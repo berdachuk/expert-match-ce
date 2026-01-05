@@ -9,3 +9,4 @@ __pycache__/
 /.vscode/
 /.zed/
 /.idea/
+/src/main/resources/application-local.yml

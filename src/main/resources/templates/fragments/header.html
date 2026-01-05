@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="header">
+    <nav class="navbar navbar-dark py-2 px-4" style="background-color: var(--uui-neutral-80, #262626);">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center gap-4">
+                <a class="text-white text-decoration-none" style="color: var(--uui-neutral-0, #FFFFFF) !important;" th:href="@{/}"
+                   th:if="${currentPage != 'index'}">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div class="d-flex align-items-center">
+                    <div class="ms-3">
+                        <h1 class="h5 mb-0 fw-bold text-white" style="color: var(--uui-neutral-0, #FFFFFF) !important;">
+                            EXPERT MATCH</h1>
+                        <p class="small mb-0 text-white" style="color: var(--uui-neutral-0, #FFFFFF) !important;">Expert
+                            Discovery System</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <!-- <span class="text-white">Expert Match</span> -->
+                </div>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <button aria-expanded="false" class="btn btn-outline-light btn-sm dropdown-toggle" data-bs-toggle="dropdown"
+                            id="userSelectorBtn" type="button">
+                        <span id="currentUserDisplay">Anonymous User</span>
+                    </button>
+                    <ul aria-labelledby="userSelectorBtn" class="dropdown-menu dropdown-menu-end" id="userSelectorMenu">
+                        <!-- User options will be populated by JavaScript -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+</th:block>
+</body>
+</body>
+</html>
+

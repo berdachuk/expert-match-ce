@@ -1,0 +1,505 @@
+/**
+ * EPAM UUI Theme Variables
+ * Based on EPAM UUI Design System
+ * https://uui.berdachuk.com/documents?id=tokens&mode=doc&category=themes
+ *
+ * This implementation follows EPAM UUI token structure and naming conventions.
+ * Color values are based on Electric theme but can be adjusted for other themes (Loveship, etc.)
+ *
+ * Token Categories:
+ * - Semantic Colors: Primary (Sky), Secondary (Night), Accent (Grass), Critical (Fire),
+ *   Info (Sky), Success (Grass), Warning (Sun), Error (Fire)
+ * - Neutral Colors: Grey scale (0-100)
+ * - Surfaces: app-bg, divider, overlay, surface-main/higher/highest
+ * - Text Colors: primary, secondary, tertiary, disabled, semantic variants
+ * - Links: link, link-hover, link-visited, link-visited-hover
+ * - Icons: icon, icon-active, icon-disabled, icon-hover
+ * - Controls: bg, border, text, placeholder, icon states
+ */
+
+:root {
+    /* Semantic Colors - Primary (Sky) */
+    --uui-primary-5: #E6F4F8;
+    --uui-primary-10: #CCE9F1;
+    --uui-primary-20: #99D3E3;
+    --uui-primary-50: #009ECC;
+    --uui-primary-60: #0086AD;
+    --uui-primary-70: #004D66;
+
+    /* Semantic Colors - Secondary (Night) */
+    --uui-secondary-5: #F0F0F0;
+    --uui-secondary-10: #D9D9D9;
+    --uui-secondary-20: #BFBFBF;
+    --uui-secondary-50: #8C8C8C;
+    --uui-secondary-60: #595959;
+    --uui-secondary-70: #434343;
+
+    /* Semantic Colors - Accent (Grass) */
+    --uui-accent-5: #F6FFED;
+    --uui-accent-10: #D9F7BE;
+    --uui-accent-20: #B7EB8F;
+    --uui-accent-50: #52C41A;
+    --uui-accent-60: #389E0D;
+    --uui-accent-70: #237804;
+
+    /* Semantic Colors - Critical (Fire) */
+    --uui-critical-5: #FFF1F0;
+    --uui-critical-10: #FFCCC7;
+    --uui-critical-20: #FFA39E;
+    --uui-critical-50: #FF4D4F;
+    --uui-critical-60: #CF1322;
+    --uui-critical-70: #A8071A;
+
+    /* Semantic Colors - Info (Sky) */
+    --uui-info-5: #E6F7FF;
+    --uui-info-10: #BAE7FF;
+    --uui-info-20: #91D5FF;
+    --uui-info-50: #1890FF;
+    --uui-info-60: #096DD9;
+    --uui-info-70: #0050B3;
+
+    /* Semantic Colors - Success (Grass) */
+    --uui-success-5: #F6FFED;
+    --uui-success-10: #D9F7BE;
+    --uui-success-20: #B7EB8F;
+    --uui-success-50: #52C41A;
+    --uui-success-60: #389E0D;
+    --uui-success-70: #237804;
+
+    /* Semantic Colors - Warning (Sun) */
+    --uui-warning-5: #FFFBE6;
+    --uui-warning-10: #FFF1B8;
+    --uui-warning-20: #FFE58F;
+    --uui-warning-50: #FAAD14;
+    --uui-warning-60: #D48806;
+    --uui-warning-70: #AD6800;
+
+    /* Semantic Colors - Error (Fire) */
+    --uui-error-5: #FFF1F0;
+    --uui-error-10: #FFCCC7;
+    --uui-error-20: #FFA39E;
+    --uui-error-50: #FF4D4F;
+    --uui-error-60: #CF1322;
+    --uui-error-70: #A8071A;
+
+    /* Neutral Colors (Grey Scale) */
+    --uui-neutral-0: #FFFFFF;
+    --uui-neutral-5: #FAFAFA;
+    --uui-neutral-10: #F5F5F5;
+    --uui-neutral-20: #E8E8E8;
+    --uui-neutral-30: #D9D9D9;
+    --uui-neutral-40: #BFBFBF;
+    --uui-neutral-50: #8C8C8C;
+    --uui-neutral-60: #595959;
+    --uui-neutral-70: #434343;
+    --uui-neutral-80: #262626;
+    --uui-neutral-90: #1F1F1F;
+    --uui-neutral-100: #000000;
+
+    /* Surfaces */
+    --uui-app-bg: var(--uui-neutral-5);
+    --uui-divider: var(--uui-neutral-20);
+    --uui-divider-light: var(--uui-neutral-10);
+    --uui-overlay: rgba(0, 0, 0, 0.5);
+    --uui-surface-higher: var(--uui-neutral-0);
+    --uui-surface-highest: var(--uui-neutral-0);
+    --uui-surface-main: var(--uui-neutral-0);
+
+    /* Text Colors */
+    --uui-text-bg-highlight: var(--uui-primary-5);
+    --uui-text-critical: var(--uui-critical-60);
+    --uui-text-disabled: var(--uui-neutral-40);
+    --uui-text-info: var(--uui-info-60);
+    --uui-text-primary: var(--uui-neutral-90);
+    --uui-text-secondary: var(--uui-neutral-60);
+    --uui-text-success: var(--uui-success-60);
+    --uui-text-tertiary: var(--uui-neutral-50);
+    --uui-text-warning: var(--uui-warning-60);
+
+    /* Links */
+    --uui-link: var(--uui-primary-50);
+    --uui-link-hover: var(--uui-primary-60);
+    --uui-link-visited: var(--uui-primary-70);
+    --uui-link-visited-hover: var(--uui-primary-60);
+
+    /* Icons */
+    --uui-icon: var(--uui-neutral-60);
+    --uui-icon-active: var(--uui-primary-50);
+    --uui-icon-disabled: var(--uui-neutral-40);
+    --uui-icon-hover: var(--uui-neutral-80);
+
+    /* Other */
+    --uui-outline-focus: var(--uui-primary-50);
+    --uui-skeleton: var(--uui-neutral-20);
+
+    /* Controls */
+    --uui-control-bg: var(--uui-neutral-0);
+    --uui-control-bg-disabled: var(--uui-neutral-10);
+    --uui-control-bg-hover: var(--uui-neutral-5);
+    --uui-control-border: var(--uui-neutral-30);
+    --uui-control-border-disabled: var(--uui-neutral-20);
+    --uui-control-border-focus: var(--uui-primary-50);
+    --uui-control-border-hover: var(--uui-neutral-40);
+    --uui-control-icon: var(--uui-neutral-60);
+    --uui-control-icon-disabled: var(--uui-neutral-40);
+    --uui-control-placeholder: var(--uui-neutral-50);
+    --uui-control-placeholder-disabled: var(--uui-neutral-40);
+    --uui-control-text: var(--uui-neutral-90);
+    --uui-control-text-disabled: var(--uui-neutral-40);
+}
+
+/* Apply UUI theme to body */
+body {
+    background-color: var(--uui-app-bg);
+    color: var(--uui-text-primary);
+}
+
+/* UUI Button Styles - Primary Sky */
+/* Non-active state: uses primary-50 */
+.btn-primary {
+    background-color: var(--uui-primary-50, #009ECC);
+    border-color: var(--uui-primary-50, #009ECC);
+    color: var(--uui-neutral-0, #FFFFFF);
+}
+
+/* Active states: use primary-60 */
+.btn-primary:hover {
+    background-color: var(--uui-primary-60, #0086AD);
+    border-color: var(--uui-primary-60, #0086AD);
+    color: var(--uui-neutral-0, #FFFFFF);
+}
+
+.btn-primary:focus {
+    background-color: var(--uui-primary-60, #0086AD);
+    border-color: var(--uui-primary-60, #0086AD);
+    box-shadow: 0 0 0 0.2rem rgba(0, 158, 204, 0.25);
+    color: var(--uui-neutral-0, #FFFFFF);
+}
+
+.btn-primary:active {
+    background-color: var(--uui-primary-60, #0086AD);
+    border-color: var(--uui-primary-60, #0086AD);
+    color: var(--uui-neutral-0, #FFFFFF);
+}
+
+/* Disabled state: uses primary-50 with reduced opacity */
+.btn-primary:disabled {
+    background-color: var(--uui-primary-50, #009ECC);
+    border-color: var(--uui-primary-50, #009ECC);
+    color: var(--uui-neutral-0, #FFFFFF);
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: var(--uui-secondary-50, #8C8C8C);
+    border-color: var(--uui-secondary-50, #8C8C8C);
+    color: var(--uui-neutral-0, #FFFFFF);
+}
+
+.btn-secondary:hover {
+    background-color: var(--uui-secondary-60, #595959);
+    border-color: var(--uui-secondary-60, #595959);
+    color: var(--uui-neutral-0, #FFFFFF);
+}
+
+.btn-outline-secondary {
+    border-color: var(--uui-control-border);
+    color: var(--uui-text-secondary);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--uui-control-bg-hover);
+    border-color: var(--uui-control-border-hover);
+    color: var(--uui-text-primary);
+}
+
+.btn-outline-light {
+    border-color: var(--uui-neutral-30);
+    color: var(--uui-neutral-0);
+}
+
+.btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--uui-neutral-20);
+}
+
+/* UUI Form Controls */
+.form-control {
+    background-color: var(--uui-control-bg);
+    border-color: var(--uui-control-border);
+    color: var(--uui-control-text);
+}
+
+.form-control:focus {
+    background-color: var(--uui-control-bg);
+    border-color: var(--uui-control-border-focus);
+    box-shadow: 0 0 0 0.2rem rgba(0, 158, 204, 0.1);
+    color: var(--uui-control-text);
+}
+
+.form-control::placeholder {
+    color: var(--uui-control-placeholder);
+}
+
+.form-control:disabled {
+    background-color: var(--uui-control-bg-disabled);
+    border-color: var(--uui-control-border-disabled);
+    color: var(--uui-control-text-disabled);
+}
+
+.form-label {
+    color: var(--uui-text-primary);
+    font-weight: 500;
+}
+
+/* UUI Links */
+a {
+    color: var(--uui-link);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--uui-link-hover);
+    text-decoration: underline;
+}
+
+a:visited {
+    color: var(--uui-link-visited);
+}
+
+a:visited:hover {
+    color: var(--uui-link-visited-hover);
+}
+
+/* UUI Borders and Dividers */
+.border-end {
+    border-color: var(--uui-divider) !important;
+}
+
+.border-secondary {
+    border-color: var(--uui-divider) !important;
+}
+
+.border-bottom {
+    border-color: var(--uui-divider) !important;
+}
+
+/* UUI Background Colors */
+.bg-dark {
+    background-color: var(--uui-neutral-80) !important;
+}
+
+.bg-primary {
+    background-color: var(--uui-primary-50) !important;
+}
+
+.bg-light {
+    background-color: var(--uui-surface-main) !important;
+}
+
+/* UUI Text Colors */
+.text-white {
+    color: var(--uui-neutral-0) !important;
+}
+
+.text-secondary {
+    color: var(--uui-text-secondary) !important;
+}
+
+.text-muted {
+    color: var(--uui-text-tertiary) !important;
+}
+
+/* UUI List Group */
+.list-group-item {
+    background-color: var(--uui-surface-main);
+    border-color: var(--uui-divider);
+    color: var(--uui-text-primary);
+}
+
+.list-group-item:hover {
+    background-color: var(--uui-control-bg-hover);
+}
+
+.list-group-item.active {
+    background-color: var(--uui-secondary-50, #8C8C8C);
+    border-color: var(--uui-secondary-50, #8C8C8C);
+    color: var(--uui-neutral-0);
+}
+
+/* UUI Accordion */
+.accordion-item {
+    background-color: var(--uui-surface-main);
+    border-color: var(--uui-divider);
+}
+
+.accordion-button {
+    background-color: var(--uui-surface-main);
+    color: var(--uui-text-primary);
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: var(--uui-control-bg-hover);
+    color: var(--uui-text-primary);
+}
+
+.accordion-button:focus {
+    border-color: var(--uui-control-border-focus);
+    box-shadow: 0 0 0 0.2rem rgba(0, 158, 204, 0.1);
+}
+
+/* UUI Cards */
+.expert-card {
+    background-color: var(--uui-surface-main);
+    border-color: var(--uui-divider);
+    color: var(--uui-text-primary);
+}
+
+.expert-card h5 {
+    color: var(--uui-primary-50, #009ECC);
+}
+
+.expert-card .expert-info {
+    color: var(--uui-text-secondary);
+}
+
+/* UUI Markdown Content - Compact */
+.markdown-content {
+    color: var(--uui-text-primary);
+    line-height: 1.2;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+    margin-top: 0.5em;
+    margin-bottom: 0.25em;
+}
+
+.markdown-content p {
+    margin-bottom: 0.3em;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+    margin-bottom: 0.3em;
+    padding-left: 1.5em;
+}
+
+.markdown-content li {
+    margin-bottom: 0.15em;
+}
+
+.markdown-content code {
+    background-color: var(--uui-neutral-10);
+    color: var(--uui-text-primary);
+}
+
+.markdown-content pre {
+    background-color: var(--uui-neutral-10);
+    border-color: var(--uui-divider);
+}
+
+.markdown-content blockquote {
+    border-left-color: var(--uui-primary-50, #009ECC);
+    color: var(--uui-text-secondary);
+}
+
+.markdown-content table th {
+    background-color: var(--uui-neutral-10);
+}
+
+.markdown-content table th,
+.markdown-content table td {
+    border-color: var(--uui-divider);
+}
+
+.markdown-content a {
+    color: var(--uui-link);
+}
+
+.markdown-content a:hover {
+    color: var(--uui-link-hover);
+}
+
+/* UUI Scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--uui-neutral-10);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--uui-neutral-40);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--uui-neutral-50);
+}
+
+/* UUI Chat History Panel */
+.chat-history-panel {
+    background-color: var(--uui-app-bg);
+}
+
+/* UUI Dropdown */
+.dropdown-menu {
+    background-color: var(--uui-surface-main);
+    border-color: var(--uui-divider);
+}
+
+.dropdown-item {
+    color: var(--uui-text-primary);
+}
+
+.dropdown-item:hover {
+    background-color: var(--uui-control-bg-hover);
+    color: var(--uui-text-primary);
+}
+
+/* UUI Modal */
+.modal-content {
+    background-color: var(--uui-surface-main);
+    border-color: var(--uui-divider);
+    color: var(--uui-text-primary);
+}
+
+.modal-header {
+    border-bottom-color: var(--uui-divider);
+}
+
+.modal-footer {
+    border-top-color: var(--uui-divider);
+}
+
+/* UUI Badge */
+.badge {
+    background-color: var(--uui-primary-50, #009ECC);
+    color: var(--uui-neutral-0);
+}
+
+.badge.bg-success {
+    background-color: var(--uui-success-50) !important;
+}
+
+.badge.bg-danger {
+    background-color: var(--uui-error-50) !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--uui-warning-50) !important;
+}
+
+.badge.bg-info {
+    background-color: var(--uui-info-50) !important;
+}
+

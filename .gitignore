@@ -1,0 +1,11 @@
+# MkDocs
+site/
+.plantuml-cache/
+*.pyc
+__pycache__/
+/logs/
+/target/
+/build/
+/.vscode/
+/.zed/
+/.idea/

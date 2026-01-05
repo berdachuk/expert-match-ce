@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: expertmatch-postgres-dev:latest
+    container_name: expertmatch-postgres
+    environment:
+      POSTGRES_DB: expertmatch
+      POSTGRES_USER: expertmatch
+      POSTGRES_PASSWORD: expertmatch
+    ports:
+      - "5433:5432"  # Map container port 5432 to host port 5433 (to avoid conflict with existing PostgreSQL)
+    volumes:
+      - ~/data/expertmatch-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U expertmatch"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - expertmatch-network
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: expertmatch-ollama
+    ports:
+      - "11435:11434"  # Map container port 11434 to host port 11435 (to avoid conflict with existing Ollama)
+    volumes:
+      - ~/data/expertmatch-ollama:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    networks:
+      - expertmatch-network
+    # Optional: Uncomment to use GPU
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+# Ollama data is stored in ~/data/expertmatch-ollama on the host
+
+networks:
+  expertmatch-network:
+    driver: bridge
+

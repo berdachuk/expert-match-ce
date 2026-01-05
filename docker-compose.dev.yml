@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    image: expertmatch-postgres-dev:latest
+    container_name: expertmatch-postgres-dev
+    environment:
+      POSTGRES_USER: expertmatch
+      POSTGRES_PASSWORD: expertmatch
+      POSTGRES_DB: expertmatch
+    ports:
+      - "5433:5432"  # Map container port 5432 to host port 5433 (to avoid conflict with existing PostgreSQL)
+    volumes:
+      - ~/data/expertmatch-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U expertmatch"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - expertmatch-network
+
+# Database data is stored in ~/data/expertmatch-postgres on the host
+
+networks:
+  expertmatch-network:
+    driver: bridge
+

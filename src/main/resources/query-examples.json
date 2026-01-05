@@ -1,0 +1,215 @@
+{
+  "examples": [
+    {
+      "category": "Basic",
+      "title": "Simple Technology Query",
+      "query": "Looking for experts in Java and Spring Boot"
+    },
+    {
+      "category": "Basic",
+      "title": "Multiple Technologies",
+      "query": "Find experts with experience in Java, Spring Boot, and AWS"
+    },
+    {
+      "category": "Basic",
+      "title": "Skills-Based Query",
+      "query": "Need experts with microservices architecture and cloud deployment skills"
+    },
+    {
+      "category": "Basic",
+      "title": "Domain-Specific Query",
+      "query": "Looking for experts in financial services domain with banking experience"
+    },
+    {
+      "category": "Technology",
+      "title": "Backend Technologies",
+      "query": "Find Java developers with Spring Boot, Hibernate, and PostgreSQL experience"
+    },
+    {
+      "category": "Technology",
+      "title": "Frontend Technologies",
+      "query": "Looking for React and TypeScript experts with Next.js experience"
+    },
+    {
+      "category": "Technology",
+      "title": "Cloud and DevOps",
+      "query": "Need AWS experts with Kubernetes, Docker, and CI/CD pipeline experience"
+    },
+    {
+      "category": "Technology",
+      "title": "Data Technologies",
+      "query": "Find experts in Apache Kafka, Spark, and data streaming architectures"
+    },
+    {
+      "category": "Technology",
+      "title": "Full Stack",
+      "query": "Need full-stack developers with Node.js, React, and MongoDB experience"
+    },
+    {
+      "category": "Seniority",
+      "title": "Senior Level",
+      "query": "Looking for senior Java developers with 10+ years of experience"
+    },
+    {
+      "category": "Seniority",
+      "title": "Lead/Architect Level",
+      "query": "Find lead architects with microservices and cloud architecture experience"
+    },
+    {
+      "category": "Seniority",
+      "title": "Mid-Level",
+      "query": "Need mid-level developers with 3-5 years of Spring Boot experience"
+    },
+    {
+      "category": "Language",
+      "title": "English Proficiency",
+      "query": "Find Java experts with fluent English (C1 level or higher)"
+    },
+    {
+      "category": "Language",
+      "title": "Multiple Languages",
+      "query": "Looking for developers with English and German language skills"
+    },
+    {
+      "category": "Team",
+      "title": "Basic Team Formation",
+      "query": "Need a team of 5 developers: 2 Java backend, 2 React frontend, 1 DevOps"
+    },
+    {
+      "category": "Team",
+      "title": "RFP Team",
+      "query": "Looking for a team to respond to RFP: 1 architect, 3 senior developers, 1 QA engineer"
+    },
+    {
+      "category": "Complex",
+      "title": "Multi-Criteria Search",
+      "query": "Find senior Java developers with Spring Boot, AWS, and microservices experience, fluent in English, available for remote work"
+    },
+    {
+      "category": "Complex",
+      "title": "Domain + Technology",
+      "query": "Looking for financial services experts with Java, Spring Boot, and banking domain knowledge"
+    },
+    {
+      "category": "RFP Response",
+      "title": "RFP with Seniority and Skills",
+      "query": "I need experts for an RFP response. We need A3-A4 level developers with Java 21+, Spring Boot, AWS, and MongoDB experience. They should have experience with ETL pipelines, system architecture, and on-call rotation."
+    },
+    {
+      "category": "RFP Response",
+      "title": "RFP with Monitoring Tools",
+      "query": "Find me senior developers (A3-A4) who know Java 21+, Spring Boot, AWS, MongoDB, and have worked with monitoring tools like Datadog. They need to be comfortable with on-call rotations."
+    },
+    {
+      "category": "RFP Response",
+      "title": "RFP with Kubernetes and ETL",
+      "query": "Looking for experts with Java, Spring Boot, AWS, MongoDB, and Kubernetes experience for a new project. Must have ETL pipeline experience and be available for on-call support."
+    },
+    {
+      "category": "RFP Response",
+      "title": "RFP for Scalable Microservices",
+      "query": "Who can help with an RFP? We need developers with Java 21+, Spring Boot, AWS, MongoDB, and experience building scalable microservices with monitoring and observability."
+    },
+    {
+      "category": "Team Formation",
+      "title": "Technical Lead with Team",
+      "query": "I need to form a team for a new project. We need a Technical Lead (A4 or A5) with Java, Spring Boot, MongoDB, and Kafka experience. The lead should have leadership experience and be able to mentor the team."
+    },
+    {
+      "category": "Team Formation",
+      "title": "Technical Lead with Code Review",
+      "query": "Looking for a Technical Lead and team members for a Spring Boot project. The lead needs to be A4-A5 level with experience in code reviews, technical decision-making, and mentoring junior developers."
+    },
+    {
+      "category": "Team Formation",
+      "title": "Lead with L3 Support",
+      "query": "Who can lead a team working with Java, Spring Boot, MongoDB, and Kafka? We need someone with leadership experience who can handle L3 support and mentor team members."
+    },
+    {
+      "category": "Team Formation",
+      "title": "Lead with GraphQL and Reactive",
+      "query": "Find me a Technical Lead (A4-A5) and team members for a project using Java, Spring Boot, MongoDB, Kafka, and Docker. The lead should have experience with GraphQL and reactive programming."
+    },
+    {
+      "category": "Urgent RFP",
+      "title": "Semantic/Industrial Modeling",
+      "query": "Looking for experts in Semantic/Industrial Modeling for an urgent customer need."
+    },
+    {
+      "category": "Urgent RFP",
+      "title": "Urgent Semantic Modeling",
+      "query": "I need to find someone with semantic modeling experience ASAP. This is urgent for a customer proposal."
+    },
+    {
+      "category": "Urgent RFP",
+      "title": "Urgent Industrial Modeling",
+      "query": "Who has experience with industrial modeling? We have an urgent RFP that needs this expertise."
+    },
+    {
+      "category": "Urgent RFP",
+      "title": "Time-Sensitive Modeling Experts",
+      "query": "Need experts in semantic and industrial modeling immediately. This is time-sensitive for a customer opportunity."
+    },
+    {
+      "category": "Skill-Based",
+      "title": "Java 21+ Stack for New Project",
+      "query": "Need experts with Java 21+, Spring Boot, AWS, and MongoDB experience for a new project."
+    },
+    {
+      "category": "Skill-Based",
+      "title": "Java Stack Experts",
+      "query": "Who has experience with Java 21+, Spring Boot, AWS, and MongoDB? We're starting a new project and need skilled developers."
+    },
+    {
+      "category": "Skill-Based",
+      "title": "Developers for Upcoming Project",
+      "query": "Find me developers who know Java 21+, Spring Boot, AWS, and MongoDB. We need them for an upcoming project."
+    },
+    {
+      "category": "Skill-Based",
+      "title": "Microservices Project Team",
+      "query": "Looking for experts with Java 21+, Spring Boot, AWS, and MongoDB skills. This is for a new microservices project we're launching."
+    },
+    {
+      "category": "Expert Search",
+      "title": "Find Siarhei Berdachuk",
+      "query": "Looking for Siarhei Berdachuk"
+    },
+    {
+      "category": "Expert Search",
+      "title": "Siarhei Berdachuk Profile",
+      "query": "Find information about Siarhei Berdachuk and his experience"
+    },
+    {
+      "category": "Expert Search",
+      "title": "Siarhei Berdachuk Skills",
+      "query": "What are Siarhei Berdachuk's skills and technologies?"
+    },
+    {
+      "category": "Expert Search",
+      "title": "Siarhei Berdachuk Experience",
+      "query": "Show me Siarhei Berdachuk's work experience and projects"
+    },
+    {
+      "category": "Expert Search",
+      "title": "Siarhei Berdachuk Java Experience",
+      "query": "Find Siarhei Berdachuk and show his Java, Spring Boot, and AWS experience"
+    },
+    {
+      "category": "Expert Search",
+      "title": "Experts with Similar Experience",
+      "query": "Find experts with similar experience to Siarhei Berdachuk - Java, Spring Boot, AWS, MongoDB, team leadership, and architecture experience"
+    },
+    {
+      "category": "Expert Search",
+      "title": "Similar Profile to Siarhei Berdachuk",
+      "query": "Who has a similar profile to Siarhei Berdachuk? Looking for team leads and architects with Java, Spring Boot, microservices, and cloud experience"
+    },
+    {
+      "category": "Expert Search",
+      "title": "Experts Like Siarhei Berdachuk",
+      "query": "Find experts like Siarhei Berdachuk with similar experience"
+    }
+  ]
+}
+

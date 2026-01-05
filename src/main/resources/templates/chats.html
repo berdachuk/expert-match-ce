@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head}">
+    <title>ExpertMatch - Chats</title>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+<main class="flex-grow-1 d-flex flex-column" style="height: calc(100vh - 60px); min-height: 0;">
+    <div class="container-fluid h-100 d-flex flex-column" style="min-height: 0;">
+        <div class="row flex-grow-1 overflow-hidden" style="min-height: 0;">
+            <!-- Chat Sidebar -->
+            <aside class="col-2 border-end border-secondary overflow-auto">
+                <div th:replace="~{fragments/chat-sidebar :: chat-sidebar}"></div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <section class="col-10 d-flex flex-column overflow-hidden" style="min-height: 0;">
+                <!-- Top Row: Query Interface and Results -->
+                <div class="row flex-shrink-0"
+                     style="flex: 1; min-height: 0; border-bottom: 1px solid var(--uui-divider, #E8E8E8);">
+                    <!-- Query Interface -->
+                    <div class="col-4 border-end border-secondary d-flex flex-column overflow-hidden">
+                        <div class="p-4 flex-grow-1 d-flex flex-column overflow-hidden" id="queryPanel">
+                            <form class="d-flex flex-column flex-shrink-0" id="queryForm" method="post"
+                                  th:action="@{/query}">
+                                <input name="chatId" th:value="${currentChat != null ? currentChat.id : ''}"
+                                       type="hidden">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label mb-0" for="query">Enter your query:</label>
+                                        <button class="btn btn-sm btn-outline-secondary" data-bs-target="#examplesModal"
+                                                data-bs-toggle="modal" id="showExamplesBtn"
+                                                type="button">
+                                            <i class="bi bi-lightbulb me-1"></i>Examples
+                                        </button>
+                                    </div>
+                                    <textarea class="form-control" id="query" name="query"
+                                              placeholder="e.g., Looking for experts in Semantic/Industrial Modeling for an urgent customer need."
+                                              rows="3"
+                                              th:text="${query}"></textarea>
+                                </div>
+
+                                <button class="btn btn-primary mb-3" disabled id="submitBtn" type="submit">Submit
+                                    Query
+                                </button>
+
+                                <!-- Query Options Accordion -->
+                                <div class="accordion mb-3" id="queryOptionsAccordion">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="queryOptionsHeader">
+                                            <button aria-controls="queryOptionsCollapse" aria-expanded="false"
+                                                    class="accordion-button collapsed"
+                                                    data-bs-target="#queryOptionsCollapse"
+                                                    data-bs-toggle="collapse" type="button">
+                                                <i class="bi bi-gear me-2"></i>Query Options
+                                            </button>
+                                        </h2>
+                                        <div aria-labelledby="queryOptionsHeader" class="accordion-collapse collapse"
+                                             data-bs-parent="#queryOptionsAccordion"
+                                             id="queryOptionsCollapse">
+                                            <div class="accordion-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Query Options:</label>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" id="rerank" name="rerank"
+                                                               type="checkbox" value="true">
+                                                        <label class="form-check-label" for="rerank">Enable
+                                                            Reranking</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" id="deepResearch"
+                                                               name="deepResearch"
+                                                               type="checkbox" value="true">
+                                                        <label class="form-check-label" for="deepResearch">Enable Deep
+                                                            Research</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" id="includeSources"
+                                                               name="includeSources"
+                                                               type="checkbox" value="true">
+                                                        <label class="form-check-label" for="includeSources">Include Sources</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" id="includeExecutionTrace"
+                                                               name="includeExecutionTrace"
+                                                               type="checkbox" value="true">
+                                                        <label class="form-check-label" for="includeExecutionTrace">Include
+                                                            Execution
+                                                            Trace</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" id="useCascadePattern"
+                                                               name="useCascadePattern"
+                                                               type="checkbox" value="true"
+                                                               data-bs-toggle="tooltip"
+                                                               data-bs-title="Requires exactly 1 expert result">
+                                                        <label class="form-check-label" for="useCascadePattern">Use
+                                                            Cascade
+                                                            Pattern</label>
+                                                        <small class="form-text text-muted d-block ms-4" style="font-size: 0.85em;">
+                                                            Requires exactly 1 expert result
+                                                        </small>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" id="useRoutingPattern"
+                                                               name="useRoutingPattern"
+                                                               type="checkbox" value="true"
+                                                               data-bs-toggle="tooltip"
+                                                               data-bs-title="Can be used with either Cascade or Cycle pattern">
+                                                        <label class="form-check-label" for="useRoutingPattern">Use
+                                                            Routing
+                                                            Pattern</label>
+                                                        <small class="form-text text-muted d-block ms-4" style="font-size: 0.85em;">
+                                                            Can be used with either Cascade or Cycle pattern
+                                                        </small>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" id="useCyclePattern"
+                                                               name="useCyclePattern"
+                                                               type="checkbox" value="true"
+                                                               data-bs-toggle="tooltip"
+                                                               data-bs-title="Requires multiple expert results (>1)">
+                                                        <label class="form-check-label" for="useCyclePattern">Use Cycle
+                                                            Pattern</label>
+                                                        <small class="form-text text-muted d-block ms-4" style="font-size: 0.85em;">
+                                                            Requires multiple expert results (>1)
+                                                        </small>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="maxResults">Max Results:</label>
+                                                    <input class="form-control" id="maxResults" max="50" min="1"
+                                                           name="maxResults" type="number" value="10">
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="minConfidence">Min
+                                                        Confidence:</label>
+                                                    <input class="form-control" id="minConfidence" max="1" min="0"
+                                                           name="minConfidence" step="0.1" type="number" value="0.7">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <!-- Chat History Panel -->
+                            <div class="chat-history-container mt-3 border-top pt-3 d-flex flex-column overflow-hidden"
+                                 style="border-top-color: var(--uui-divider, #E8E8E8) !important;"
+                                 th:if="${currentChat != null}">
+                                <div class="d-flex justify-content-between align-items-center mb-2 flex-shrink-0">
+                                    <h6 class="mb-0 fw-bold">Chat History</h6>
+                                    <form class="mb-0" method="post" style="display: inline;"
+                                          th:action="@{/chats/history/clear}">
+                                        <input name="chatId" th:value="${currentChat.id}" type="hidden">
+                                        <button class="btn btn-link btn-sm text-decoration-none p-0 border-0"
+                                                onclick="return confirm('Are you sure you want to clear all chat history? This action cannot be undone.');"
+                                                style="font-size: 0.875rem; color: #6c757d; line-height: 1.5;"
+                                                type="submit">
+                                            clear
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="chat-history-panel border rounded p-2 flex-grow-1 overflow-auto"
+                                     style="min-height: 0; flex: 1 1 0;">
+                                    <div th:if="${messages != null && !messages.isEmpty()}">
+                                        <div th:class="${message != null && message.role == 'user'} ? 'mb-2 text-end' : 'mb-2 text-start'"
+                                             th:each="message : ${messages}">
+                                            <div style="max-width: 85%;"
+                                                 th:attr="data-markdown=${message != null && message.content != null ? message.content : ''}"
+                                                 th:class="${message != null && message.role == 'user'} ? 'd-inline-block bg-primary text-white p-2 rounded markdown-content small' : 'd-inline-block bg-light p-2 rounded markdown-content small'"></div>
+                                        </div>
+                                    </div>
+                                    <div class="text-center text-muted py-3"
+                                         th:if="${messages == null || messages.isEmpty()}">
+                                        <small>No messages yet</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 border-top pt-3 d-flex flex-column flex-grow-1 overflow-hidden"
+                                 style="border-top-color: var(--uui-divider, #E8E8E8) !important;"
+                                 th:if="${currentChat == null}">
+                                <h6 class="mb-2 fw-bold text-muted flex-shrink-0">Chat History</h6>
+                                <div class="text-center text-muted py-3 d-flex align-items-center justify-content-center flex-grow-1">
+                                    <small>Select a chat to view history</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Query Results -->
+                    <div class="col-8 d-flex flex-column overflow-hidden">
+                        <div class="p-4 border-bottom"
+                             style="border-bottom-color: var(--uui-divider, #E8E8E8) !important;">
+                            <h2 class="h5 mb-0">Query Results</h2>
+                        </div>
+                        <div class="p-4 flex-grow-1 overflow-auto" id="results">
+                            <!-- Progress Indicator -->
+                            <div class="d-none text-center py-5" id="progressIndicator">
+                                <div class="spinner-border text-primary" role="status"
+                                     style="width: 3rem; height: 3rem;">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-3 text-muted">Processing your query...</p>
+                                <div class="progress mt-3" style="height: 6px;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                         role="progressbar" style="width: 100%"></div>
+                                </div>
+                                <p class="mt-2 small text-muted">
+                                    <em>Complex queries may take 2-3 minutes. Please wait...</em>
+                                </p>
+                            </div>
+
+                            <div id="resultsContent">
+                                <!-- Error Display -->
+                                <div class="alert alert-danger" th:if="${error != null && !error.isEmpty()}"
+                                     th:text="${error}"></div>
+
+                                <!-- Query Results -->
+                                <div th:if="${queryResult != null}">
+                                    <div class="mb-3"
+                                         th:if="${queryResult.getAnswer() != null && !queryResult.getAnswer().isEmpty()}">
+                                        <div class="query-result bg-light p-2 rounded markdown-content"
+                                             th:attr="data-markdown=${queryResult.getAnswer()}"></div>
+                                    </div>
+                                    <div class="mb-4"
+                                         th:if="${queryResult.getExperts() != null && !queryResult.getExperts().isEmpty()}">
+                                        <h5 class="mb-2">Experts:</h5>
+                                        <div class="expert-card" th:each="expert : ${queryResult.getExperts()}">
+                                            <h6>
+                                                <span th:if="${personProfileUrlTemplate != null && !personProfileUrlTemplate.isEmpty() && expert != null && expert.getId() != null}">
+                                                    <a rel="noopener noreferrer"
+                                                       target="_blank"
+                                                       th:href="${#strings.replace(personProfileUrlTemplate, '{externalId}', expert.getId())}"
+                                                       th:text="${expert != null ? expert.getName() : 'Unknown'}"></a>
+                                                    <i class="bi bi-box-arrow-up-right ms-1"
+                                                       style="font-size: 0.75em;"></i>
+                                                </span>
+                                                <span th:if="${personProfileUrlTemplate == null || personProfileUrlTemplate.isEmpty() || expert == null || expert.getId() == null}"
+                                                      th:text="${expert != null ? expert.getName() : 'Unknown'}"></span>
+                                            </h6>
+                                            <div class="expert-info"
+                                                 th:if="${expert != null && expert.getEmail() != null && !expert.getEmail().isEmpty()}">
+                                                <strong>Email:</strong> <span th:text="${expert.getEmail()}"></span>
+                                            </div>
+                                            <div class="expert-info"
+                                                 th:if="${expert != null && expert.getSeniority() != null && !expert.getSeniority().isEmpty()}">
+                                                <strong>Seniority:</strong> <span
+                                                    th:text="${expert.getSeniority()}"></span>
+                                            </div>
+                                            <div class="expert-info"
+                                                 th:if="${expert != null && expert.getRelevanceScore() != null}">
+                                                <strong>Relevance Score:</strong> <span
+                                                    th:text="${#numbers.formatDecimal(expert.getRelevanceScore(), 1, 2)}"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="sourcesSection" class="mb-4"
+                                         th:if="${queryResult.getSources() != null && !queryResult.getSources().isEmpty()}">
+                                        <h5 class="mb-2">Sources:</h5>
+                                        <ul class="list-group">
+                                            <li class="list-group-item" th:each="source : ${queryResult.getSources()}"
+                                                th:text="${source != null ? source : 'Unknown source'}"></li>
+                                        </ul>
+                                    </div>
+
+                                    <!-- Execution Trace -->
+                                    <div class="mb-4"
+                                         th:if="${queryResult.getExecutionTrace() != null}">
+                                        <div class="card">
+                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                                <h5 class="mb-0">Execution Trace</h5>
+                                                <button aria-controls="executionTraceCollapse" aria-expanded="false"
+                                                        class="btn btn-sm btn-outline-secondary"
+                                                        data-bs-target="#executionTraceCollapse"
+                                                        data-bs-toggle="collapse" type="button">
+                                                    <i class="bi bi-chevron-down"></i> Toggle Details
+                                                </button>
+                                            </div>
+                                            <div class="collapse show" id="executionTraceCollapse">
+                                                <div class="card-body">
+                                                    <div class="mb-3"
+                                                         th:if="${queryResult.getExecutionTrace().getTotalDurationMs() != null}">
+                                                        <strong>Total Duration:</strong>
+                                                        <span th:text="${#numbers.formatDecimal(queryResult.getExecutionTrace().getTotalDurationMs() / 1000.0, 1, 2)}"></span>
+                                                        seconds
+                                                        (<span
+                                                            th:text="${queryResult.getExecutionTrace().getTotalDurationMs()}"></span>
+                                                        ms)
+                                                    </div>
+                                                    <div class="mb-3"
+                                                         th:if="${queryResult.getExecutionTrace().getTotalTokenUsage() != null}">
+                                                        <strong>Total Token Usage:</strong>
+                                                        <div class="ms-3">
+                                                            <div th:if="${queryResult.getExecutionTrace().getTotalTokenUsage().getInputTokens() != null}">
+                                                                <strong>Input:</strong> <span
+                                                                    th:text="${queryResult.getExecutionTrace().getTotalTokenUsage().getInputTokens()}"></span>
+                                                                tokens
+                                                            </div>
+                                                            <div th:if="${queryResult.getExecutionTrace().getTotalTokenUsage().getOutputTokens() != null}">
+                                                                <strong>Output:</strong> <span
+                                                                    th:text="${queryResult.getExecutionTrace().getTotalTokenUsage().getOutputTokens()}"></span>
+                                                                tokens
+                                                            </div>
+                                                            <div th:if="${queryResult.getExecutionTrace().getTotalTokenUsage().getTotalTokens() != null}">
+                                                                <strong>Total:</strong> <span
+                                                                    th:text="${queryResult.getExecutionTrace().getTotalTokenUsage().getTotalTokens()}"></span>
+                                                                tokens
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div th:if="${queryResult.getExecutionTrace().getSteps() != null && !queryResult.getExecutionTrace().getSteps().isEmpty()}">
+                                                        <strong>Execution Steps:</strong>
+                                                        <div class="mt-2">
+                                                            <div class="accordion" id="executionStepsAccordion">
+                                                                <div class="accordion-item"
+                                                                     th:each="step, iterStat : ${queryResult.getExecutionTrace().getSteps()}">
+                                                                    <h2 class="accordion-header"
+                                                                        th:id="'stepHeader' + ${iterStat.index}">
+                                                                        <button class="accordion-button collapsed"
+                                                                                data-bs-toggle="collapse"
+                                                                                th:aria-controls="'step' + ${iterStat.index}"
+                                                                                th:data-bs-target="'#step' + ${iterStat.index}"
+                                                                                type="button">
+                                                                            <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                                                                <div>
+                                                                                    <strong th:text="${step.getName() != null ? step.getName() : 'Unknown Step'}"></strong>
+                                                                                    <span class="badge ms-2"
+                                                                                          th:classappend="${step.getStatus() != null && step.getStatus().toString() == 'SUCCESS'} ? 'bg-success' : (${step.getStatus() != null && step.getStatus().toString() == 'FAILED'} ? 'bg-danger' : 'bg-warning')"
+                                                                                          th:text="${step.getStatus() != null ? step.getStatus().toString() : 'UNKNOWN'}"></span>
+                                                                                </div>
+                                                                                <div class="text-muted small">
+                                                                                    <span th:if="${step.getDurationMs() != null}"
+                                                                                          th:text="${step.getDurationMs()} + ' ms'"></span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </button>
+                                                                    </h2>
+                                                                    <div class="accordion-collapse collapse"
+                                                                         th:data-bs-parent="'#executionStepsAccordion'"
+                                                                         th:id="'step' + ${iterStat.index}">
+                                                                        <div class="accordion-body">
+                                                                            <div class="row">
+                                                                                <div class="col-md-6">
+                                                                                    <div class="mb-2"
+                                                                                         th:if="${step.getService() != null}">
+                                                                                        <strong>Service:</strong> <span
+                                                                                            th:text="${step.getService()}"></span>
+                                                                                    </div>
+                                                                                    <div class="mb-2"
+                                                                                         th:if="${step.getMethod() != null}">
+                                                                                        <strong>Method:</strong> <span
+                                                                                            th:text="${step.getMethod()}"></span>
+                                                                                    </div>
+                                                                                    <div class="mb-2"
+                                                                                         th:if="${step.getLlmModel() != null}">
+                                                                                        <strong>LLM Model:</strong>
+                                                                                        <span th:text="${step.getLlmModel()}"></span>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="col-md-6">
+                                                                                    <div class="mb-2"
+                                                                                         th:if="${step.getTokenUsage() != null}">
+                                                                                        <strong>Token Usage:</strong>
+                                                                                        <div class="ms-3">
+                                                                                            <div th:if="${step.getTokenUsage().getInputTokens() != null}">
+                                                                                                Input: <span
+                                                                                                    th:text="${step.getTokenUsage().getInputTokens()}"></span>
+                                                                                            </div>
+                                                                                            <div th:if="${step.getTokenUsage().getOutputTokens() != null}">
+                                                                                                Output: <span
+                                                                                                    th:text="${step.getTokenUsage().getOutputTokens()}"></span>
+                                                                                            </div>
+                                                                                            <div th:if="${step.getTokenUsage().getTotalTokens() != null}">
+                                                                                                Total: <span
+                                                                                                    th:text="${step.getTokenUsage().getTotalTokens()}"></span>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="mt-2"
+                                                                                 th:if="${step.getInputSummary() != null}">
+                                                                                <strong>Input:</strong>
+                                                                                <div class="bg-light p-2 rounded mt-1">
+                                                                                    <pre class="mb-0 small"
+                                                                                         th:text="${step.getInputSummary()}"></pre>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="mt-2"
+                                                                                 th:if="${step.getOutputSummary() != null}">
+                                                                                <strong>Output:</strong>
+                                                                                <div class="bg-light p-2 rounded mt-1">
+                                                                                    <pre class="mb-0 small"
+                                                                                         th:text="${step.getOutputSummary()}"></pre>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Empty State -->
+                                <div class="text-center py-5"
+                                     th:if="${queryResult == null && (error == null || error.isEmpty())}">
+                                    <p class="text-muted">Submit a query to see results here.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+<!-- Query Examples Modal -->
+<div aria-hidden="true" aria-labelledby="examplesModalLabel" class="modal fade" id="examplesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="examplesModalLabel">Query Examples</h5>
+                <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center py-4" id="examplesLoading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading examples...</p>
+                </div>
+                <div class="alert alert-danger d-none" id="examplesError" role="alert">
+                    Failed to load examples. Please try again later.
+                </div>
+                <div class="d-none" id="examplesContent">
+                    <p class="text-muted mb-3">Select an example query to insert it into the query input field:</p>
+                    <div class="list-group" id="examplesList">
+                        <!-- Examples will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>

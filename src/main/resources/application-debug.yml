@@ -1,0 +1,89 @@
+# Debug Profile Configuration for Verbose Logging
+# This profile enables detailed logging for troubleshooting and development
+#
+# To use this configuration, run with: --spring.profiles.active=local,debug
+# Or set: export SPRING_PROFILES_ACTIVE=local,debug
+#
+# This profile should be used in combination with other profiles like 'local' or 'dev'
+# It increases logging verbosity to TRACE level for most components
+
+logging:
+  level:
+    # Enable verbose logging for the ExpertMatch application
+    com.berdachuk.expertmatch: DEBUG
+    com.berdachuk.expertmatch.system: TRACE  # Detailed health check logging
+    com.berdachuk.expertmatch.api: DEBUG
+    com.berdachuk.expertmatch.chat: DEBUG
+    com.berdachuk.expertmatch.config: DEBUG
+    com.berdachuk.expertmatch.data: DEBUG
+    com.berdachuk.expertmatch.embedding: DEBUG
+    com.berdachuk.expertmatch.graph: DEBUG
+    com.berdachuk.expertmatch.ingestion: DEBUG
+    com.berdachuk.expertmatch.llm: DEBUG
+    com.berdachuk.expertmatch.llm.sgr: DEBUG
+    com.berdachuk.expertmatch.llm.tools: DEBUG
+    com.berdachuk.expertmatch.mcp: DEBUG
+    com.berdachuk.expertmatch.query: DEBUG
+    com.berdachuk.expertmatch.retrieval: DEBUG
+
+    # Enable verbose logging for Spring components
+    org.springframework: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.ai: DEBUG
+    org.springframework.modulith: DEBUG
+
+    # Enable verbose logging for database operations
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.jdbc.core: TRACE
+    org.springframework.transaction: DEBUG
+
+    # Enable verbose logging for web requests
+    # Suppress DEBUG logs for Tomcat connection handling (EOFException on client disconnect is normal)
+    org.apache.coyote.http11: INFO  # Changed from DEBUG to suppress harmless connection close messages
+    org.apache.tomcat.util.net: INFO  # Suppress connection-level DEBUG messages
+    org.springframework.web.servlet: DEBUG
+
+  pattern:
+    # More detailed console logging pattern for debugging
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{50}] %msg%n"
+
+  # File logging for debug profile
+  file:
+    name: logs/expert-match-debug.log
+    max-size: 50MB
+    max-history: 10
+
+# Additional debug-specific configurations
+spring:
+  # Enable detailed request logging
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          max-age: 0  # Disable caching for debugging
+
+# ExpertMatch specific debug configurations
+expertmatch:
+  # Enable detailed tracing for all components
+  debug:
+    enabled: true
+    trace-requests: true
+    log-payloads: true
+
+  # More verbose output for LLM operations
+  llm:
+    log-prompts: true
+    log-responses: true
+
+  # Detailed logging for retrieval operations
+  retrieval:
+    log-queries: true
+    log-results: true
+    log-timings: true
+
+  # Detailed logging for SGR operations
+  sgr:
+    log-schemas: true
+    log-validation: true

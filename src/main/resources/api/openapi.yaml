@@ -1,0 +1,1568 @@
+openapi: 3.0.3
+info:
+  title: ExpertMatch API
+  version: 1.0.0
+  description: |
+    GraphRAG-powered expert discovery and matching service for RFPs and team formation.
+    This API enables automatic client generation for frontend applications using OpenAPI generators.
+  contact:
+    name: API Support
+    email: api-support@example.com
+  license:
+    name: Proprietary
+    url: https://example.com/license
+
+servers:
+  - url: ""
+    description: Current Server (auto-detected)
+  - url: http://localhost:8093
+    description: Local Development Server
+  - url: http://192.168.0.73:8093
+    description: Remote Development Server
+  - url: https://api.expertmatch.com
+    description: Production Server
+
+# Security: Authentication and authorization are handled by Spring Gateway.
+# Spring Gateway validates JWT tokens and populates user information in HTTP headers:
+# - X-User-Id: User identifier (required)
+# - X-User-Roles: Comma-separated list of roles (optional, e.g., "ROLE_USER,ROLE_ADMIN")
+# - X-User-Email: User email address (optional)
+
+tags:
+  - name: Query
+    description: Expert discovery query processing endpoints
+  - name: Query Streaming
+    description: Server-Sent Events (SSE) streaming query endpoints
+  - name: Chat Management
+    description: Chat CRUD operations and conversation history
+  - name: Test Data
+    description: Test data generation endpoints (Admin only)
+  - name: Ingest
+    description: Data ingestion endpoints for expert profiles (Admin only)
+  - name: System
+    description: System health and metrics endpoints
+  - name: MCP Server
+    description: Model Context Protocol server for AI assistant integration
+
+components:
+  parameters:
+    X-User-Id:
+      name: X-User-Id
+      in: header
+      required: false
+      description: User identifier populated by Spring Gateway after authentication. If not provided, anonymous user will be used.
+      schema:
+        type: string
+        default: "anonymous-user"
+        example: "user-123"
+    X-User-Roles:
+      name: X-User-Roles
+      in: header
+      required: false
+      description: Comma-separated list of user roles populated by Spring Gateway
+      schema:
+        type: string
+        example: "ROLE_USER,ROLE_ADMIN"
+    X-User-Email:
+      name: X-User-Email
+      in: header
+      required: false
+      description: User email address populated by Spring Gateway
+      schema:
+        type: string
+        example: "user@example.com"
+
+  schemas:
+    # Query-related schemas
+    QueryRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: Natural language query describing expert requirements
+          example: "Looking for experts in Java, Spring Boot, and AWS"
+          maxLength: 5000
+        chatId:
+          type: string
+          description: Optional chat ID for conversation context (24-character hexadecimal string)
+          example: "507f1f77bcf86cd799439011"
+          pattern: "^[0-9a-fA-F]{24}$"
+          minLength: 24
+          maxLength: 24
+        options:
+          $ref: '#/components/schemas/QueryOptions'
+
+    QueryOptions:
+      type: object
+      properties:
+        maxResults:
+          type: integer
+          description: Maximum number of results to return (1-100)
+          example: 10
+          minimum: 1
+          maximum: 100
+          default: 10
+        minConfidence:
+          type: number
+          format: double
+          description: Minimum confidence score (0.0-1.0)
+          example: 0.7
+          minimum: 0.0
+          maximum: 1.0
+          default: 0.7
+        includeSources:
+          type: boolean
+          description: Include source citations in response
+          example: true
+          default: true
+        includeEntities:
+          type: boolean
+          description: Include extracted entities in response
+          example: true
+          default: true
+        rerank:
+          type: boolean
+          description: Enable semantic reranking
+          example: true
+          default: true
+        deepResearch:
+          type: boolean
+          description: Enable deep research SGR pattern
+          example: false
+          default: false
+        useCascadePattern:
+          type: boolean
+          description: Enable Cascade pattern for structured expert evaluation (requires exactly 1 expert result)
+          example: false
+          default: false
+        useRoutingPattern:
+          type: boolean
+          description: Enable Routing pattern for LLM-based query classification
+          example: false
+          default: false
+        useCyclePattern:
+          type: boolean
+          description: Enable Cycle pattern for multiple expert evaluations (requires multiple expert results)
+          example: false
+          default: false
+        includeExecutionTrace:
+          type: boolean
+          description: Include execution trace in response (step-by-step processing details with LLM models and token usage)
+          example: false
+          default: false
+
+    QueryExample:
+      type: object
+      required:
+        - category
+        - title
+        - query
+      properties:
+        category:
+          type: string
+          description: Category of the example query (e.g., Basic, Technology, Seniority)
+          example: "Basic"
+        title:
+          type: string
+          description: Title/name of the example query
+          example: "Simple Technology Query"
+        query:
+          type: string
+          description: The example query text
+          example: "Looking for experts in Java and Spring Boot"
+
+    QueryExamplesResponse:
+      type: object
+      required:
+        - examples
+      properties:
+        examples:
+          type: array
+          description: List of example queries
+          items:
+            $ref: '#/components/schemas/QueryExample'
+
+    QueryResponse:
+      type: object
+      required:
+        - answer
+        - confidence
+        - queryId
+      properties:
+        answer:
+          type: string
+          description: Natural language answer with expert recommendations
+          example: "Based on your requirements, I found several experts..."
+        experts:
+          type: array
+          description: List of matched experts with detailed information
+          items:
+            $ref: '#/components/schemas/ExpertMatch'
+        sources:
+          type: array
+          description: Source citations used in the answer
+          items:
+            $ref: '#/components/schemas/Source'
+        entities:
+          type: array
+          description: Extracted entities from the query
+          items:
+            $ref: '#/components/schemas/Entity'
+        confidence:
+          type: number
+          format: double
+          description: Confidence score for the response (0.0-1.0)
+          example: 0.85
+          minimum: 0.0
+          maximum: 1.0
+        queryId:
+          type: string
+          description: Unique query ID
+          example: "507f1f77bcf86cd799439012"
+        chatId:
+          type: string
+          description: Chat ID used for context
+          example: "507f1f77bcf86cd799439011"
+        messageId:
+          type: string
+          description: Message ID for this response
+          example: "507f1f77bcf86cd799439013"
+        processingTimeMs:
+          type: integer
+          format: int64
+          description: Processing time in milliseconds
+          example: 1234
+        summary:
+          $ref: '#/components/schemas/MatchSummary'
+        executionTrace:
+          $ref: '#/components/schemas/ExecutionTrace'
+          description: Step-by-step execution trace (only included if includeExecutionTrace=true)
+
+    ExpertMatch:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Expert ID
+        name:
+          type: string
+          description: Expert name
+        email:
+          type: string
+          description: Expert email
+        seniority:
+          type: string
+          description: Seniority level (e.g., A3, A4, A5)
+        language:
+          $ref: '#/components/schemas/LanguageProficiency'
+        skillMatch:
+          $ref: '#/components/schemas/SkillMatch'
+        matchedSkills:
+          $ref: '#/components/schemas/MatchedSkills'
+        relevantProjects:
+          type: array
+          description: Relevant projects
+          items:
+            $ref: '#/components/schemas/RelevantProject'
+        experience:
+          $ref: '#/components/schemas/Experience'
+        relevanceScore:
+          type: number
+          format: double
+          description: Relevance score (0-1)
+        availability:
+          type: string
+          description: Availability status
+
+    SkillMatch:
+      type: object
+      properties:
+        mustHaveMatched:
+          type: integer
+          description: Number of must-have skills matched
+        mustHaveTotal:
+          type: integer
+          description: Total number of must-have skills required
+        niceToHaveMatched:
+          type: integer
+          description: Number of nice-to-have skills matched
+        niceToHaveTotal:
+          type: integer
+          description: Total number of nice-to-have skills
+        matchScore:
+          type: number
+          format: double
+          description: Overall match score (0-1)
+
+    MatchedSkills:
+      type: object
+      properties:
+        mustHave:
+          type: array
+          description: List of matched must-have skills
+          items:
+            type: string
+        niceToHave:
+          type: array
+          description: List of matched nice-to-have skills
+          items:
+            type: string
+
+    RelevantProject:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Project name
+        technologies:
+          type: array
+          description: Technologies used in project
+          items:
+            type: string
+        role:
+          type: string
+          description: Role in project
+        duration:
+          type: string
+          description: Project duration
+
+    Experience:
+      type: object
+      properties:
+        etlPipelines:
+          type: boolean
+          description: Has ETL pipeline experience
+        highPerformanceServices:
+          type: boolean
+          description: Has high-performance services experience
+        systemArchitecture:
+          type: boolean
+          description: Has system architecture experience
+        monitoring:
+          type: boolean
+          description: Has monitoring/observability experience
+        onCall:
+          type: boolean
+          description: Has on-call rotation experience
+
+    LanguageProficiency:
+      type: object
+      properties:
+        english:
+          type: string
+          description: English proficiency level (e.g., B2+)
+
+    MatchSummary:
+      type: object
+      properties:
+        totalExpertsFound:
+          type: integer
+          description: Total number of experts found
+        perfectMatches:
+          type: integer
+          description: Number of perfect matches (matchScore >= 0.9)
+        goodMatches:
+          type: integer
+          description: Number of good matches (0.7 <= matchScore < 0.9)
+        partialMatches:
+          type: integer
+          description: Number of partial matches (matchScore < 0.7)
+
+    ExecutionTrace:
+      type: object
+      description: Step-by-step execution trace showing internal processing details
+      properties:
+        steps:
+          type: array
+          description: List of execution steps
+          items:
+            $ref: '#/components/schemas/ExecutionStep'
+        totalDurationMs:
+          type: integer
+          format: int64
+          description: Total processing duration in milliseconds
+          example: 2402
+        totalTokenUsage:
+          $ref: '#/components/schemas/TokenUsage'
+          description: Aggregated token usage across all LLM steps
+
+    ExecutionStep:
+      type: object
+      description: Individual execution step with tracking information
+      properties:
+        name:
+          type: string
+          description: Step name
+          example: "Parse Query"
+        service:
+          type: string
+          description: Service that executed the step
+          example: "QueryParser"
+        method:
+          type: string
+          description: Method called
+          example: "parse"
+        durationMs:
+          type: integer
+          format: int64
+          description: Duration in milliseconds
+          example: 234
+        status:
+          type: string
+          enum: [ SUCCESS, FAILED, SKIPPED ]
+          description: Step status
+          example: "SUCCESS"
+        inputSummary:
+          type: string
+          description: Input summary
+          example: "Query: Find Java experts"
+        outputSummary:
+          type: string
+          description: Output summary
+          example: "Intent: expert_search, Skills: [Java]"
+        llmModel:
+          type: string
+          nullable: true
+          description: LLM model used (null if no LLM)
+          example: "OllamaChatModel (qwen3:4b-instruct-2507-q4_K_M)"
+        tokenUsage:
+          $ref: '#/components/schemas/TokenUsage'
+          nullable: true
+          description: Token usage (null if no LLM or usage not available)
+
+    TokenUsage:
+      type: object
+      description: Token usage information for LLM calls
+      properties:
+        inputTokens:
+          type: integer
+          nullable: true
+          description: Input/prompt tokens
+          example: 45
+        outputTokens:
+          type: integer
+          nullable: true
+          description: Output/completion tokens
+          example: 12
+        totalTokens:
+          type: integer
+          nullable: true
+          description: Total tokens (input + output)
+          example: 57
+
+    Source:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [ expert, project, document ]
+          description: Source type
+        id:
+          type: string
+          description: Source ID
+        title:
+          type: string
+          description: Source title
+        relevanceScore:
+          type: number
+          format: double
+          description: Relevance score
+        metadata:
+          type: object
+          description: Additional metadata
+          additionalProperties: true
+
+    Entity:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [ person, organization, technology, project, domain ]
+          description: Entity type
+        name:
+          type: string
+          description: Entity name
+        id:
+          type: string
+          description: Entity ID
+
+    # Chat-related schemas
+    Chat:
+      type: object
+      required:
+        - id
+        - userId
+        - name
+        - isDefault
+        - createdAt
+        - updatedAt
+        - lastActivityAt
+        - messageCount
+      properties:
+        id:
+          type: string
+          description: Chat ID (24-character hexadecimal string)
+          example: "507f1f77bcf86cd799439011"
+        userId:
+          type: string
+          description: User ID who owns the chat
+        name:
+          type: string
+          description: Chat name
+          example: "My Chat"
+        isDefault:
+          type: boolean
+          description: Whether this is the user's default chat
+        createdAt:
+          type: string
+          format: date-time
+          description: Chat creation timestamp (ISO 8601)
+        updatedAt:
+          type: string
+          format: date-time
+          description: Chat last update timestamp (ISO 8601)
+        lastActivityAt:
+          type: string
+          format: date-time
+          description: Last activity timestamp (ISO 8601)
+        messageCount:
+          type: integer
+          description: Number of messages in the chat
+
+    CreateChatRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Optional chat name. If not provided, a default name will be generated.
+          example: "My New Chat"
+
+    UpdateChatRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: New chat name
+          example: "Updated Chat Name"
+
+    ChatListResponse:
+      type: object
+      required:
+        - chats
+        - total
+      properties:
+        chats:
+          type: array
+          description: List of chats
+          items:
+            $ref: '#/components/schemas/Chat'
+        total:
+          type: integer
+          description: Total number of chats
+
+    ConversationMessage:
+      type: object
+      required:
+        - id
+        - chatId
+        - messageType
+        - role
+        - content
+        - sequenceNumber
+        - createdAt
+      properties:
+        id:
+          type: string
+          description: Message ID
+        chatId:
+          type: string
+          description: Chat ID this message belongs to
+        messageType:
+          type: string
+          enum: [ user, assistant, system ]
+          description: Message type
+        role:
+          type: string
+          description: Message role (user, assistant, system)
+        content:
+          type: string
+          description: Message content
+        sequenceNumber:
+          type: integer
+          description: Message sequence number in the conversation
+        tokensUsed:
+          type: integer
+          nullable: true
+          description: Number of tokens used (null for user messages)
+        createdAt:
+          type: string
+          format: date-time
+          description: Message creation timestamp (ISO 8601)
+
+    PageInfo:
+      type: object
+      required:
+        - number
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        number:
+          type: integer
+          description: Current page number (0-indexed)
+        size:
+          type: integer
+          description: Page size
+        totalElements:
+          type: integer
+          description: Total number of elements
+        totalPages:
+          type: integer
+          description: Total number of pages
+
+    ConversationHistoryResponse:
+      type: object
+      required:
+        - chatId
+        - messages
+        - page
+      properties:
+        chatId:
+          type: string
+          description: Chat ID
+        messages:
+          type: array
+          description: List of conversation messages
+          items:
+            $ref: '#/components/schemas/ConversationMessage'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+
+    DeleteChatResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          description: Whether the deletion was successful
+        message:
+          type: string
+          description: Response message
+
+    # Ingestion-related schemas
+    TestDataSizeResponse:
+      type: object
+      required:
+        - success
+        - message
+        - size
+      properties:
+        success:
+          type: boolean
+          description: Whether the operation was successful
+        message:
+          type: string
+          description: Operation message
+        size:
+          type: string
+          enum: [ tiny, small, medium, large, huge ]
+          description: Dataset size that was generated
+
+    SuccessResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          description: Whether the operation was successful
+        message:
+          type: string
+          description: Operation message
+
+    IngestionResult:
+      type: object
+      required:
+        - totalProfiles
+        - successCount
+        - errorCount
+        - results
+        - sourceName
+      properties:
+        totalProfiles:
+          type: integer
+          description: Total number of profiles processed
+          example: 10
+        successCount:
+          type: integer
+          description: Number of successfully processed profiles
+          example: 9
+        errorCount:
+          type: integer
+          description: Number of profiles that failed to process
+          example: 1
+        results:
+          type: array
+          description: Detailed results for each processed profile
+          items:
+            $ref: '#/components/schemas/ProcessingResult'
+        sourceName:
+          type: string
+          description: Name or path of the source (file or directory)
+          example: "classpath:data"
+
+    ProcessingResult:
+      type: object
+      required:
+        - employeeId
+        - employeeName
+        - success
+        - projectsProcessed
+        - projectsSkipped
+        - projectErrors
+      properties:
+        employeeId:
+          type: string
+          description: Employee ID
+          example: "4000741400013306668"
+        employeeName:
+          type: string
+          description: Employee name
+          example: "John Doe"
+        success:
+          type: boolean
+          description: Whether the profile was processed successfully
+        errorMessage:
+          type: string
+          nullable: true
+          description: Error message if processing failed
+        projectsProcessed:
+          type: integer
+          description: Number of projects successfully processed
+          example: 5
+        projectsSkipped:
+          type: integer
+          description: Number of projects skipped due to errors
+          example: 0
+        projectErrors:
+          type: array
+          description: List of error messages for failed projects
+          items:
+            type: string
+          example: [ ]
+
+    # Error schemas
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type/code
+        message:
+          type: string
+          description: Human-readable error message
+        status:
+          type: integer
+          description: HTTP status code
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp
+        path:
+          type: string
+          description: API path that caused the error
+        details:
+          type: object
+          description: Additional error details
+          additionalProperties: true
+
+paths:
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      description: |
+        Returns comprehensive health status of the service including database, vector store, LLM, and embedding models.
+        Also available at /actuator/health.
+      operationId: health
+      responses:
+        '200':
+          description: Service health status with detailed component checks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: Health status code (UP, DOWN, etc.)
+                  details:
+                    type: object
+                    description: Detailed health information for each component
+                    additionalProperties: true
+                  checkDuration:
+                    type: string
+                    description: Duration of health check in milliseconds
+              example:
+                status: "UP"
+                details:
+                  db:
+                    status: "UP"
+                  vectorStore:
+                    status: "UP"
+                checkDuration: "45ms"
+
+  /metrics:
+    get:
+      tags:
+        - System
+      summary: Service metrics
+      description: |
+        Returns service metrics information.
+        Also available at /actuator/metrics.
+      operationId: metrics
+      responses:
+        '200':
+          description: Service metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  available:
+                    type: boolean
+                    description: Whether metrics are available
+                  message:
+                    type: string
+                    description: Information message
+                  note:
+                    type: string
+                    description: Additional note about metrics
+              example:
+                available: true
+                message: "Metrics available at /actuator/metrics/{metricName}"
+                note: "Use Actuator endpoints for detailed metrics"
+
+  /query:
+    post:
+      tags:
+        - Query
+      summary: Process natural language query
+      description: |
+        Processes a natural language query to discover experts matching project requirements.
+        Uses hybrid GraphRAG retrieval combining vector search, graph traversal, and keyword search.
+        If chatId is not provided, uses or creates the user's default chat for conversation context.
+      operationId: processQuery
+      parameters:
+        - $ref: '#/components/parameters/X-User-Id'
+        - $ref: '#/components/parameters/X-User-Roles'
+        - $ref: '#/components/parameters/X-User-Email'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+            example:
+              query: "Looking for experts in Java, Spring Boot, and AWS"
+              chatId: "507f1f77bcf86cd799439011"
+              options:
+                maxResults: 10
+                minConfidence: 0.7
+                includeSources: true
+                includeEntities: true
+                rerank: true
+                deepResearch: false
+                useCascadePattern: false
+                useRoutingPattern: false
+                useCyclePattern: false
+                includeExecutionTrace: false
+      responses:
+        '200':
+          description: Query processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResponse'
+        '400':
+          description: Invalid request format or validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Chat access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Chat not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: LLM or embedding service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ingestion/json-profiles:
+    post:
+      tags:
+        - Ingest
+      summary: Ingest expert profiles from JSON files
+      description: |
+        Ingests expert profiles from JSON files. Supports both array format (multiple profiles) 
+        and single object format (backward compatible). Handles partial data gracefully with defaults.
+        Requires ADMIN role.
+      operationId: ingestJsonProfiles
+      parameters:
+        - name: directory
+          in: query
+          description: |
+            Directory path containing JSON profile files. Supports classpath (e.g., "classpath:data") 
+            or file system paths. If not specified, defaults to "classpath:data".
+          required: false
+          schema:
+            type: string
+          example: "classpath:data"
+        - name: file
+          in: query
+          description: |
+            Single JSON file path to ingest. Supports classpath (e.g., "classpath:data/profile.json") 
+            or file system paths. If specified, directory parameter is ignored.
+          required: false
+          schema:
+            type: string
+          example: "classpath:data/siarhei-berdachuk-profile.json"
+      responses:
+        '200':
+          description: Ingestion completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionResult'
+        '400':
+          description: Invalid request or JSON parsing error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions (requires ADMIN role)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error during ingestion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /query-stream:
+    post:
+      tags:
+        - Query Streaming
+      summary: Process query with streaming response
+      description: |
+        Processes a natural language query and streams the response using Server-Sent Events (SSE).
+        Emits events at each processing stage: parsing, retrieving, reranking, generating, and complete.
+        If chatId is not provided, uses or creates the user's default chat for conversation context.
+      operationId: processQueryStream
+      parameters:
+        - $ref: '#/components/parameters/X-User-Id'
+        - $ref: '#/components/parameters/X-User-Roles'
+        - $ref: '#/components/parameters/X-User-Email'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+            example:
+              query: "Looking for experts in Java, Spring Boot, and AWS"
+              chatId: "507f1f77bcf86cd799439011"
+              options:
+                maxResults: 10
+                minConfidence: 0.7
+                includeSources: true
+                includeEntities: true
+                rerank: true
+                deepResearch: false
+                useCascadePattern: false
+                useRoutingPattern: false
+                useCyclePattern: false
+                includeExecutionTrace: false
+      responses:
+        '200':
+          description: Query processing stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                format: binary
+                description: Server-Sent Events stream with query processing updates
+        '400':
+          description: Invalid request format or validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing or invalid JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Chat access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Chat not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: LLM or embedding service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /query/examples:
+    get:
+      tags:
+        - Query
+      summary: Get example queries
+      description: |
+        Returns a list of example queries organized by categories.
+        Helps new users understand how to formulate queries for expert discovery.
+      operationId: getQueryExamples
+      responses:
+        '200':
+          description: List of example queries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryExamplesResponse'
+              example:
+                examples:
+                  - category: "Basic"
+                    title: "Simple Technology Query"
+                    query: "Looking for experts in Java and Spring Boot"
+                  - category: "Technology"
+                    title: "Backend Technologies"
+                    query: "Find Java developers with Spring Boot, Hibernate, and PostgreSQL experience"
+                  - category: "Seniority"
+                    title: "Senior Level"
+                    query: "Looking for senior Java developers with 10+ years of experience"
+
+  /chats:
+    post:
+      tags:
+        - Chat Management
+      summary: Create a new chat
+      description: |
+        Creates a new chat for the authenticated user.
+        If name is not provided, a default name will be generated.
+      operationId: createChat
+      parameters:
+        - $ref: '#/components/parameters/X-User-Id'
+        - $ref: '#/components/parameters/X-User-Roles'
+        - $ref: '#/components/parameters/X-User-Email'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChatRequest'
+      responses:
+        '201':
+          description: Chat created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chat'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - Chat Management
+      summary: List all chats
+      description: Returns all chats for the authenticated user, including the default chat.
+      operationId: listChats
+      parameters:
+        - $ref: '#/components/parameters/X-User-Id'
+        - $ref: '#/components/parameters/X-User-Roles'
+        - $ref: '#/components/parameters/X-User-Email'
+      responses:
+        '200':
+          description: List of chats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /chats/{chatId}:
+    get:
+      tags:
+        - Chat Management
+      summary: Get chat details
+      description: |
+        Returns details for a specific chat.
+        Verifies that the chat belongs to the authenticated user.
+      operationId: getChat
+      parameters:
+        - $ref: '#/components/parameters/X-User-Id'
+        - $ref: '#/components/parameters/X-User-Roles'
+        - $ref: '#/components/parameters/X-User-Email'
+        - name: chatId
+          in: path
+          required: true
+          description: 24-character hexadecimal chat ID
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        '200':
+          description: Chat details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chat'
+        '400':
+          description: Invalid chat ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Access denied to chat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Chat not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      tags:
+        - Chat Management
+      summary: Update chat
+      description: |
+        Updates a chat, typically to rename it.
+        Verifies that the chat belongs to the authenticated user.
+      operationId: updateChat
+      parameters:
+        - $ref: '#/components/parameters/X-User-Id'
+        - $ref: '#/components/parameters/X-User-Roles'
+        - $ref: '#/components/parameters/X-User-Email'
+        - name: chatId
+          in: path
+          required: true
+          description: 24-character hexadecimal chat ID
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+          example: "507f1f77bcf86cd799439011"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateChatRequest'
+      responses:
+        '200':
+          description: Chat updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chat'
+        '400':
+          description: Invalid chat ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Access denied to chat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Chat not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Chat Management
+      summary: Delete a chat
+      description: |
+        Deletes a chat. Cannot delete the default chat.
+        Verifies that the chat belongs to the authenticated user.
+      operationId: deleteChat
+      parameters:
+        - $ref: '#/components/parameters/X-User-Id'
+        - $ref: '#/components/parameters/X-User-Roles'
+        - $ref: '#/components/parameters/X-User-Email'
+        - name: chatId
+          in: path
+          required: true
+          description: 24-character hexadecimal chat ID
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        '200':
+          description: Chat deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteChatResponse'
+        '400':
+          description: Invalid chat ID format or attempting to delete default chat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Access denied to chat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Chat not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /chats/{chatId}/history:
+    get:
+      tags:
+        - Chat Management
+      summary: Get conversation history
+      description: |
+        Returns paginated conversation history for a chat.
+        Verifies that the chat belongs to the authenticated user.
+      operationId: getHistory
+      parameters:
+        - $ref: '#/components/parameters/X-User-Id'
+        - $ref: '#/components/parameters/X-User-Roles'
+        - $ref: '#/components/parameters/X-User-Email'
+        - name: chatId
+          in: path
+          required: true
+          description: 24-character hexadecimal chat ID
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+          example: "507f1f77bcf86cd799439011"
+        - name: page
+          in: query
+          required: false
+          description: Page number (0-indexed)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          example: 0
+        - name: size
+          in: query
+          required: false
+          description: Page size (1-100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 20
+        - name: sort
+          in: query
+          required: false
+          description: Sort criteria (e.g., 'sequence_number,asc')
+          schema:
+            type: string
+            default: "sequence_number,asc"
+          example: "sequence_number,asc"
+      responses:
+        '200':
+          description: Conversation history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationHistoryResponse'
+        '400':
+          description: Invalid chat ID format or pagination parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Access denied to chat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Chat not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /test-data:
+    post:
+      tags:
+        - Test Data
+      summary: Generate test data
+      description: |
+        Generates synthetic test data using Datafaker. Requires ADMIN role.
+        Size options: 'tiny' (5 employees), 'small' (50), 'medium' (500), 
+        'large' (2,000), or 'huge' (50,000).
+      operationId: generateTestData
+      parameters:
+        - name: size
+          in: query
+          required: false
+          description: |
+            Predefined dataset size. Options:
+            - tiny: 5 employees, 5 projects, ~15 work experiences
+            - small: 50 employees, 100 projects, ~250 work experiences
+            - medium: 500 employees, 1,000 projects, ~4,000 work experiences
+            - large: 2,000 employees, 4,000 projects, ~20,000 work experiences
+            - huge: 50,000 employees, 100,000 projects, ~750,000 work experiences
+          schema:
+            type: string
+            enum: [ tiny, small, medium, large, huge ]
+            default: small
+          example: small
+        - name: clear
+          in: query
+          required: false
+          description: |
+            If true, clears all existing test data (employees, work experience, projects, technologies) 
+            before generating new data. Default: false (new data will be appended to existing data).
+          schema:
+            type: boolean
+            default: false
+          example: false
+      responses:
+        '200':
+          description: Test data generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestDataSizeResponse'
+        '400':
+          description: Invalid size parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - ADMIN role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /test-data/embeddings:
+    post:
+      tags:
+        - Test Data
+      summary: Generate embeddings
+      description: |
+        Generates vector embeddings for all work experience records using the configured embedding model.
+        Requires ADMIN role.
+      operationId: generateEmbeddings
+      responses:
+        '200':
+          description: Embeddings generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - ADMIN role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /test-data/graph:
+    post:
+      tags:
+        - Test Data
+      summary: Build graph relationships
+      description: |
+        Builds graph relationships in Apache AGE from existing database data. Requires ADMIN role.
+      operationId: buildGraph
+      responses:
+        '200':
+          description: Graph relationships built successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - ADMIN role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /test-data/complete:
+    post:
+      tags:
+        - Test Data
+      summary: Generate complete dataset
+      description: |
+        Generates complete dataset including test data, embeddings, and graph relationships in one operation.
+        Requires ADMIN role. Size options: 'tiny' (5 employees), 'small' (50), 'medium' (500), 
+        'large' (2,000), or 'huge' (50,000).
+      operationId: generateCompleteDataset
+      parameters:
+        - name: size
+          in: query
+          required: false
+          description: |
+            Predefined dataset size. Options:
+            - tiny: 5 employees, 5 projects, ~15 work experiences
+            - small: 50 employees, 100 projects, ~250 work experiences
+            - medium: 500 employees, 1,000 projects, ~4,000 work experiences
+            - large: 2,000 employees, 4,000 projects, ~20,000 work experiences
+            - huge: 50,000 employees, 100,000 projects, ~750,000 work experiences
+          schema:
+            type: string
+            enum: [ tiny, small, medium, large, huge ]
+            default: small
+          example: small
+        - name: clear
+          in: query
+          required: false
+          description: |
+            If true, clears all existing test data (employees, work experience, projects, technologies) 
+            before generating new data. Default: false (new data will be appended to existing data).
+          schema:
+            type: boolean
+            default: false
+          example: false
+      responses:
+        '200':
+          description: Complete dataset generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestDataSizeResponse'
+        '400':
+          description: Invalid size parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - ADMIN role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

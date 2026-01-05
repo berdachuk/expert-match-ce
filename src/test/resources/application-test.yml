@@ -1,0 +1,78 @@
+spring:
+  application:
+    name: expert-match-test
+
+  # Database configuration will be provided by Testcontainers via @DynamicPropertySource
+  # No static datasource configuration needed
+
+  # HikariCP connection pool configuration for tests
+  datasource:
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 5  # Reduced to avoid keeping too many connections that might get closed
+      connection-timeout: 30000
+      idle-timeout: 30000  # 30 seconds - close idle connections quickly
+      # Very short max-lifetime for tests to avoid validation failures with Testcontainers
+      # Connections may be closed by container, so use very short lifetime
+      max-lifetime: 60000  # 60 seconds - connections retire before container closes them
+      validation-timeout: 3000  # 3 seconds for connection validation
+      # Test query to validate connections before use
+      connection-test-query: SELECT 1
+      leak-detection-threshold: 60000
+      # Close idle connections more aggressively
+      keepalive-time: 20000  # 20 seconds - keep connections alive more frequently
+
+  # Enable Flyway for tests - use same migrations as production
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true  # Validation enabled - database schema is recreated from scratch before each test run
+    schemas: expertmatch
+    default-schema: expertmatch
+
+  # Security Configuration
+  # Authentication and authorization are handled by Spring Gateway in production.
+  # For tests, headers can be set manually in test requests.
+
+  # Disable AI services for tests - provide dummy values to prevent auto-configuration errors
+  ai:
+    openai:
+      enabled: false
+      api-key: test-key
+      base-url: http://localhost:9999
+    ollama:
+      enabled: false
+      base-url: http://localhost:11434
+      # Disable reranking to prevent real LLM calls
+      reranking:
+        options:
+          model: ""
+
+# ExpertMatch API Configuration for tests
+# WebController uses API client to call REST endpoints
+# In tests, this will be overridden by @LocalServerPort in WebControllerIT
+# Default value for other tests
+expertmatch:
+  api:
+    base-url: http://localhost:${server.port:8093}
+
+  # Explicitly exclude Spring AI auto-configuration classes to prevent real LLM models from being created
+  # This ensures that even tests with their own @SpringBootTest use mocks
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.model.ollama.autoconfigure.OllamaChatAutoConfiguration
+      - org.springframework.ai.model.ollama.autoconfigure.OllamaEmbeddingAutoConfiguration
+      - org.springframework.ai.model.ollama.autoconfigure.OllamaApiAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration
+
+# Logging
+logging:
+  level:
+    com.berdachuk.expertmatch: INFO
+    org.springframework: WARN
+    # Suppress HikariCP connection validation warnings in tests
+    # These occur when Testcontainers closes connections, but are harmless
+    com.zaxxer.hikari.pool.PoolBase: ERROR
+

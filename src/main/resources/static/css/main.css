@@ -1,0 +1,407 @@
+/* ExpertMatch UI Styles with EPAM UUI Theme */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--uui-app-bg, #f8f9fa);
+    color: var(--uui-text-primary, #1F1F1F);
+}
+
+.navbar {
+    min-height: 60px;
+}
+
+/* Ensure navbar text is white */
+.navbar-dark h1,
+.navbar-dark h2,
+.navbar-dark h3,
+.navbar-dark h4,
+.navbar-dark h5,
+.navbar-dark h6,
+.navbar-dark p,
+.navbar-dark span,
+.navbar-dark .text-white {
+    color: var(--uui-neutral-0, #FFFFFF) !important;
+}
+
+#chatMessages {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+.list-group-item {
+    cursor: pointer;
+}
+
+.list-group-item:hover {
+    background-color: var(--uui-control-bg-hover, #f8f9fa);
+}
+
+.list-group-item.active {
+    background-color: var(--uui-secondary-50, #8C8C8C);
+    border-color: var(--uui-secondary-50, #8C8C8C);
+    color: var(--uui-neutral-0, #FFFFFF);
+}
+
+/* Chat selector timestamp - white when active */
+.list-group-item.active .text-muted,
+.list-group-item.active small {
+    color: var(--uui-neutral-0, #FFFFFF) !important;
+}
+
+#results {
+    min-height: 200px;
+}
+
+.expert-card {
+    border: 1px solid var(--uui-divider, #E8E8E8);
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background-color: var(--uui-surface-main, #FFFFFF);
+}
+
+.expert-card h5 {
+    color: var(--uui-primary-50, #009ECC);
+    margin-bottom: 0.5rem;
+}
+
+.expert-card .expert-info {
+    color: var(--uui-text-secondary, #595959);
+    font-size: 0.875rem;
+}
+
+.query-result {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.2;
+}
+
+/* Markdown Content Styling - Compact */
+.markdown-content {
+    line-height: 1.2;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+    margin-top: 0.5em;
+    margin-bottom: 0.25em;
+    font-weight: 600;
+}
+
+.markdown-content h1 {
+    font-size: 1.75em;
+}
+
+.markdown-content h2 {
+    font-size: 1.5em;
+}
+
+.markdown-content h3 {
+    font-size: 1.25em;
+}
+
+.markdown-content h4 {
+    font-size: 1.1em;
+}
+
+.markdown-content h5 {
+    font-size: 1em;
+}
+
+.markdown-content h6 {
+    font-size: 0.95em;
+}
+
+.markdown-content p {
+    margin-bottom: 0.3em;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+    margin-bottom: 0.3em;
+    padding-left: 1.5em;
+}
+
+.markdown-content li {
+    margin-bottom: 0.15em;
+}
+
+.markdown-content code {
+    background-color: var(--uui-neutral-10, #F5F5F5);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    color: var(--uui-text-primary, #1F1F1F);
+}
+
+.markdown-content pre {
+    background-color: var(--uui-neutral-10, #F5F5F5);
+    padding: 0.75em;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin-bottom: 0.5em;
+    border: 1px solid var(--uui-divider, #E8E8E8);
+}
+
+.markdown-content pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+.markdown-content blockquote {
+    border-left: 4px solid var(--uui-primary-50, #009ECC);
+    padding-left: 0.75em;
+    margin-left: 0;
+    margin-bottom: 0.3em;
+    color: var(--uui-text-secondary, #595959);
+    font-style: italic;
+}
+
+.markdown-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0.3em;
+}
+
+.markdown-content table th,
+.markdown-content table td {
+    border: 1px solid var(--uui-divider, #E8E8E8);
+    padding: 0.5em;
+    text-align: left;
+}
+
+.markdown-content table th {
+    background-color: var(--uui-neutral-10, #F5F5F5);
+    font-weight: 600;
+}
+
+.markdown-content a {
+    color: var(--uui-link, #009ECC);
+    text-decoration: none;
+}
+
+.markdown-content a:hover {
+    color: var(--uui-link-hover, #0086AD);
+    text-decoration: underline;
+}
+
+.markdown-content strong {
+    font-weight: 600;
+}
+
+.markdown-content em {
+    font-style: italic;
+}
+
+/* Markdown in chat messages */
+#chatMessages .markdown-content {
+    max-width: 80%;
+    text-align: left;
+}
+
+#chatMessages .text-end .markdown-content {
+    text-align: right;
+}
+
+#chatMessages .bg-primary .markdown-content {
+    color: white;
+}
+
+#chatMessages .bg-primary .markdown-content a {
+    color: var(--uui-warning-20, #FFE58F);
+}
+
+#chatMessages .bg-primary .markdown-content code {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* Query Panel Scrolling */
+#queryPanel {
+    height: 100%;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#queryForm {
+    flex-shrink: 0;
+}
+
+#queryPanel::-webkit-scrollbar {
+    width: 8px;
+}
+
+#queryPanel::-webkit-scrollbar-track {
+    background: var(--uui-neutral-10, #F5F5F5);
+    border-radius: 4px;
+}
+
+#queryPanel::-webkit-scrollbar-thumb {
+    background: var(--uui-neutral-40, #BFBFBF);
+    border-radius: 4px;
+}
+
+#queryPanel::-webkit-scrollbar-thumb:hover {
+    background: var(--uui-neutral-50, #8C8C8C);
+}
+
+/* Results Panel Scrolling */
+#results {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#results::-webkit-scrollbar {
+    width: 8px;
+}
+
+#results::-webkit-scrollbar-track {
+    background: var(--uui-neutral-10, #F5F5F5);
+    border-radius: 4px;
+}
+
+#results::-webkit-scrollbar-thumb {
+    background: var(--uui-neutral-40, #BFBFBF);
+    border-radius: 4px;
+}
+
+#results::-webkit-scrollbar-thumb:hover {
+    background: var(--uui-neutral-50, #8C8C8C);
+}
+
+/* Chat Delete Button */
+.chat-delete-btn {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    line-height: 1;
+    font-size: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-delete-btn:hover {
+    background-color: var(--uui-error-50, #FF4D4F);
+    border-color: var(--uui-error-50, #FF4D4F);
+    color: var(--uui-neutral-0, #FFFFFF);
+}
+
+.chat-item:hover .chat-delete-btn {
+    opacity: 1;
+}
+
+.chat-delete-btn {
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+/* Progress Indicator */
+#progressIndicator {
+    min-height: 200px;
+}
+
+#progressIndicator .spinner-border {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3em;
+    border-color: var(--uui-primary-50, #009ECC);
+    border-right-color: transparent;
+}
+
+#progressIndicator .progress {
+    max-width: 300px;
+    margin: 1rem auto 0;
+}
+
+#progressIndicator .progress-bar {
+    background-color: var(--uui-primary-50, #009ECC);
+}
+
+/* Spinner color override for all spinners */
+.spinner-border.text-primary {
+    border-color: var(--uui-primary-50, #009ECC);
+    border-right-color: transparent;
+}
+
+/* Progress bar color override */
+.progress-bar {
+    background-color: var(--uui-primary-50, #009ECC);
+}
+
+#examplesLoading .spinner-border {
+    border-color: var(--uui-primary-50, #009ECC);
+    border-right-color: transparent;
+}
+
+/* Chat History Panel Container */
+.chat-history-container {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Chat History Panel */
+.chat-history-panel {
+    background-color: var(--uui-app-bg, #FAFAFA);
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.chat-history-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-history-panel::-webkit-scrollbar-track {
+    background: var(--uui-neutral-10, #F5F5F5);
+    border-radius: 3px;
+}
+
+.chat-history-panel::-webkit-scrollbar-thumb {
+    background: var(--uui-neutral-40, #BFBFBF);
+    border-radius: 3px;
+}
+
+.chat-history-panel::-webkit-scrollbar-thumb:hover {
+    background: var(--uui-neutral-50, #8C8C8C);
+}
+
+.chat-history-panel .markdown-content {
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.chat-history-panel .text-end .markdown-content {
+    text-align: right;
+}
+
+.chat-history-panel .bg-primary .markdown-content {
+    color: white;
+}
+
+.chat-history-panel .bg-primary .markdown-content a {
+    color: #ffeb3b;
+}
+
+.chat-history-panel .bg-primary .markdown-content code {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+

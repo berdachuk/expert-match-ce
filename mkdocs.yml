@@ -1,0 +1,136 @@
+site_name: ExpertMatch Documentation
+site_description: ExpertMatch - GraphRAG-Powered Expert Discovery for RFPs and Team Formation
+site_author: ExpertMatch Team
+site_url: https://expertmatch.example.com
+
+# Repository
+repo_name: expert-match
+repo_url: https://github.com/your-org/expert-match
+edit_uri: edit/main/docs/
+
+# Copyright
+copyright: Copyright &copy; 2025 ExpertMatch Team
+
+# Theme
+theme:
+  name: material
+  palette:
+    # Light mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.annotate
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+# Plugins
+plugins:
+  - search:
+      lang: en
+
+# Extensions
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - plantuml_markdown:
+      server: https://www.plantuml.com/plantuml
+      cachedir: .plantuml-cache
+      format: svg
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+# Navigation
+nav:
+  - Home: index.md
+  - Overview:
+      - Product Overview: ExpertMatch.md
+      - SGR Benefits: ExpertMatch-SGR-Benefits.md
+      - Deep Research Benefits: ExpertMatch-Deep-Research-Benefits.md
+      - PgVector Benefits: ExpertMatch-PgVector-Benefits.md
+      - Apache AGE Benefits: ExpertMatch-Apache-AGE-Benefits.md
+      - Cypher & Apache AGE Tutorial: CYPHER_APACHE_AGE_TUTORIAL.md
+  - Architecture:
+      - Expert Search Flow: ExpertMatch-Expert-Search-Flow.md
+      - Query Processing Flow: QUERY_PROCESSING_FLOW_DETAILED.md
+      - SGR Usage: ExpertMatch-SGR-Usage.md
+      - Deep Research Architecture: DEEP_RESEARCH_ARCHITECTURE.md
+      - Smart Tool Selection: SMART_TOOL_SELECTION.md
+      - Conversation History Management: CONVERSATION_HISTORY_MANAGEMENT.md
+      - Graph Improvements Analysis: GRAPH_IMPROVEMENTS_ANALYSIS.md
+  - Development:
+      - Development Guide: DEVELOPMENT_GUIDE.md
+      - Remote SSH Setup: REMOTE_SSH_SETUP.md
+      - Coding Rules: CODING_RULES.md
+      - Code Rules Compliance Report: CODE_RULES_COMPLIANCE_REPORT.md
+      - Testing: TESTING.md
+      - Test Data Generation Flow: TEST_DATA_GENERATION_FLOW.md
+      - Improvements Plan: IMPROVEMENTS_PLAN.md
+      - Improvements Implementation Summary: IMPROVEMENTS_IMPLEMENTATION_SUMMARY.md
+      - MkDocs Setup: MKDOCS_SETUP.md
+      - MkDocs Readme: README_MKDOCS.md
+      - PlantUML Usage: PLANTUML_USAGE.md
+  - Quick Start:
+      - Quick Start Guide: QUICK_START.md
+      - Quick Start (Remote): QUICK_START_REMOTE.md
+  - Configuration:
+      - AI Provider Configuration: AI_PROVIDER_CONFIGURATION.md
+      - Citus Configuration: CITUS_CONFIGURATION.md
+      - Embedding Model Recommendation: EMBEDDING_MODEL_RECOMMENDATION.md
+      - Reranking Models Report: RERANKING_MODELS_REPORT.md
+      - Deep Research Configuration Review: DEEP_RESEARCH_CONFIGURATION_REVIEW.md
+  - API:
+      - API Endpoints: API_ENDPOINTS.md
+      - Ingestion Endpoints Analysis: INGESTION_ENDPOINTS_ANALYSIS.md
+      - Query Examples: QUERY_EXAMPLES.md
+      - Authorization Guide: AUTHORIZATION_GUIDE.md
+      - Swagger UI Testing Guide: SWAGGER_UI_TESTING_GUIDE.md
+      - Endpoint Naming Proposal: ENDPOINT_NAMING_PROPOSAL.md
+
+# Extra
+extra:
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-org/expert-match
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+
+# Custom CSS for full-width content
+extra_css:
+  - stylesheets/extra.css
+

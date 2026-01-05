@@ -1,0 +1,34 @@
+/* Custom styles for full-width content in MkDocs Material theme */
+
+/* Remove max-width constraint on main content container */
+.md-main__inner {
+    max-width: 100% !important;
+}
+
+.md-content {
+    max-width: 100% !important;
+}
+
+.md-content__inner {
+    max-width: 100% !important;
+}
+
+/* Ensure content uses full available width */
+.md-grid {
+    max-width: 100% !important;
+}
+
+/* Adjust article container to use full width */
+.md-typeset {
+    max-width: 100% !important;
+}
+
+/* Make sure tables and code blocks can use full width */
+.md-typeset table {
+    width: 100%;
+}
+
+.md-typeset pre {
+    width: 100%;
+}
+

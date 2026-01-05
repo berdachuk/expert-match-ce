@@ -1,0 +1,172 @@
+# ExpertMatch Development Rules
+
+## Test-Driven Development (TDD) Approach
+
+**CRITICAL**: Always follow TDD approach:
+1. **Create test first** - Write the test before implementing the feature
+2. **Run the test** - Verify it fails (red phase)
+3. **Implement the feature** - Write minimal code to make the test pass (green phase)
+4. **Refactor** - Improve code while keeping tests green
+5. **Verify** - Always verify tests and implementation before switching to next task
+
+### TDD Workflow
+- Never skip writing tests
+- Never implement features without tests
+- Always run tests after implementation
+- Fix broken tests before moving to new features
+- Ensure all tests pass before marking task as complete
+
+## Project Context
+
+### ID Formats
+- **External System Entity IDs**: Use external system format - numeric strings
+  - **Employee IDs**: "8760000000000420950" (19-digit numeric string)
+  - **Project IDs**: "4060741400384209073" (19-digit numeric string)
+  - **Customer IDs**: "8009377469709733890" (19-digit numeric string)
+  - **Entity IDs**: "8400000000019736853" (19-digit numeric string)
+  - Database columns: VARCHAR(74) to accommodate external system IDs
+- **Internal IDs**: Use MongoDB-compatible 24-character hexadecimal strings
+  - Chat IDs, conversation IDs, work experience IDs, technology IDs
+  - Database columns: CHAR(24)
+
+### Technology Stack
+- Backend: Spring Boot 3.5.8, Java 21, PostgreSQL 16, PgVector, Apache AGE, Spring AI
+- Frontend: Next.js 14, React 18, TypeScript, EPAM UUI, React Query
+- Testing: JUnit 5, Testcontainers, Mockito
+
+### Naming Conventions
+- JSON/API: camelCase (`chatId`, `messageType`)
+- Database: snake_case (`chat_id`, `created_at`)
+- Employee IDs: Numeric strings from external system
+
+### Development Principles
+1. **API First**: OpenAPI spec drives implementation
+2. **Type Safety**: Auto-generated clients from OpenAPI
+3. **TDD**: Test-driven development - tests first, then implementation
+4. **Modularity**: Spring Modulith (backend), component-driven (frontend)
+
+### Planning and Implementation Strategy
+- **Incremental Testable Steps**: Always propose plans with incremental, testable steps
+- **Step-by-Step Improvement**: Each step should produce a working, testable state of the application
+- **Testability First**: Every step must be testable before moving to the next step
+- **Plan Structure**: When creating implementation plans, structure them so that:
+  1. Each step builds upon the previous step
+  2. Each step results in a runnable, testable application
+  3. Tests can be written and executed after each step
+  4. The application can be verified to work correctly at each stage
+  5. Steps are small enough to be completed and tested independently
+- **No Big Bang**: Avoid plans that require completing multiple features before anything is testable
+- **Continuous Verification**: After each step, verify the application works and tests pass before proceeding
+
+### Database Migrations (MVP)
+- **MVP Rule**: Use only V1 migration script with all required changes consolidated
+- **Single Migration**: All schema changes must be in V1__initial_schema.sql
+- **No Incremental Migrations**: Do not create V2, V3, V4, etc. for MVP
+- **Consolidation**: When making schema changes, update V1 directly instead of creating new migrations
+- **Post-MVP**: After MVP, can use incremental migrations (V2, V3, etc.)
+
+### Database Testing
+- **Always use Testcontainers**: Never use H2 or other in-memory databases for database tests
+- **PostgreSQL with Testcontainers**: All database tests must use Testcontainers with PostgreSQL
+- **Real Database**: Tests should use the same database (PostgreSQL) as production to catch real issues
+- **No H2**: H2 database is not compatible with PostgreSQL-specific features (PgVector, Apache AGE, etc.)
+- **Integration Tests with Real Database**: Always use integration tests with real database in Testcontainers
+- **Don't Mock Database Access**: Never mock database access (DataSource, JdbcTemplate, etc.) - use real database connections
+- **BaseIntegrationTest**: All database-related tests should extend BaseIntegrationTest to get proper Testcontainers setup
+
+### Custom Test Container
+- **Custom Docker Image**: Project uses a custom test container image `expertmatch-postgres-test:latest`
+- **Image Details**: Based on `apache/age:release_PG17_1.6.0` with PgVector 0.8.0 extension added
+- **Build Script**: Use `./scripts/build-test-container.sh` or `docker build -f docker/Dockerfile.test -t expertmatch-postgres-test:latest .`
+- **Image Location**: `docker/Dockerfile.test`
+- **BaseIntegrationTest Configuration**: Uses `DockerImageName.parse("expertmatch-postgres-test:latest")` in static initializer
+- **Container Reuse**: **ENABLED by default** (`withReuse(true)`) for faster test execution
+  - Container reuse is automatically **DISABLED** when `mvn clean` is detected (target directory missing)
+  - After `mvn clean`, tests get a fresh database container
+  - Subsequent test runs reuse the container for faster execution
+  - Configured in `BaseIntegrationTest` (checks for target directory) and `src/test/resources/testcontainers.properties`
+- **Prerequisites**: Custom test container image must be built before running integration tests
+- **Extensions**: Container includes PostgreSQL 17, Apache AGE 1.6.0, and PgVector 0.8.0 pre-configured
+- **Important**: Always build the test container image before running tests: `./scripts/build-test-container.sh`
+- **Test Independence**: `mvn clean test` always starts with a fresh database. Regular `mvn test` reuses containers for speed
+
+## Documentation
+
+### Documentation Location
+- **Documentation Folder**: Use `/home/berdachuk/projects-ai/expert-match-root/expert-match/docs` for all documentation files
+- **Documentation Types**: API guides, setup instructions, Postman collections, authorization guides, etc.
+- **Build Exclusion**: The `docs` folder is excluded from build targets and should not be included in JAR/WAR files
+
+## Code Quality
+- Write clean, maintainable code
+- Follow SOLID principles
+- Use meaningful variable and method names
+- Add comments for complex logic
+- Keep methods small and focused
+
+### Logging
+- **Use Lombok Logging**: Always use Lombok's `@Slf4j` annotation for logging
+- **Never use static logger declarations**: Do not use `private static final Logger logger = LoggerFactory.getLogger(ClassName.class);`
+- **Lombok Pattern**: Use `@Slf4j` annotation on the class, which automatically provides a `log` field
+- **Example**:
+  ```java
+  @Slf4j
+  @Service
+  public class MyService {
+      public void doSomething() {
+          log.info("Doing something");
+      }
+  }
+  ```
+- **Benefits**: Reduces boilerplate, consistent logging pattern across the codebase
+
+### Imports and Class Names
+- **Use Imports Instead of Fully Qualified Names**: Never use fully qualified class names when imports can be used
+- **Invalid**: `java.io.File`, `java.util.List`, `java.time.Duration`
+- **Valid**: `File` (with `import java.io.File;`), `List` (with `import java.util.List;`), `Duration` (with `import java.time.Duration;`)
+- **Exception**: Only use fully qualified names when there's a naming conflict that requires disambiguation
+- **Benefits**: Cleaner, more readable code; standard Java practice
+
+### Error Handling
+- **Never Add Fallbacks**: Do not implement fallback mechanisms that silently handle errors
+- **Fail Fast**: When operations fail, throw exceptions instead of falling back to alternative behavior
+- **Explicit Error Handling**: All errors should be explicitly handled and reported, not hidden by fallback logic
+- **Invalid**: Catching exceptions and using fallback values, alternative parsing methods, or default behaviors
+- **Valid**: Throwing exceptions, returning error responses, or logging errors and failing
+- **Benefits**: Makes errors visible, prevents silent failures, improves debugging and reliability
+
+### Prompt Management
+- **Always Use PromptTemplates and .st Resources**: All LLM prompts must use Spring AI `PromptTemplate` with external `.st` (StringTemplate) files
+- **Template Location**: Store all prompt templates in `src/main/resources/prompts/` directory
+- **Template Format**: Use `.st` file extension for StringTemplate files
+- **Configuration**: Define `PromptTemplate` beans in `PromptTemplateConfig` with `@Qualifier` annotations
+- **Invalid**: Hardcoded prompt strings, `StringBuilder`-based prompt construction, inline prompt text in Java code
+- **Valid**: External `.st` files with `PromptTemplate` beans injected via constructor
+- **Example**:
+  ```java
+  // Template file: src/main/resources/prompts/my-prompt.st
+  // Configuration: PromptTemplateConfig.java
+  @Bean
+  @Qualifier("myPromptTemplate")
+  public PromptTemplate myPromptTemplate(StTemplateRenderer stTemplateRenderer) {
+      return PromptTemplate.builder()
+              .renderer(stTemplateRenderer)
+              .templateResource(new ClassPathResource("/prompts/my-prompt.st"))
+              .build();
+  }
+  
+  // Usage in service
+  private final PromptTemplate myPromptTemplate;
+  
+  public MyService(@Qualifier("myPromptTemplate") PromptTemplate myPromptTemplate) {
+      this.myPromptTemplate = myPromptTemplate;
+  }
+  
+  private String buildPrompt(String variable) {
+      Map<String, Object> variables = new HashMap<>();
+      variables.put("variable", variable);
+      return myPromptTemplate.render(variables);
+  }
+  ```
+- **Benefits**: Centralized prompt management, easier to update prompts without code changes, better separation of concerns, version control for prompts
+

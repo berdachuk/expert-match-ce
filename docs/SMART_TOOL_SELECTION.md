@@ -270,7 +270,7 @@ expertmatch:
 export EXPERTMATCH_TOOLS_SEARCH_ENABLED=true
 mvn spring-boot:run
 
-# Or via application-local.yml
+# Or via application-local.yml.sample
 expertmatch:
   tools:
     search:

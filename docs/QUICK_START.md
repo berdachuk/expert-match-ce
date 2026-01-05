@@ -68,7 +68,7 @@ EMBEDDING_MODEL=qwen3-embedding-8b
 # RERANKING_BASE_URL=http://localhost:11434
 # RERANKING_MODEL=dengcao/Qwen3-Reranker-8B:Q4_K_M
 
-# Example 2: Use OpenAI-compatible API with local Ollama (as in application-local.yml)
+# Example 2: Use OpenAI-compatible API with local Ollama (as in application-local.yml.sample)
 # This configuration uses OpenAI-compatible API format but connects to local Ollama
 # Chat configuration
 # CHAT_PROVIDER=openai
@@ -492,7 +492,7 @@ If you encounter timeout errors during query processing:
 
 1. **Check Server Timeout Configuration**:
    ```yaml
-   # In application-local.yml
+   # In application-local.yml.sample
    server:
      connection-timeout: 300000  # 5 minutes
    ```

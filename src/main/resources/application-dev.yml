@@ -1,6 +1,6 @@
 # Development Configuration with EPAM DIAL
 # This file is gitignored and should be customized for your dev setup
-# 
+#
 # Configuration:
 # - LLM Inference: EPAM DIAL (Azure OpenAI-compatible provider)
 # - Embeddings: EPAM DIAL (Azure OpenAI-compatible provider)
@@ -24,9 +24,9 @@ spring:
       # EPAM DIAL API key (uses AZURE_OPENAI_API_KEY environment variable)
       api-key: ${AZURE_OPENAI_API_KEY:${EPAM_DIAL_API_KEY:}}
       # EPAM DIAL base URL (Azure OpenAI-compatible endpoint)
-      # Based on aist-tool-networking: https://ai-proxy.lab.berdachuk.com
+      # Based on aist-tool-networking: https://ai-proxy.lab.epam.com
       # Spring AI OpenAI client works with Azure OpenAI endpoints
-      base-url: ${AZURE_OPENAI_ENDPOINT:${EPAM_DIAL_BASE_URL:https://ai-proxy.lab.berdachuk.com}}
+      base-url: ${AZURE_OPENAI_ENDPOINT:${EPAM_DIAL_BASE_URL:https://ai-proxy.lab.epam.com}}
       chat:
         options:
           # EPAM DIAL model for LLM inference
@@ -41,7 +41,7 @@ spring:
           model: ${EPAM_DIAL_EMBEDDING_MODEL:text-embedding-3-large}
           # Embedding dimensions (adjust based on EPAM DIAL model capabilities)
           dimensions: ${EPAM_DIAL_EMBEDDING_DIMENSIONS:1536}
-    
+
     # Note: For reranking, EPAM DIAL may use chat models for relevance scoring
     # Configure reranking model via expertmatch.retrieval.reranking configuration below
 

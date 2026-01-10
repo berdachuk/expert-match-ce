@@ -4,6 +4,7 @@ import com.berdachuk.expertmatch.chat.domain.Chat;
 import com.berdachuk.expertmatch.chat.repository.ChatRepository;
 import com.berdachuk.expertmatch.chat.repository.ConversationHistoryRepository;
 import com.berdachuk.expertmatch.chat.service.ChatService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,15 +15,11 @@ import java.util.Optional;
  * Service implementation for chat management operations.
  */
 @Service
+@RequiredArgsConstructor
 public class ChatServiceImpl implements ChatService {
 
     private final ChatRepository chatRepository;
     private final ConversationHistoryRepository historyRepository;
-
-    public ChatServiceImpl(ChatRepository chatRepository, ConversationHistoryRepository historyRepository) {
-        this.chatRepository = chatRepository;
-        this.historyRepository = historyRepository;
-    }
 
     @Override
     public Chat getOrCreateDefaultChat(String userId) {

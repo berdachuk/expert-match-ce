@@ -1,8 +1,11 @@
 package com.berdachuk.expertmatch.core.exception;
 
+import lombok.Getter;
+
 /**
  * Base exception for ExpertMatch application.
  */
+@Getter
 public class ExpertMatchException extends RuntimeException {
 
     private final String errorCode;
@@ -25,10 +28,6 @@ public class ExpertMatchException extends RuntimeException {
     public ExpertMatchException(String errorCode, String message, Throwable cause) {
         super(message, cause);
         this.errorCode = errorCode;
-    }
-
-    public String getErrorCode() {
-        return errorCode;
     }
 }
 

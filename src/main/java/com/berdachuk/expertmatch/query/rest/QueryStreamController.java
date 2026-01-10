@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
@@ -34,6 +35,7 @@ import java.util.concurrent.Executors;
 @ConditionalOnProperty(name = "expertmatch.query.enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(QueryService.class)
 @org.springframework.core.annotation.Order(org.springframework.core.Ordered.HIGHEST_PRECEDENCE)
+@RequiredArgsConstructor
 public class QueryStreamController {
 
     private final QueryService queryService;
@@ -41,16 +43,7 @@ public class QueryStreamController {
     private final ApiMapper apiMapper;
     private final HeaderBasedUserContext userContext;
     private final Validator validator;
-    private final ExecutorService executorService;
-
-    public QueryStreamController(QueryService queryService, ChatService chatService, ApiMapper apiMapper, HeaderBasedUserContext userContext, Validator validator) {
-        this.queryService = queryService;
-        this.chatService = chatService;
-        this.apiMapper = apiMapper;
-        this.userContext = userContext;
-        this.validator = validator;
-        this.executorService = Executors.newCachedThreadPool();
-    }
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
 
     /**
      * Process natural language query with streaming response using Server-Sent Events.

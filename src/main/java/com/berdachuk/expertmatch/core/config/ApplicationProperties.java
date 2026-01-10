@@ -1,5 +1,7 @@
 package com.berdachuk.expertmatch.core.config;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -8,6 +10,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConfigurationProperties(prefix = "server")
+@Getter
+@Setter
 public class ApplicationProperties {
 
     private int port = 8080;
@@ -17,15 +21,7 @@ public class ApplicationProperties {
         return port;
     }
 
-    public void setPort(int port) {
-        this.port = port;
-    }
-
     public String getServerContextPath() {
         return contextPath;
-    }
-
-    public void setContextPath(String contextPath) {
-        this.contextPath = contextPath;
     }
 }

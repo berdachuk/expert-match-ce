@@ -7,6 +7,7 @@ import com.berdachuk.expertmatch.core.api.ApiMapper;
 import com.berdachuk.expertmatch.core.security.HeaderBasedUserContext;
 import com.berdachuk.expertmatch.core.util.ValidationUtils;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,19 +22,13 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class ChatController implements ChatsApi {
 
     private final ChatService chatService;
     private final ConversationHistoryRepository historyRepository;
     private final ApiMapper apiMapper;
     private final HeaderBasedUserContext userContext;
-
-    public ChatController(ChatService chatService, ConversationHistoryRepository historyRepository, ApiMapper apiMapper, HeaderBasedUserContext userContext) {
-        this.chatService = chatService;
-        this.historyRepository = historyRepository;
-        this.apiMapper = apiMapper;
-        this.userContext = userContext;
-    }
 
     @Override
     public Optional<NativeWebRequest> getRequest() {

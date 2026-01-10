@@ -107,6 +107,13 @@
   - **repository/**: Data access layer interfaces (JDBC-based), with `impl/` subdirectory for implementations and optional `jdbc/` subdirectory for JDBC-specific implementations (e.g., RowMappers)
   - **service/**: Business logic layer interfaces, with `impl/` subdirectory for implementations
   - **rest/**: REST API controllers (API endpoints)
+- **REST Controller Package Structure**: All REST controllers must be in the `rest/` subpackage of their module
+  - Query controllers: `com.berdachuk.expertmatch.query.rest.QueryController`
+  - Ingestion controllers: `com.berdachuk.expertmatch.ingestion.rest.TestDataController`
+  - Chat controllers: `com.berdachuk.expertmatch.chat.rest.ChatController`
+  - Module-specific controllers: `com.berdachuk.expertmatch.[module].rest.[Entity]Controller`
+  - **Invalid**: Controllers directly in module package (e.g., `com.berdachuk.expertmatch.query.QueryController`)
+  - **Valid**: Controllers in `rest/` subpackage (e.g., `com.berdachuk.expertmatch.query.rest.QueryController`)
 - **REST API Versioning**: Use versioned REST controllers (e.g., `*RestControllerV2`) and separate data controllers (e.g., `*DataRestControllerV2`) when needed
 - **Self-Contained Modules**: Each domain module should be self-contained with its own domain, repository, service, and REST layers
 - **Benefits**: Clear separation of concerns, consistent structure across domains, easier navigation and maintenance, scalable architecture
@@ -294,6 +301,32 @@
   }
   ```
 - **Benefits**: Reduces boilerplate, consistent logging pattern across the codebase
+
+### Lombok Usage
+- **Use Lombok to Simplify Code**: Always use Lombok annotations to reduce boilerplate code where possible
+- **Common Lombok Annotations**: Use appropriate Lombok annotations to simplify code:
+  - `@Slf4j` - For logging (see Logging section)
+  - `@Getter` / `@Setter` - For getters and setters
+  - `@Data` - For simple data classes (combines `@Getter`, `@Setter`, `@ToString`, `@EqualsAndHashCode`, `@RequiredArgsConstructor`)
+  - `@Builder` - For builder pattern
+  - `@AllArgsConstructor` / `@NoArgsConstructor` / `@RequiredArgsConstructor` - For constructors
+  - `@ToString` - For toString methods
+  - `@EqualsAndHashCode` - For equals and hashCode methods
+  - `@Value` - For immutable value objects (combines `@Getter`, `@ToString`, `@EqualsAndHashCode`, `@AllArgsConstructor`, `final` fields)
+- **When to Use**: Use Lombok annotations instead of manually writing boilerplate code
+- **Invalid**: Manually writing getters, setters, constructors, toString, equals, hashCode when Lombok can generate them
+- **Valid**: Using Lombok annotations to generate boilerplate code automatically
+- **Example**:
+  ```java
+  @Data
+  @Builder
+  public class Employee {
+      private String id;
+      private String name;
+      private String email;
+  }
+  ```
+- **Benefits**: Reduces boilerplate code, improves code readability, reduces maintenance burden, consistent code style
 
 ### Imports and Class Names
 - **Use Imports Instead of Fully Qualified Names**: Never use fully qualified class names when imports can be used

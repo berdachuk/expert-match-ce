@@ -3,6 +3,7 @@ package com.berdachuk.expertmatch.employee.service.impl;
 import com.berdachuk.expertmatch.employee.domain.Employee;
 import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
 import com.berdachuk.expertmatch.employee.service.EmployeeService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,13 +13,10 @@ import java.util.Optional;
  * Service implementation for employee/expert operations.
  */
 @Service
+@RequiredArgsConstructor
 public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
-
-    public EmployeeServiceImpl(EmployeeRepository employeeRepository) {
-        this.employeeRepository = employeeRepository;
-    }
 
     @Override
     public Optional<Employee> findById(String employeeId) {

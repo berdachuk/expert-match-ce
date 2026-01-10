@@ -14,6 +14,7 @@ import com.berdachuk.expertmatch.query.service.ExecutionTracer;
 import com.berdachuk.expertmatch.query.service.QueryService;
 import com.berdachuk.expertmatch.retrieval.service.DeepResearchService;
 import com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Lazy;
@@ -31,8 +32,10 @@ import java.util.Map;
 @Slf4j
 @Service
 @ConditionalOnBean(AnswerGenerationService.class)
+@RequiredArgsConstructor
 public class QueryServiceImpl implements QueryService {
 
+    @Lazy
     private final QueryParser queryParser;
     private final EntityExtractor entityExtractor;
     private final HybridRetrievalService retrievalService;
@@ -42,27 +45,6 @@ public class QueryServiceImpl implements QueryService {
     private final ConversationHistoryRepository historyRepository;
     private final ConversationHistoryManager historyManager;
     private final ChatRepository chatRepository;
-
-    public QueryServiceImpl(
-            @Lazy QueryParser queryParser,
-            EntityExtractor entityExtractor,
-            HybridRetrievalService retrievalService,
-            DeepResearchService deepResearchService,
-            AnswerGenerationService answerGenerationService,
-            ExpertEnrichmentService enrichmentService,
-            ConversationHistoryRepository historyRepository,
-            ConversationHistoryManager historyManager,
-            ChatRepository chatRepository) {
-        this.queryParser = queryParser;
-        this.entityExtractor = entityExtractor;
-        this.retrievalService = retrievalService;
-        this.deepResearchService = deepResearchService;
-        this.answerGenerationService = answerGenerationService;
-        this.enrichmentService = enrichmentService;
-        this.historyRepository = historyRepository;
-        this.historyManager = historyManager;
-        this.chatRepository = chatRepository;
-    }
 
     /**
      * Processes a query and returns expert recommendations.

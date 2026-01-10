@@ -13,6 +13,7 @@ import com.berdachuk.expertmatch.query.service.QueryService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -33,6 +34,7 @@ import java.util.List;
 @RequestMapping("/api/v1")
 @ConditionalOnProperty(name = "expertmatch.query.enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(QueryService.class)
+@RequiredArgsConstructor
 public class QueryController implements QueryApi {
 
     private final QueryService queryService;
@@ -41,15 +43,6 @@ public class QueryController implements QueryApi {
     private final HeaderBasedUserContext userContext;
     private final QueryExamplesService queryExamplesService;
     private final Validator validator;
-
-    public QueryController(QueryService queryService, ChatService chatService, ApiMapper apiMapper, HeaderBasedUserContext userContext, QueryExamplesService queryExamplesService, Validator validator) {
-        this.queryService = queryService;
-        this.chatService = chatService;
-        this.apiMapper = apiMapper;
-        this.userContext = userContext;
-        this.queryExamplesService = queryExamplesService;
-        this.validator = validator;
-    }
 
     /**
      * Process natural language query for expert discovery.

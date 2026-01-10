@@ -1,6 +1,6 @@
 package com.berdachuk.expertmatch.llm.sgr;
 
-import com.berdachuk.expertmatch.llm.AnswerGenerationService;
+import com.berdachuk.expertmatch.llm.service.AnswerGenerationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +39,7 @@ class ExpertEvaluationServiceTest {
         lenient().when(cascadeConfig.isEnabled()).thenReturn(true);
         lenient().when(cascadeEvaluationPromptTemplate.render(any())).thenReturn("test prompt");
 
-        service = new ExpertEvaluationService(structuredOutputHelper, config, cascadeEvaluationPromptTemplate);
+        service = new ExpertEvaluationServiceImpl(structuredOutputHelper, config, cascadeEvaluationPromptTemplate);
     }
 
     @Test
@@ -75,7 +75,7 @@ class ExpertEvaluationServiceTest {
         // Arrange - create new service with disabled config to avoid unnecessary stubbings
         SGRPatternConfig disabledConfig = mock(SGRPatternConfig.class);
         when(disabledConfig.isEnabled()).thenReturn(false);
-        ExpertEvaluationService disabledService = new ExpertEvaluationService(structuredOutputHelper, disabledConfig, cascadeEvaluationPromptTemplate);
+        ExpertEvaluationService disabledService = new ExpertEvaluationServiceImpl(structuredOutputHelper, disabledConfig, cascadeEvaluationPromptTemplate);
 
         String query = "Find expert";
         AnswerGenerationService.ExpertContext expertContext = new AnswerGenerationService.ExpertContext(
@@ -96,7 +96,7 @@ class ExpertEvaluationServiceTest {
         when(cascadeDisabledConfig.getCascade()).thenReturn(disabledCascadeConfig);
         when(cascadeDisabledConfig.isEnabled()).thenReturn(true);
         when(disabledCascadeConfig.isEnabled()).thenReturn(false);
-        ExpertEvaluationService cascadeDisabledService = new ExpertEvaluationService(structuredOutputHelper, cascadeDisabledConfig, cascadeEvaluationPromptTemplate);
+        ExpertEvaluationService cascadeDisabledService = new ExpertEvaluationServiceImpl(structuredOutputHelper, cascadeDisabledConfig, cascadeEvaluationPromptTemplate);
 
         String query = "Find expert";
         AnswerGenerationService.ExpertContext expertContext = new AnswerGenerationService.ExpertContext(

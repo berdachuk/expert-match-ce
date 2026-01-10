@@ -187,6 +187,108 @@ many-to-many relationship tables.
 
 - Many-to-many relationship tables may use plural names (e.g., `employee_projects`, `project_technologies`)
 
+## Test-Driven Development Approach
+
+**Rule**: Use test-driven development (TDD) approach. Always use integration tests to verify full flow. Prepare required data for tests for independence before test run. Minimize using simple JUnit tests.
+
+**Rationale**:
+
+- Integration tests verify the complete flow from API to database
+- Integration tests catch real-world issues that unit tests might miss
+- Test independence ensures tests can run in any order and in parallel
+- Full flow testing validates actual behavior, not just isolated components
+- Integration tests with real database catch SQL errors, transaction issues, and data problems
+- Preparing data before tests ensures predictable and repeatable test execution
+- Simple JUnit tests (unit tests with mocks) don't verify actual integration between components
+
+**Core Principles**:
+
+1. **Test-Driven Development**: Write tests before or alongside implementation
+2. **Integration Tests First**: Prefer integration tests over unit tests
+3. **Full Flow Verification**: Test complete workflows from API endpoints to database
+4. **Test Independence**: Each test prepares its own data and cleans up after itself
+5. **Minimize Unit Tests**: Use unit tests only for pure logic, algorithms, or when integration tests are impractical
+
+**Examples**:
+
+- **Don't**: Write only unit tests with mocks for repository/service interactions
+- **Don't**: Rely on existing database data in tests
+- **Don't**: Write tests that depend on other tests' data
+- **Do**: Write integration tests that test the full flow (Controller → Service → Repository → Database)
+- **Do**: Prepare all required test data in `@BeforeEach` before each test
+- **Do**: Use Testcontainers with PostgreSQL for database integration tests
+- **Do**: Test real SQL queries, transactions, and data persistence
+
+**Integration Test Structure**:
+
+```java
+@SpringBootTest
+@AutoConfigureMockMvc
+class MyServiceIT extends BaseIntegrationTest {
+
+    @Autowired
+    private MyService myService;
+
+    @Autowired
+    private NamedParameterJdbcTemplate namedJdbcTemplate;
+
+    @BeforeEach
+    void setUp() {
+        // Clear existing data to ensure test independence
+        namedJdbcTemplate.getJdbcTemplate().execute("DELETE FROM expertmatch.related_table");
+        namedJdbcTemplate.getJdbcTemplate().execute("DELETE FROM expertmatch.main_table");
+
+        // Prepare required test data for this test
+        createTestData();
+    }
+
+    @Test
+    @Transactional
+    void testFullFlow() {
+        // Test complete flow from service to database
+        // Verify actual database changes, not just method calls
+    }
+}
+```
+
+**When to Use Unit Tests**:
+
+- Pure logic functions (calculations, transformations, validations)
+- Complex algorithms that don't require database
+- Utility classes with no dependencies
+- When testing edge cases that are difficult to set up in integration tests
+
+**When to Use Integration Tests**:
+
+- Service methods that interact with repositories
+- Repository methods that execute SQL queries
+- Complete workflows (API → Service → Repository → Database)
+- Transaction management and rollback behavior
+- Data persistence and retrieval
+- Complex business logic that spans multiple layers
+
+**Test Data Preparation**:
+
+- Always prepare test data in `@BeforeEach` or at the start of test methods
+- Use unique identifiers (UUIDs, timestamps) to avoid conflicts
+- Clear relevant tables before creating test data
+- Create only the data needed for the specific test
+- Use helper methods for common test data creation patterns
+
+**Benefits**:
+
+- **Real-World Validation**: Tests verify actual behavior, not mocked behavior
+- **Early Bug Detection**: Catches integration issues before production
+- **Confidence**: High confidence that the system works end-to-end
+- **Documentation**: Tests serve as executable documentation of system behavior
+- **Refactoring Safety**: Integration tests catch breaking changes across layers
+- **Test Independence**: Tests can run in any order without interference
+
+**Exception**:
+
+- Unit tests are acceptable for pure utility functions, algorithms, or when integration test setup is prohibitively complex
+- However, prefer integration tests whenever possible
+
 ## Integration Test Independence
 
 **Rule**: All integration tests must be independent. Each test should create its own test data in a transaction and
@@ -668,3 +770,389 @@ Ensure proper Spring AI configuration:
 **Exception**:
 
 - No exceptions - all application configuration must use YAML format
+
+## Interface-Based Design for Services and Repositories
+
+**Rule**: All services and repositories must be defined as interfaces with separate implementation classes.
+
+**Rationale**:
+
+- Better testability (easy to mock interfaces)
+- Loose coupling between components
+- Flexibility to swap implementations
+- Clear separation of contract and implementation
+- Easier to maintain and refactor
+- Supports dependency inversion principle (SOLID)
+
+**Structure**:
+
+- **Interface Location**: Interfaces should be in the main package (e.g., `service/`, `repository/`)
+- **Implementation Location**: Implementations should be in `impl/` subdirectories (e.g., `service/impl/`, `repository/impl/`)
+- **Mapper Location**: RowMappers are located in the same `impl/` folder as repository implementations
+- **Naming Convention**: 
+  - Interface: `[Entity]Service` or `[Entity]Repository` (e.g., `EmployeeService`, `ChatRepository`)
+  - Implementation: `[Entity]ServiceImpl` or `[Entity]RepositoryImpl` (e.g., `EmployeeServiceImpl`, `ChatRepositoryImpl`)
+  - Mapper: `[Entity]Mapper` (e.g., `EmployeeMapper`, `ChatMapper`)
+
+**Examples**:
+
+- **Service Interface** (`service/EmployeeService.java`):
+  ```java
+  package com.berdachuk.expertmatch.employee.service;
+  
+  public interface EmployeeService {
+      Optional<Employee> findById(String employeeId);
+      List<Employee> findAll();
+  }
+  ```
+
+- **Service Implementation** (`service/impl/EmployeeServiceImpl.java`):
+  ```java
+  package com.berdachuk.expertmatch.employee.service.impl;
+  
+  @Service
+  public class EmployeeServiceImpl implements EmployeeService {
+      private final EmployeeRepository employeeRepository;
+      
+      public EmployeeServiceImpl(EmployeeRepository employeeRepository) {
+          this.employeeRepository = employeeRepository;
+      }
+      
+      @Override
+      @Transactional(readOnly = true)
+      public Optional<Employee> findById(String employeeId) {
+          return employeeRepository.findById(employeeId);
+      }
+  }
+  ```
+
+- **Repository Interface** (`repository/EmployeeRepository.java`):
+  ```java
+  package com.berdachuk.expertmatch.employee.repository;
+  
+  public interface EmployeeRepository {
+      Optional<Employee> findById(String employeeId);
+  }
+  ```
+
+- **Repository Implementation** (`repository/impl/EmployeeRepositoryImpl.java`):
+  ```java
+  package com.berdachuk.expertmatch.employee.repository.impl;
+  
+  @Repository
+  public class EmployeeRepositoryImpl implements EmployeeRepository {
+      private final NamedParameterJdbcTemplate namedJdbcTemplate;
+      private final EmployeeMapper employeeMapper;
+      
+      public EmployeeRepositoryImpl(
+              NamedParameterJdbcTemplate namedJdbcTemplate,
+              EmployeeMapper employeeMapper) {
+          this.namedJdbcTemplate = namedJdbcTemplate;
+          this.employeeMapper = employeeMapper;
+      }
+      
+      @Override
+      public Optional<Employee> findById(String employeeId) {
+          // Implementation details
+      }
+  }
+  ```
+
+- **Mapper** (`repository/impl/EmployeeMapper.java`):
+  ```java
+  package com.berdachuk.expertmatch.employee.repository.impl;
+  
+  @Component
+  public class EmployeeMapper implements RowMapper<Employee> {
+      @Override
+      public Employee mapRow(ResultSet rs, int rowNum) throws SQLException {
+          // Mapping logic
+      }
+  }
+  ```
+
+**Dependency Injection**:
+
+- Always inject interfaces, never concrete implementations
+- **Don't**: `private final EmployeeServiceImpl employeeService;`
+- **Do**: `private final EmployeeService employeeService;`
+
+**Usage in Other Classes**:
+
+```java
+@Service
+public class QueryService {
+    private final EmployeeService employeeService;  // Interface, not implementation
+    private final EmployeeRepository employeeRepository;  // Interface, not implementation
+    
+    public QueryService(
+            EmployeeService employeeService,
+            EmployeeRepository employeeRepository) {
+        this.employeeService = employeeService;
+        this.employeeRepository = employeeRepository;
+    }
+}
+```
+
+**Testing**:
+
+**Note**: Prefer integration tests over unit tests (see Test-Driven Development Approach section). When unit tests are necessary, use implementation classes when instantiating directly:
+
+```java
+// Unit test (use sparingly - prefer integration tests)
+@Test
+void testPureLogic() {
+    EmployeeRepository repository = new EmployeeRepositoryImpl(mockJdbcTemplate, mockMapper);
+    EmployeeService service = new EmployeeServiceImpl(repository);
+    // Test pure logic without database
+}
+
+// Integration test (preferred)
+@SpringBootTest
+class EmployeeServiceIT extends BaseIntegrationTest {
+    @Autowired
+    private EmployeeService employeeService; // Inject interface
+    
+    @Test
+    void testFullFlow() {
+        // Test complete flow with real database
+    }
+}
+```
+
+**Implementation**:
+
+- Create interface first, then implementation
+- Place interfaces in main package (`service/`, `repository/`)
+- Place implementations in `impl/` subdirectories
+- Place mappers in the same `impl/` folder as repository implementations
+- Always inject interfaces via constructor
+- Use `@Override` annotation on all implementation methods
+- Follow naming conventions consistently
+
+**Benefits**:
+
+- **Testability**: Easy to mock interfaces in unit tests
+- **Loose Coupling**: Components depend on contracts, not implementations
+- **Flexibility**: Easy to swap implementations without changing dependent code
+- **Maintainability**: Changes to implementation don't affect interface consumers
+- **SOLID**: Supports Dependency Inversion Principle
+
+**Exception**:
+
+- No exceptions - all services and repositories must follow this pattern
+
+## Interface Method Documentation
+
+**Rule**: Always create JavaDoc comments for all methods in interfaces. Do not duplicate JavaDoc in implementation classes if the interface already has JavaDoc.
+
+**Rationale**:
+
+- Interfaces define contracts that must be clearly documented
+- JavaDoc provides essential information about method purpose, parameters, return values, and exceptions
+- Improves code readability and maintainability
+- Helps developers understand how to use the interface without reading implementation code
+- Enables better IDE support and auto-completion documentation
+- Essential for API documentation generation
+- Follows Java best practices for interface design
+- **Single Source of Truth**: JavaDoc in interfaces serves as the single source of documentation, avoiding duplication and maintenance burden
+- **DRY Principle**: Don't Repeat Yourself - documentation should be in one place (interface), not duplicated in implementations
+
+**Examples**:
+
+- **Don't**:
+  ```java
+  public interface EmployeeService {
+      Optional<Employee> findById(String employeeId);
+      List<Employee> findAll();
+  }
+  ```
+
+- **Do**:
+  ```java
+  public interface EmployeeService {
+      /**
+       * Finds an employee by their unique identifier.
+       *
+       * @param employeeId The unique identifier of the employee (19-digit numeric string)
+       * @return Optional containing the employee if found, empty otherwise
+       */
+      Optional<Employee> findById(String employeeId);
+
+      /**
+       * Retrieves all employees from the system.
+       *
+       * @return List of all employees, empty list if none found
+       */
+      List<Employee> findAll();
+  }
+  ```
+
+**JavaDoc Structure**:
+
+Each method JavaDoc should include:
+
+1. **Description**: Brief description of what the method does (first sentence)
+2. **Detailed Description**: Additional details if needed (subsequent paragraphs)
+3. **@param**: For each parameter, describe its purpose and any constraints
+4. **@return**: Describe what the method returns and any special cases
+5. **@throws**: Document any exceptions that may be thrown (if applicable)
+6. **@since**: Version when the method was added (if tracking versions)
+7. **@deprecated**: If the method is deprecated, explain why and what to use instead
+
+**Example with All Elements**:
+
+```java
+public interface ConversationHistoryManager {
+    /**
+     * Gets conversation history optimized for context window.
+     * Automatically summarizes older messages if history exceeds token limits.
+     *
+     * @param chatId              Chat ID to retrieve history for
+     * @param excludeCurrentQuery If true, excludes the most recent message (current query)
+     * @param tracer              Optional execution tracer for tracking (can be null)
+     * @return Optimized conversation history within token limits, empty list if no history found
+     * @throws IllegalArgumentException if chatId is null or empty
+     */
+    List<ConversationHistoryRepository.ConversationMessage> getOptimizedHistory(
+            String chatId,
+            boolean excludeCurrentQuery,
+            ExecutionTracer tracer);
+}
+```
+
+**Implementation**:
+
+- **Interfaces**: Add JavaDoc comments to all interface methods
+- **Implementations**: Do NOT duplicate JavaDoc from interfaces in implementation classes
+- Use standard JavaDoc tags (`@param`, `@return`, `@throws`, etc.)
+- Keep descriptions concise but informative
+- Document parameter constraints (e.g., "non-null", "non-empty", "must be positive")
+- Document return value semantics (e.g., "empty list if none found", "null if not found")
+- Document any exceptions that may be thrown
+- Use proper JavaDoc formatting (HTML tags when needed)
+- Keep JavaDoc comments up-to-date when method signatures change
+
+**Implementation Class Pattern**:
+
+- Use `@Override` annotation without JavaDoc when interface already documents the method
+- Only add JavaDoc in implementations if:
+  - The method is not from an interface (e.g., private methods, package-private methods)
+  - Implementation-specific behavior needs documentation (rare)
+  - The method is part of a class that doesn't implement an interface
+
+**Best Practices**:
+
+- **First Sentence**: Should be a brief summary that can stand alone
+- **Parameter Documentation**: Always document all parameters, even if their names are self-explanatory
+- **Return Value**: Always document return values, including special cases (null, empty collections, etc.)
+- **Exception Documentation**: Document all checked exceptions and important unchecked exceptions
+- **Code Examples**: Include code examples in JavaDoc for complex methods when helpful
+- **Cross-References**: Use `{@link}` to reference related classes or methods
+- **Consistency**: Use consistent JavaDoc style across all interfaces
+
+**Example with Code Reference**:
+
+```java
+public interface TokenCountingService {
+    /**
+     * Estimates the number of tokens in a text string.
+     * Uses a simple approximation: ~4 characters per token for English text.
+     *
+     * @param text The text to count tokens for (can be null or empty)
+     * @return Estimated number of tokens (always >= 0), 0 if text is null or empty
+     * @see #estimateFormattedMessageTokens(String, String) for formatted message counting
+     */
+    int estimateTokens(String text);
+}
+```
+
+**Benefits**:
+
+- **Self-Documenting Code**: Interfaces become self-documenting contracts
+- **Better IDE Support**: IDEs display JavaDoc when hovering over methods
+- **API Documentation**: JavaDoc can be automatically generated into HTML documentation
+- **Onboarding**: New developers can understand interfaces without reading implementations
+- **Maintenance**: Clear documentation reduces questions and misunderstandings
+- **Contract Clarity**: Explicit documentation of expected behavior and constraints
+
+**Examples - Interface vs Implementation**:
+
+- **Interface with JavaDoc** (correct):
+  ```java
+  public interface EmployeeService {
+      /**
+       * Finds an employee by their unique identifier.
+       *
+       * @param employeeId The unique identifier of the employee (19-digit numeric string)
+       * @return Optional containing the employee if found, empty otherwise
+       */
+      Optional<Employee> findById(String employeeId);
+  }
+  ```
+
+- **Implementation without JavaDoc** (correct - avoids duplication):
+  ```java
+  @Service
+  public class EmployeeServiceImpl implements EmployeeService {
+      private final EmployeeRepository employeeRepository;
+      
+      public EmployeeServiceImpl(EmployeeRepository employeeRepository) {
+          this.employeeRepository = employeeRepository;
+      }
+      
+      @Override
+      @Transactional(readOnly = true)
+      public Optional<Employee> findById(String employeeId) {
+          return employeeRepository.findById(employeeId);
+      }
+  }
+  ```
+
+- **Implementation with duplicated JavaDoc** (incorrect - don't do this):
+  ```java
+  @Service
+  public class EmployeeServiceImpl implements EmployeeService {
+      /**
+       * Finds an employee by their unique identifier.
+       *
+       * @param employeeId The unique identifier of the employee (19-digit numeric string)
+       * @return Optional containing the employee if found, empty otherwise
+       */
+      @Override
+      @Transactional(readOnly = true)
+      public Optional<Employee> findById(String employeeId) {
+          return employeeRepository.findById(employeeId);
+      }
+  }
+  ```
+
+- **Implementation with implementation-specific JavaDoc** (acceptable - only if needed):
+  ```java
+  @Service
+  public class EmployeeServiceImpl implements EmployeeService {
+      @Override
+      @Transactional(readOnly = true)
+      public Optional<Employee> findById(String employeeId) {
+          // Implementation note: Uses read-only transaction for performance
+          return employeeRepository.findById(employeeId);
+      }
+      
+      /**
+       * Internal helper method for validation (not part of interface).
+       * Validates employee ID format before database lookup.
+       *
+       * @param employeeId The employee ID to validate
+       * @throws IllegalArgumentException if employee ID format is invalid
+       */
+      private void validateEmployeeId(String employeeId) {
+          // Implementation-specific method - JavaDoc is appropriate here
+      }
+  }
+  ```
+
+**Exception**:
+
+- No exceptions - all interface methods must have JavaDoc comments
+- Implementation classes should not duplicate interface JavaDoc
+- Only add JavaDoc in implementations for methods not defined in interfaces (private, package-private, or class-specific methods)

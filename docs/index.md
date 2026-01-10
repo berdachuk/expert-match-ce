@@ -59,8 +59,14 @@ ExpertMatch leverages a **Hybrid GraphRAG architecture** combining:
 ### Development
 
 - [Development Guide](DEVELOPMENT_GUIDE.md) - **Fullstack development setup and workflow**
+  - Module structure and interface-based design
+  - Data access patterns (SQL files, RowMappers, DataAccessUtils)
+  - Interface-based design for services and repositories
 - [Testing Guide](TESTING.md) - Testing patterns, Testcontainers setup, and best practices
 - [Coding Rules](CODING_RULES.md) - Development guidelines and conventions
+  - Interface-based design patterns
+  - JDBC template usage
+  - Database naming conventions
 
 ## Key Features
 
@@ -119,5 +125,5 @@ For questions or issues, please refer to the relevant documentation section or c
 
 ---
 
-*Last updated: 2026-01-04 (Added JSON Batch Ingestion feature)*
+*Last updated: 2026-01-10 (Updated module structure and interface-based design documentation)*
 

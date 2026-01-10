@@ -1,6 +1,8 @@
 package com.berdachuk.expertmatch.ingestion;
 
 import com.berdachuk.expertmatch.api.model.IngestionResult;
+import com.berdachuk.expertmatch.ingestion.rest.IngestionController;
+import com.berdachuk.expertmatch.ingestion.service.TestDataGenerator;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

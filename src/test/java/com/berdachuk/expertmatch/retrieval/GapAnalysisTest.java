@@ -1,5 +1,6 @@
 package com.berdachuk.expertmatch.retrieval;
 
+import com.berdachuk.expertmatch.retrieval.domain.GapAnalysis;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

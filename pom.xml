@@ -357,7 +357,8 @@
             </plugin>
 
             <!-- Maven Failsafe Plugin (Integration Tests) -->
-            <!-- Runs during 'integration-test' phase (before 'verify') -->
+            <!-- Runs during 'integration-test' phase (after 'package' phase) -->
+            <!-- Integration tests must use IT suffix (e.g., *IT.java) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -365,6 +366,7 @@
                 <executions>
                     <execution>
                         <id>integration-tests</id>
+                        <phase>integration-test</phase>
                         <goals>
                             <goal>integration-test</goal>
                             <goal>verify</goal>

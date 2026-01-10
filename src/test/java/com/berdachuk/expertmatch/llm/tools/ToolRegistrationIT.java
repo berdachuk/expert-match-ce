@@ -1,8 +1,8 @@
 package com.berdachuk.expertmatch.llm.tools;
 
-import com.berdachuk.expertmatch.config.TestAIConfig;
-import com.berdachuk.expertmatch.config.TestSecurityConfig;
-import com.berdachuk.expertmatch.config.ToolConfiguration;
+import com.berdachuk.expertmatch.core.config.TestAIConfig;
+import com.berdachuk.expertmatch.core.config.TestSecurityConfig;
+import com.berdachuk.expertmatch.core.config.ToolConfiguration;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

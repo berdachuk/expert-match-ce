@@ -5,7 +5,8 @@
     <nav class="navbar navbar-dark py-2 px-4" style="background-color: var(--uui-neutral-80, #262626);">
         <div class="container-fluid">
             <div class="d-flex align-items-center gap-4">
-                <a class="text-white text-decoration-none" style="color: var(--uui-neutral-0, #FFFFFF) !important;" th:href="@{/}"
+                <a class="text-white text-decoration-none" style="color: var(--uui-neutral-0, #FFFFFF) !important;"
+                   th:href="@{/}"
                    th:if="${currentPage != 'index'}">
                     <i class="bi bi-arrow-left"></i>
                 </a>
@@ -23,7 +24,8 @@
             </div>
             <div class="d-flex align-items-center">
                 <div class="dropdown">
-                    <button aria-expanded="false" class="btn btn-outline-light btn-sm dropdown-toggle" data-bs-toggle="dropdown"
+                    <button aria-expanded="false" class="btn btn-outline-light btn-sm dropdown-toggle"
+                            data-bs-toggle="dropdown"
                             id="userSelectorBtn" type="button">
                         <span id="currentUserDisplay">Anonymous User</span>
                     </button>

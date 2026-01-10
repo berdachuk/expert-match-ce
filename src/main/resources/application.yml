@@ -1,6 +1,7 @@
 spring:
   application:
     name: expert-match
+    version: 1.0.0
 
   # Spring AI auto-configuration exclusion
   # NOTE: We ALWAYS use custom Java configuration (SpringAIConfig) to create ChatModel and EmbeddingModel beans

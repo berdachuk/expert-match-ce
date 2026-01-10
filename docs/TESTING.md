@@ -1,34 +1,50 @@
 # Testing Guide
 
-## Test Structure
+## Test-Driven Development Approach
 
-The ExpertMatch backend includes unit tests and integration tests.
+ExpertMatch follows a **Test-Driven Development (TDD)** approach with emphasis on integration tests. See [CODING_RULES.md](CODING_RULES.md#test-driven-development-approach) for complete guidelines.
 
-### Unit Tests
+### Core Principles
 
-Located in `src/test/java/com/berdachuk/expertmatch/`:
+1. **Integration Tests First**: Prefer integration tests over unit tests
+2. **Full Flow Verification**: Test complete workflows from API endpoints to database
+3. **Test Independence**: Each test prepares its own data and cleans up after itself
+4. **Minimize Unit Tests**: Use unit tests only for pure logic, algorithms, or when integration tests are impractical
 
-- `QueryParserTest` - Tests query parsing functionality
-- `ResultFusionServiceTest` - Tests RRF fusion logic
-- `IdGeneratorTest` - Tests ID generation
+### Test Structure
 
-### Integration Tests
+The ExpertMatch backend follows TDD principles with **integration tests as the primary testing strategy**.
 
-Located in `src/test/java/com/berdachuk/expertmatch/`:
+#### Integration Tests (Primary)
 
-- `EmployeeRepositoryTest` - Database integration test for employee repository
-- `WorkExperienceRepositoryTest` - Database integration test for work experience repository
-- `VectorSearchServiceTest` - Integration test for vector similarity search
-- `KeywordSearchServiceTest` - Integration test for keyword/full-text search
-- `ChatServiceTest` - Integration test for chat management operations
-- `QueryServiceIntegrationTest` - Full integration test for query processing pipeline
+Integration tests verify the complete flow (Controller → Service → Repository → Database) and are located in `src/test/java/com/berdachuk/expertmatch/`:
+
+- `EmployeeRepositoryIT` - Database integration test for employee repository
+- `WorkExperienceRepositoryIT` - Database integration test for work experience repository
+- `VectorSearchServiceIT` - Integration test for vector similarity search
+- `KeywordSearchServiceIT` - Integration test for keyword/full-text search
+- `ChatServiceIT` - Integration test for chat management operations
+- `QueryServiceIT` - Full integration test for query processing pipeline
 - `GraphServiceIT` - Integration test for Apache AGE graph operations
-- `GraphBuilderServiceIT` - Comprehensive integration test for graph building from database data, including Customer
-  vertices and relationships
+- `GraphBuilderServiceIT` - Comprehensive integration test for graph building from database data
+- `ProfileProcessorIT` - Integration test for profile processing with database persistence
+- `JsonProfileIngestionServiceIT` - Integration test for JSON profile ingestion (full flow)
+- `TestDataGeneratorSiarheiBerdachukIT` - Integration test for Siarhei Berdachuk profile data generation
 
-### Unit Tests (Mocked Dependencies)
+**Naming Convention**: Integration tests use `*IT` suffix (e.g., `EmployeeRepositoryIT`)
 
-- `EmbeddingServiceTest` - Unit test for embedding generation (mocks EmbeddingClient)
+#### Unit Tests (Limited Use)
+
+Unit tests are used **only** for pure logic functions without database dependencies:
+
+- `ResultFusionServiceTest` - Pure algorithm logic (result fusion/ranking)
+- `QueryExamplesServiceTest` - Static data service (no database)
+- `ValidationUtilsTest` - Pure utility functions (no dependencies)
+- `IdGeneratorTest` - Pure utility functions
+- `QueryParserTest` - Pure parsing logic (with mocked LLM)
+- `EntityExtractorTest` - Pure extraction logic (with mocked LLM)
+
+**Note**: Unit tests with mocks are acceptable only when testing pure logic or when integration test setup is prohibitively complex.
 
 ### Integration Tests
 
@@ -234,37 +250,70 @@ docker build -f docker/Dockerfile.test -t expertmatch-postgres-test:latest .
 
 ## Writing Tests
 
-### Database Test Example
+### Integration Test Pattern (Required)
+
+All integration tests must follow this pattern for test independence:
 
 ```java
-class EmployeeRepositoryTest extends BaseIntegrationTest {
+@SpringBootTest
+class EmployeeRepositoryIT extends BaseIntegrationTest {
     
     @Autowired
-    private EmployeeRepository repository;
+    private EmployeeRepository employeeRepository;  // Inject interface, not implementation
+    
+    @Autowired
+    private NamedParameterJdbcTemplate namedJdbcTemplate;
     
     @BeforeEach
     void setUp() {
-        // Set up test data in PostgreSQL
+        // Clear existing data to ensure test independence
+        namedJdbcTemplate.getJdbcTemplate().execute("DELETE FROM expertmatch.work_experience");
+        namedJdbcTemplate.getJdbcTemplate().execute("DELETE FROM expertmatch.employee");
+        
+        // Prepare required test data for this test
+        createTestData();
     }
     
     @Test
+    @Transactional
     void testFindById() {
-        // Test implementation
+        // Test complete flow with real database
+        // Verify actual database changes, not just method calls
+    }
+    
+    private void createTestData() {
+        // Create test data specific to this test
     }
 }
 ```
 
-### Integration Test Example
+### Key Requirements
+
+1. **Extend BaseIntegrationTest**: All integration tests extend `BaseIntegrationTest`
+2. **Inject Interfaces**: Always inject service/repository interfaces, never concrete implementations
+3. **Clear Data in @BeforeEach**: Always clear relevant tables before creating test data
+4. **Prepare Test Data**: Create all required test data in `@BeforeEach` or at the start of test methods
+5. **Use Unique Identifiers**: Use unique IDs (UUIDs, timestamps) to avoid conflicts between parallel test runs
+6. **Test Full Flow**: Verify actual database persistence, not just method calls
+
+### Unit Test Pattern (Limited Use)
+
+Unit tests are acceptable only for pure logic:
 
 ```java
-class QueryServiceIntegrationTest extends BaseIntegrationTest {
+/**
+ * Unit test for ResultFusionService.
+ * 
+ * Note: This is a legitimate unit test because it tests pure algorithm logic (result fusion/ranking)
+ * without database dependencies. According to TDD rules, unit tests are acceptable for pure logic functions.
+ */
+class ResultFusionServiceTest {
     
-    @Autowired
-    private QueryService queryService;
+    private final ResultFusionService fusionService = new ResultFusionServiceImpl();
     
     @Test
-    void testProcessQuery() {
-        // Test implementation
+    void testFuseResults() {
+        // Test pure algorithm logic
     }
 }
 ```
@@ -326,23 +375,40 @@ class GraphBuilderServiceIT extends BaseIntegrationTest {
 
 ## Best Practices
 
-1. **Unit Tests**: Test individual components in isolation
-2. **Integration Tests**: Test component interactions
-3. **Test Data**:
-- Use constants for test data values instead of hardcoded strings
-   - Create helper methods for common test data creation patterns
-   - Use unique identifiers to avoid conflicts between tests
-   - Extract cleanup logic into separate methods
-4. **Cleanup**:
-- Use `@Transactional` or manual cleanup in `@BeforeEach`/`@AfterEach`
-   - Clear database tables and graph state before each test
-   - Extract cleanup logic into helper methods (e.g., `clearDatabaseTables()`, `clearGraph()`)
-5. **Assertions**: Use descriptive assertion messages
-6. **Code Organization**:
-- Keep `setUp()` methods simple and focused
-   - Extract complex logic into helper methods
-   - Use constants for magic strings and repeated values
-   - Group related test data constants together
+### Test-Driven Development
+
+1. **Integration Tests First**: Always prefer integration tests that verify full flow
+2. **Test Independence**: Each test must prepare its own data and clean up after itself
+3. **Full Flow Verification**: Test complete workflows from API to database
+4. **Minimize Unit Tests**: Use unit tests only for pure logic, algorithms, or utilities
+
+### Test Data Management
+
+1. **Prepare in @BeforeEach**: Always prepare test data in `@BeforeEach` before each test
+2. **Clear Before Create**: Clear relevant tables before creating test data
+3. **Use Constants**: Use constants for test data values instead of hardcoded strings
+4. **Helper Methods**: Create helper methods for common test data creation patterns
+5. **Unique Identifiers**: Use unique identifiers (UUIDs, timestamps) to avoid conflicts
+6. **Extract Cleanup**: Extract cleanup logic into separate methods (e.g., `clearDatabaseTables()`, `clearGraph()`)
+
+### Code Organization
+
+1. **Keep setUp() Focused**: Keep `setUp()` methods simple and focused on data preparation
+2. **Extract Complex Logic**: Extract complex logic into helper methods
+3. **Use Constants**: Use constants for magic strings and repeated values
+4. **Group Constants**: Group related test data constants together
+
+### Dependency Injection
+
+1. **Inject Interfaces**: Always inject service/repository interfaces, never concrete implementations
+2. **Use @Autowired**: Use Spring's `@Autowired` for dependency injection in integration tests
+3. **Interface Types**: Use interface types for variables even when instantiating implementations directly in unit tests
+
+### Assertions
+
+1. **Descriptive Messages**: Use descriptive assertion messages
+2. **Verify Database**: Verify actual database changes, not just method calls
+3. **Full Flow**: Test complete workflows end-to-end
 
 ## Test Coverage Goals
 

@@ -1,8 +1,7 @@
 package com.berdachuk.expertmatch.web;
 
-import com.berdachuk.expertmatch.chat.ChatService;
-import com.berdachuk.expertmatch.data.ChatRepository;
-import com.berdachuk.expertmatch.data.IdGenerator;
+import com.berdachuk.expertmatch.chat.service.ChatService;
+import com.berdachuk.expertmatch.core.util.IdGenerator;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,17 +36,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class WebControllerIT extends BaseIntegrationTest {
 
     private static final String TEST_USER_ID = "test-user-web-123";
-
+    private static volatile int staticServerPort = 0;
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     private ChatService chatService;
-
     @Autowired
     private NamedParameterJdbcTemplate namedJdbcTemplate;
-
-    private static volatile int staticServerPort = 0;
     @LocalServerPort
     private int serverPort;
 
@@ -96,7 +91,7 @@ class WebControllerIT extends BaseIntegrationTest {
         }
 
         // Create test chat
-        ChatRepository.Chat testUserChat = chatService.getOrCreateDefaultChat(TEST_USER_ID);
+        com.berdachuk.expertmatch.chat.domain.Chat testUserChat = chatService.getOrCreateDefaultChat(TEST_USER_ID);
         validChatId = testUserChat.id();
         // Verify chat was created with correct user ID
         assert testUserChat.userId().equals(TEST_USER_ID) :
@@ -225,7 +220,7 @@ class WebControllerIT extends BaseIntegrationTest {
     @Test
     void testDeleteChat_WithValidChatId_RedirectsToIndex() throws Exception {
         // Create a non-default chat to delete
-        ChatRepository.Chat chatToDelete = chatService.createChat(TEST_USER_ID, "Chat to Delete");
+        com.berdachuk.expertmatch.chat.domain.Chat chatToDelete = chatService.createChat(TEST_USER_ID, "Chat to Delete");
         String chatIdToDelete = chatToDelete.id();
 
         mockMvc.perform(post("/chats/delete")

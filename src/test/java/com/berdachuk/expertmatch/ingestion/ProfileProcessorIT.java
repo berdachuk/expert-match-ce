@@ -4,6 +4,7 @@ import com.berdachuk.expertmatch.ingestion.model.EmployeeData;
 import com.berdachuk.expertmatch.ingestion.model.EmployeeProfile;
 import com.berdachuk.expertmatch.ingestion.model.ProcessingResult;
 import com.berdachuk.expertmatch.ingestion.model.ProjectData;
+import com.berdachuk.expertmatch.ingestion.service.ProfileProcessor;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,11 @@ class ProfileProcessorIT extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // Clear existing data to ensure test independence
+        namedJdbcTemplate.getJdbcTemplate().execute("DELETE FROM expertmatch.work_experience");
+        namedJdbcTemplate.getJdbcTemplate().execute("DELETE FROM expertmatch.employee");
+
+        // Create processor instance
         processor = new ProfileProcessor(namedJdbcTemplate, objectMapper);
     }
 

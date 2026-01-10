@@ -1,14 +1,14 @@
 package com.berdachuk.expertmatch.llm.tools;
 
-import com.berdachuk.expertmatch.data.EmployeeRepository;
-import com.berdachuk.expertmatch.data.ExpertEnrichmentService;
-import com.berdachuk.expertmatch.data.WorkExperienceRepository;
-import com.berdachuk.expertmatch.query.QueryParser;
-import com.berdachuk.expertmatch.query.QueryRequest;
-import com.berdachuk.expertmatch.query.QueryResponse;
-import com.berdachuk.expertmatch.query.QueryService;
-import com.berdachuk.expertmatch.retrieval.HybridRetrievalService;
-import com.berdachuk.expertmatch.security.HeaderBasedUserContext;
+import com.berdachuk.expertmatch.core.security.HeaderBasedUserContext;
+import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
+import com.berdachuk.expertmatch.employee.service.ExpertEnrichmentService;
+import com.berdachuk.expertmatch.query.domain.QueryParser;
+import com.berdachuk.expertmatch.query.domain.QueryRequest;
+import com.berdachuk.expertmatch.query.domain.QueryResponse;
+import com.berdachuk.expertmatch.query.service.QueryService;
+import com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService;
+import com.berdachuk.expertmatch.workexperience.repository.WorkExperienceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -82,7 +82,7 @@ class ExpertMatchToolsTest {
                 chatId,
                 "message-id",
                 1234L,
-                new QueryResponse.MatchSummary(5, 2, 2, 1),
+                new com.berdachuk.expertmatch.query.domain.QueryResponse.MatchSummary(5, 2, 2, 1),
                 null  // executionTrace
         );
 
@@ -115,7 +115,7 @@ class ExpertMatchToolsTest {
                 null,
                 "message-id",
                 1000L,
-                new QueryResponse.MatchSummary(3, 1, 1, 1),
+                new com.berdachuk.expertmatch.query.domain.QueryResponse.MatchSummary(3, 1, 1, 1),
                 null  // executionTrace
         );
 
@@ -139,7 +139,7 @@ class ExpertMatchToolsTest {
         List<String> technologies = List.of("AWS", "Docker");
         String domain = "FinTech";
 
-        QueryParser.ParsedQuery parsedQuery = new QueryParser.ParsedQuery(
+        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery = new com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery(
                 "Skills: Java, Spring Boot. Technologies: AWS, Docker. Seniority: A4. Domain: FinTech.",
                 skills,
                 List.of(seniority),
@@ -148,14 +148,14 @@ class ExpertMatchToolsTest {
                 technologies
         );
 
-        HybridRetrievalService.RetrievalResult retrievalResult =
-                new HybridRetrievalService.RetrievalResult(
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult retrievalResult =
+                new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(
                         List.of("emp1", "emp2"),
                         Map.of("emp1", 0.9, "emp2", 0.8)
                 );
 
-        QueryResponse.ExpertMatch expert1 = createMockExpert("emp1", "John Doe");
-        QueryResponse.ExpertMatch expert2 = createMockExpert("emp2", "Jane Smith");
+        com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch expert1 = createMockExpert("emp1", "John Doe");
+        com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch expert2 = createMockExpert("emp2", "Jane Smith");
 
         when(queryParser.parse(anyString())).thenReturn(parsedQuery);
         when(retrievalService.retrieve(any(QueryRequest.class), eq(parsedQuery)))
@@ -164,7 +164,7 @@ class ExpertMatchToolsTest {
                 .thenReturn(List.of(expert1, expert2));
 
         // Act
-        List<QueryResponse.ExpertMatch> result = expertMatchTools.findExperts(
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> result = expertMatchTools.findExperts(
                 skills, seniority, technologies, domain
         );
 
@@ -179,7 +179,7 @@ class ExpertMatchToolsTest {
     @Test
     void testFindExpertsWithEmptyCriteria() {
         // Act
-        List<QueryResponse.ExpertMatch> result = expertMatchTools.findExperts(
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> result = expertMatchTools.findExperts(
                 List.of(), null, List.of(), null
         );
 
@@ -193,7 +193,7 @@ class ExpertMatchToolsTest {
     void testGetExpertProfileById() {
         // Arrange
         String expertId = "8760000000000420950";
-        EmployeeRepository.Employee employee = new EmployeeRepository.Employee(
+        com.berdachuk.expertmatch.employee.domain.Employee employee = new com.berdachuk.expertmatch.employee.domain.Employee(
                 expertId,
                 "John Doe",
                 "john.doe@example.com",
@@ -202,7 +202,7 @@ class ExpertMatchToolsTest {
                 "Available"
         );
 
-        WorkExperienceRepository.WorkExperience workExp = new WorkExperienceRepository.WorkExperience(
+        com.berdachuk.expertmatch.workexperience.domain.WorkExperience workExp = new com.berdachuk.expertmatch.workexperience.domain.WorkExperience(
                 "exp1",
                 expertId,
                 "proj1",
@@ -222,7 +222,7 @@ class ExpertMatchToolsTest {
         when(workExperienceRepository.findByEmployeeId(expertId)).thenReturn(List.of(workExp));
 
         // Act
-        QueryResponse.ExpertMatch result = expertMatchTools.getExpertProfile(expertId, null);
+        com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch result = expertMatchTools.getExpertProfile(expertId, null);
 
         // Assert
         assertNotNull(result);
@@ -240,7 +240,7 @@ class ExpertMatchToolsTest {
         when(employeeRepository.findById(expertId)).thenReturn(Optional.empty());
 
         // Act
-        QueryResponse.ExpertMatch result = expertMatchTools.getExpertProfile(expertId, null);
+        com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch result = expertMatchTools.getExpertProfile(expertId, null);
 
         // Assert
         assertNull(result);
@@ -258,7 +258,7 @@ class ExpertMatchToolsTest {
                 "responsibilities", List.of("API Development", "Code Review")
         );
 
-        QueryParser.ParsedQuery parsedQuery = new QueryParser.ParsedQuery(
+        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery = new com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery(
                 "Technologies: Java, Spring Boot, AWS, Docker. Seniority: A4. Responsibilities: API Development, Code Review.",
                 List.of("Java", "Spring Boot"),
                 List.of("A4"),
@@ -267,15 +267,15 @@ class ExpertMatchToolsTest {
                 List.of("AWS", "Docker")
         );
 
-        HybridRetrievalService.RetrievalResult retrievalResult =
-                new HybridRetrievalService.RetrievalResult(
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult retrievalResult =
+                new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(
                         List.of("emp1", "emp2", "emp3"),
                         Map.of("emp1", 0.95, "emp2", 0.85, "emp3", 0.75)
                 );
 
-        QueryResponse.ExpertMatch expert1 = createMockExpert("emp1", "Expert 1");
-        QueryResponse.ExpertMatch expert2 = createMockExpert("emp2", "Expert 2");
-        QueryResponse.ExpertMatch expert3 = createMockExpert("emp3", "Expert 3");
+        com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch expert1 = createMockExpert("emp1", "Expert 1");
+        com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch expert2 = createMockExpert("emp2", "Expert 2");
+        com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch expert3 = createMockExpert("emp3", "Expert 3");
 
         when(queryParser.parse(anyString())).thenReturn(parsedQuery);
         when(retrievalService.retrieve(any(QueryRequest.class), eq(parsedQuery)))
@@ -284,7 +284,7 @@ class ExpertMatchToolsTest {
                 .thenReturn(List.of(expert1, expert2, expert3));
 
         // Act
-        List<QueryResponse.ExpertMatch> result = expertMatchTools.matchProjectRequirements(requirements);
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> result = expertMatchTools.matchProjectRequirements(requirements);
 
         // Assert
         assertNotNull(result);
@@ -300,7 +300,7 @@ class ExpertMatchToolsTest {
         Map<String, Object> requirements = Map.of();
 
         // Act
-        List<QueryResponse.ExpertMatch> result = expertMatchTools.matchProjectRequirements(requirements);
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> result = expertMatchTools.matchProjectRequirements(requirements);
 
         // Assert
         assertNotNull(result);
@@ -315,18 +315,18 @@ class ExpertMatchToolsTest {
         String expertId1 = "emp1";
         String expertId2 = "emp2";
 
-        WorkExperienceRepository.WorkExperience we1 = new WorkExperienceRepository.WorkExperience(
+        com.berdachuk.expertmatch.workexperience.domain.WorkExperience we1 = new com.berdachuk.expertmatch.workexperience.domain.WorkExperience(
                 "exp1", expertId1, "proj1", "cust1", projectName, "Customer A",
                 "Finance", "Developer", java.time.Instant.now().minusSeconds(86400 * 180),
                 java.time.Instant.now(), "Summary", "Responsibilities", List.of("Java")
         );
-        WorkExperienceRepository.WorkExperience we2 = new WorkExperienceRepository.WorkExperience(
+        com.berdachuk.expertmatch.workexperience.domain.WorkExperience we2 = new com.berdachuk.expertmatch.workexperience.domain.WorkExperience(
                 "exp2", expertId2, "proj1", "cust1", projectName, "Customer A",
                 "Finance", "Lead", java.time.Instant.now().minusSeconds(86400 * 365),
                 java.time.Instant.now(), "Summary", "Responsibilities", List.of("Java", "Spring")
         );
 
-        QueryParser.ParsedQuery parsedQuery = new QueryParser.ParsedQuery(
+        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery = new com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery(
                 "Experts who worked on project: " + projectName,
                 List.of(),
                 List.of(),
@@ -335,14 +335,14 @@ class ExpertMatchToolsTest {
                 List.of()
         );
 
-        HybridRetrievalService.RetrievalResult retrievalResult =
-                new HybridRetrievalService.RetrievalResult(
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult retrievalResult =
+                new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(
                         List.of(expertId1, expertId2),
                         Map.of(expertId1, 1.0, expertId2, 1.0)
                 );
 
-        QueryResponse.ExpertMatch expert1 = createMockExpert(expertId1, "John Doe");
-        QueryResponse.ExpertMatch expert2 = createMockExpert(expertId2, "Jane Smith");
+        com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch expert1 = createMockExpert(expertId1, "John Doe");
+        com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch expert2 = createMockExpert(expertId2, "Jane Smith");
 
         when(queryParser.parse(anyString())).thenReturn(parsedQuery);
         when(retrievalService.retrieve(any(QueryRequest.class), eq(parsedQuery)))
@@ -356,7 +356,7 @@ class ExpertMatchToolsTest {
                 ));
 
         // Act
-        List<QueryResponse.ExpertMatch> result = expertMatchTools.getProjectExperts(null, projectName);
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> result = expertMatchTools.getProjectExperts(null, projectName);
 
         // Assert
         assertNotNull(result);
@@ -369,7 +369,7 @@ class ExpertMatchToolsTest {
     @Test
     void testGetProjectExpertsEmptyCriteria() {
         // Act
-        List<QueryResponse.ExpertMatch> result = expertMatchTools.getProjectExperts(null, null);
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> result = expertMatchTools.getProjectExperts(null, null);
 
         // Assert
         assertNotNull(result);
@@ -378,17 +378,17 @@ class ExpertMatchToolsTest {
     }
 
     // Helper method to create mock expert
-    private QueryResponse.ExpertMatch createMockExpert(String id, String name) {
-        return new QueryResponse.ExpertMatch(
+    private com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch createMockExpert(String id, String name) {
+        return new com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch(
                 id,
                 name,
                 name.toLowerCase().replace(" ", ".") + "@example.com",
                 "A4",
-                new QueryResponse.LanguageProficiency("C1"),
+                new com.berdachuk.expertmatch.query.domain.QueryResponse.LanguageProficiency("C1"),
                 null,
                 null,
                 List.of(),
-                new QueryResponse.Experience(false, false, false, false, false),
+                new com.berdachuk.expertmatch.query.domain.QueryResponse.Experience(false, false, false, false, false),
                 0.9,
                 "Available"
         );

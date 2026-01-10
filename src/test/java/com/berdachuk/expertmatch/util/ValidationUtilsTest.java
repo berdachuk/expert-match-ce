@@ -1,5 +1,6 @@
 package com.berdachuk.expertmatch.util;
 
+import com.berdachuk.expertmatch.core.util.ValidationUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -7,6 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for ValidationUtils.
+ * <p>
+ * Note: This is a legitimate unit test because it tests pure utility/validation logic
+ * without any dependencies. According to TDD rules, unit tests are acceptable for
+ * utility classes with no dependencies.
  */
 class ValidationUtilsTest {
 

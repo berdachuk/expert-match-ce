@@ -4,6 +4,7 @@ import com.berdachuk.expertmatch.ingestion.model.EmployeeData;
 import com.berdachuk.expertmatch.ingestion.model.EmployeeProfile;
 import com.berdachuk.expertmatch.ingestion.model.ProcessingResult;
 import com.berdachuk.expertmatch.ingestion.model.ProjectData;
+import com.berdachuk.expertmatch.ingestion.service.ProfileProcessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

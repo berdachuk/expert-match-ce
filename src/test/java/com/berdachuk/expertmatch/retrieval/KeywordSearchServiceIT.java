@@ -1,7 +1,8 @@
 package com.berdachuk.expertmatch.retrieval;
 
-import com.berdachuk.expertmatch.data.IdGenerator;
+import com.berdachuk.expertmatch.core.util.IdGenerator;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
+import com.berdachuk.expertmatch.retrieval.service.KeywordSearchService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -50,27 +51,27 @@ class KeywordSearchServiceIT extends BaseIntegrationTest {
         String workExperienceId2 = IdGenerator.generateId();
 
         String insertSql = """
-            INSERT INTO expertmatch.work_experience 
-            (id, employee_id, project_name, project_summary, role, technologies)
-                VALUES (:id, :employeeId, :projectName, :summary, :role, :technologies)
-            """;
+                INSERT INTO expertmatch.work_experience 
+                (id, employee_id, project_name, project_summary, role, technologies)
+                    VALUES (:id, :employeeId, :projectName, :summary, :role, :technologies)
+                """;
 
         namedJdbcTemplate.update(insertSql, Map.of(
                 "id", workExperienceId1,
                 "employeeId", employeeId1,
-            "projectName", "Spring Boot Microservices",
-            "summary", "Developed REST APIs using Spring Boot and Java",
-            "role", "Backend Developer",
-            "technologies", new String[]{"Java", "Spring Boot", "PostgreSQL"}
+                "projectName", "Spring Boot Microservices",
+                "summary", "Developed REST APIs using Spring Boot and Java",
+                "role", "Backend Developer",
+                "technologies", new String[]{"Java", "Spring Boot", "PostgreSQL"}
         ));
 
         namedJdbcTemplate.update(insertSql, Map.of(
                 "id", workExperienceId2,
                 "employeeId", employeeId2,
-            "projectName", "React Frontend Application",
-            "summary", "Built user interface with React and TypeScript",
-            "role", "Frontend Developer",
-            "technologies", new String[]{"React", "TypeScript", "JavaScript"}
+                "projectName", "React Frontend Application",
+                "summary", "Built user interface with React and TypeScript",
+                "role", "Frontend Developer",
+                "technologies", new String[]{"React", "TypeScript", "JavaScript"}
         ));
 
         // Test keyword search for "Spring Boot"
@@ -94,13 +95,13 @@ class KeywordSearchServiceIT extends BaseIntegrationTest {
 
         namedJdbcTemplate.update(
                 "INSERT INTO expertmatch.work_experience (id, employee_id, project_name, project_summary, technologies) VALUES (:id, :employeeId, :name, :summary, :technologies)",
-            Map.of(
-                    "id", workExperienceId,
-                    "employeeId", employeeId,
-                "name", "Banking Application",
-                "summary", "Developed secure banking system with Java and Spring",
-                    "technologies", new String[]{"Java", "Spring Boot", "PostgreSQL", "Docker"}
-            )
+                Map.of(
+                        "id", workExperienceId,
+                        "employeeId", employeeId,
+                        "name", "Banking Application",
+                        "summary", "Developed secure banking system with Java and Spring",
+                        "technologies", new String[]{"Java", "Spring Boot", "PostgreSQL", "Docker"}
+                )
         );
 
         // Search for multiple keywords
@@ -132,12 +133,12 @@ class KeywordSearchServiceIT extends BaseIntegrationTest {
 
         namedJdbcTemplate.update(
                 "INSERT INTO expertmatch.work_experience (id, employee_id, project_name, technologies) VALUES (:id, :employeeId, :name, :technologies)",
-            Map.of(
-                    "id", workExperienceId,
-                    "employeeId", employeeId,
-                "name", "Test Project",
-                    "technologies", new String[]{"Java", "Spring Boot", "PostgreSQL"}
-            )
+                Map.of(
+                        "id", workExperienceId,
+                        "employeeId", employeeId,
+                        "name", "Test Project",
+                        "technologies", new String[]{"Java", "Spring Boot", "PostgreSQL"}
+                )
         );
 
         // Search by technologies

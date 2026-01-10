@@ -1,6 +1,7 @@
 package com.berdachuk.expertmatch.llm.tools;
 
-import com.berdachuk.expertmatch.embedding.EmbeddingService;
+import com.berdachuk.expertmatch.core.repository.sql.InjectSql;
+import com.berdachuk.expertmatch.embedding.service.EmbeddingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springaicommunity.tool.search.*;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -24,6 +25,12 @@ public class PgVectorToolSearcher implements ToolSearcher {
 
     private final NamedParameterJdbcTemplate namedJdbcTemplate;
     private final EmbeddingService embeddingService;
+
+    @InjectSql("/sql/toolmetadata/clearIndex.sql")
+    private String clearIndexSql;
+
+    @InjectSql("/sql/toolmetadata/searchTools.sql")
+    private String searchToolsSql;
 
     public PgVectorToolSearcher(
             NamedParameterJdbcTemplate namedJdbcTemplate,
@@ -77,8 +84,7 @@ public class PgVectorToolSearcher implements ToolSearcher {
     @Override
     public void clearIndex(String sessionId) {
         // Clear all tool metadata from database
-        String sql = "DELETE FROM expertmatch.tool_metadata";
-        namedJdbcTemplate.update(sql, new HashMap<>());
+        namedJdbcTemplate.update(clearIndexSql, new HashMap<>());
         log.info("Cleared tool index for sessionId: {}", sessionId);
     }
 
@@ -112,28 +118,12 @@ public class PgVectorToolSearcher implements ToolSearcher {
             throw new IllegalArgumentException("Formatted vector string is invalid: " + vectorString);
         }
 
-        // Vector similarity search using cosine distance
-        String sql = """
-                SELECT 
-                    tool_name,
-                    description,
-                    tool_class,
-                    method_name,
-                    parameters,
-                    1 - (embedding <=> :queryVector::vector) as similarity
-                FROM expertmatch.tool_metadata
-                WHERE embedding IS NOT NULL
-                AND 1 - (embedding <=> :queryVector::vector) >= 0.5
-                ORDER BY embedding <=> :queryVector::vector
-                LIMIT :maxResults
-                """;
-
         Map<String, Object> params = new HashMap<>();
         params.put("queryVector", vectorString);
         params.put("maxResults", maxResults);
 
         // Execute query and convert to ToolReference objects
-        List<Map<String, Object>> results = namedJdbcTemplate.query(sql, params, (rs, rowNum) -> {
+        List<Map<String, Object>> results = namedJdbcTemplate.query(searchToolsSql, params, (rs, rowNum) -> {
             Map<String, Object> toolMetadata = new HashMap<>();
             toolMetadata.put("toolName", rs.getString("tool_name"));
             toolMetadata.put("description", rs.getString("description"));

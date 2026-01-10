@@ -1,5 +1,7 @@
 package com.berdachuk.expertmatch.embedding;
 
+import com.berdachuk.expertmatch.embedding.service.EmbeddingService;
+import com.berdachuk.expertmatch.embedding.service.impl.EmbeddingServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +22,7 @@ import static org.mockito.Mockito.*;
 /**
  * Unit test for EmbeddingService.
  * Uses Mockito to mock EmbeddingModel.
- *
+ * <p>
  * IMPORTANT: LLM providers are external services and MUST be mocked.
  * - Uses @Mock for EmbeddingModel to avoid real API calls
  * - All embedding generation uses mocked responses
@@ -32,7 +34,7 @@ class EmbeddingServiceTest {
     private EmbeddingModel embeddingModel;
 
     @InjectMocks
-    private EmbeddingService embeddingService;
+    private EmbeddingServiceImpl embeddingService;
 
     @BeforeEach
     void setUp() {
@@ -51,7 +53,7 @@ class EmbeddingServiceTest {
         when(embedding.getOutput()).thenReturn(mockEmbedding);
         when(response.getResults()).thenReturn(List.of(embedding));
 
-        when(embeddingModel.embedForResponse(ArgumentMatchers.<List<String>>any())).thenReturn(response);
+        when(embeddingModel.embedForResponse(ArgumentMatchers.any())).thenReturn(response);
 
         List<Double> resultList = embeddingService.generateEmbedding("test text");
 
@@ -72,7 +74,7 @@ class EmbeddingServiceTest {
         EmbeddingResponse response = mock(EmbeddingResponse.class);
         when(response.getResults()).thenReturn(List.of());
 
-        when(embeddingModel.embedForResponse(ArgumentMatchers.<List<String>>any())).thenReturn(response);
+        when(embeddingModel.embedForResponse(ArgumentMatchers.any())).thenReturn(response);
 
         List<Double> result = embeddingService.generateEmbedding("test text");
 
@@ -95,7 +97,7 @@ class EmbeddingServiceTest {
         when(emb2.getOutput()).thenReturn(embedding2);
         when(response.getResults()).thenReturn(List.of(emb1, emb2));
 
-        when(embeddingModel.embedForResponse(ArgumentMatchers.<List<String>>any())).thenReturn(response);
+        when(embeddingModel.embedForResponse(ArgumentMatchers.any())).thenReturn(response);
 
         List<String> texts = new ArrayList<>();
         texts.add("text1");
@@ -121,7 +123,7 @@ class EmbeddingServiceTest {
         assertNotNull(results);
         assertTrue(results.isEmpty());
 
-        verify(embeddingModel, never()).embedForResponse(ArgumentMatchers.<List<String>>any());
+        verify(embeddingModel, never()).embedForResponse(ArgumentMatchers.any());
     }
 
     @Test
@@ -135,7 +137,7 @@ class EmbeddingServiceTest {
         when(embedding.getOutput()).thenReturn(mockEmbedding);
         when(response.getResults()).thenReturn(List.of(embedding));
 
-        when(embeddingModel.embedForResponse(ArgumentMatchers.<List<String>>any())).thenReturn(response);
+        when(embeddingModel.embedForResponse(ArgumentMatchers.any())).thenReturn(response);
 
         float[] resultArray = embeddingService.generateEmbeddingAsFloatArray("test text");
 
@@ -147,7 +149,7 @@ class EmbeddingServiceTest {
 
     @Test
     void testGenerateEmbeddingNullClient() {
-        EmbeddingService service = new EmbeddingService(null);
+        EmbeddingService service = new EmbeddingServiceImpl(null);
 
         assertThrows(IllegalStateException.class, () -> {
             service.generateEmbedding("test");
@@ -156,7 +158,7 @@ class EmbeddingServiceTest {
 
     @Test
     void testGenerateEmbeddingsNullClient() {
-        EmbeddingService service = new EmbeddingService(null);
+        EmbeddingService service = new EmbeddingServiceImpl(null);
 
         List<String> testList = new ArrayList<>();
         testList.add("test");

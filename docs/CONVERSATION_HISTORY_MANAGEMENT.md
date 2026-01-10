@@ -1,6 +1,7 @@
 # Conversation History Management
 
 **Date:** 2025-12-28  
+**Last Updated:** 2026-01-10  
 **Status:** Implemented
 
 ---
@@ -15,9 +16,11 @@ queries.
 
 ### Components
 
-1. **TokenCountingService**: Estimates tokens in text messages and conversation history
-2. **ConversationHistoryManager**: Manages history retrieval, token counting, and summarization
-3. **Summarization Prompt Template**: LLM prompt for condensing old messages
+1. **TokenCountingService**: Interface for estimating tokens in text messages and conversation history
+   - **Implementation**: `TokenCountingServiceImpl` (`com.berdachuk.expertmatch.chat.service.impl`)
+2. **ConversationHistoryManager**: Interface for managing history retrieval, token counting, and summarization
+   - **Implementation**: `ConversationHistoryManagerImpl` (`com.berdachuk.expertmatch.chat.service.impl`)
+3. **Summarization Prompt Template**: LLM prompt for condensing old messages (`summarize-history.st`)
 
 ### Flow
 
@@ -41,47 +44,81 @@ ConversationHistoryManager.getOptimizedHistory()
 
 ## Token Counting
 
+### Implementation
+
+The `TokenCountingServiceImpl` class implements token counting using a simple estimation algorithm.
+
+**Location**: `com.berdachuk.expertmatch.chat.service.impl.TokenCountingServiceImpl`
+
 ### Estimation Algorithm
 
 - **Method**: ~4 characters per token (conservative estimate for English text)
+- **Constant**: `CHARS_PER_TOKEN = 4.0`
 - **Accuracy**: Reasonable approximation for most use cases
 - **Note**: Actual token counts may vary based on:
-- Language (non-English may have different ratios)
-    - Model tokenizer (different models tokenize differently)
-    - Special characters and whitespace
+  - Language (non-English may have different ratios)
+  - Model tokenizer (different models tokenize differently)
+  - Special characters and whitespace
 
 ### Token Counting Methods
 
 1. **estimateTokens(String text)**: Counts tokens in raw text
-2. **estimateFormattedMessageTokens(String role, String content)**: Counts tokens including formatting ("User: " or "Assistant: " prefix)
-3. **estimateHistoryTokens(List<Message>)**: Counts tokens for entire history including section headers
+   - Returns 0 for null or empty strings
+   - Uses `Math.ceil(text.length() / 4.0)` for estimation
+
+2. **estimateFormattedMessageTokens(String role, String content)**: Counts tokens including formatting
+   - Formats as: `"{role}: {content}\n"`
+   - Includes formatting overhead in token count
+
+3. **estimateHistoryTokens(List<ConversationMessage>)**: Counts tokens for entire history
+   - Iterates through all messages and sums formatted token counts
+   - Adds overhead for "Conversation History:\n" section header
+
 4. **estimateSectionTokens(String sectionText)**: Counts tokens for prompt sections
+   - Delegates to `estimateTokens()` for section text
 
 ## History Optimization
+
+### Implementation
+
+The `ConversationHistoryManagerImpl` class implements the history optimization logic.
+
+**Location**: `com.berdachuk.expertmatch.chat.service.impl.ConversationHistoryManagerImpl`
 
 ### Strategy
 
 When history exceeds limits, the system:
 
-1. **Splits History**:
-- Recent messages: Keep as-is (half of `max-messages`)
-    - Older messages: Summarize
+1. **Fetches Messages**:
+   - Retrieves up to 50 messages from database (ordered by sequence number, descending)
+   - Optionally excludes the most recent message (current query) if `excludeCurrentQuery` is true
 
-2. **Summarization**:
-- Uses LLM with `summarize-history.st` prompt template
-    - Preserves key context, requirements, and decisions
-    - Maintains information about experts, technologies, and skills
-    - Removes redundant information
-    - Limited to `max-summary-tokens` (default: 500)
+2. **Token Counting**:
+   - Uses `TokenCountingService` to estimate total tokens
+   - Checks against `max-tokens` and `max-messages` limits
 
-3. **Combination**:
-- Creates synthetic summary message: `[Previous conversation summary] {summary}`
-    - Combines: Summary + Recent messages
-    - Checks if still within limits
+3. **Splits History** (if exceeds limits):
+   - **Recent messages**: Keep as-is (half of `max-messages`, minimum 1)
+   - **Older messages**: Summarize using LLM
 
-4. **Recursive Optimization**:
-- If still exceeds token limit, further optimizes by summarizing oldest messages
-    - Continues until within limits
+4. **Summarization**:
+   - Uses LLM with `summarize-history.st` prompt template via `ChatClient`
+   - Formats older messages as "role: content\n" pairs
+   - Preserves key context, requirements, and decisions
+   - Maintains information about experts, technologies, and skills
+   - Removes redundant information
+   - Limited to `max-summary-tokens` (default: 500)
+   - Truncates summary if it exceeds token limit
+
+5. **Combination**:
+   - Creates synthetic summary message: `[Previous conversation summary] {summary}`
+   - Message type: "system", role: "system"
+   - Combines: Summary + Recent messages
+   - Checks if still within limits
+
+6. **Recursive Optimization**:
+   - If still exceeds token limit, recursively calls `optimizeHistory()` on the combined result
+   - Continues until within limits
 
 ### Example
 
@@ -142,7 +179,7 @@ export EXPERTMATCH_CHAT_HISTORY_MAX_SUMMARY_TOKENS=800
 
 ### Integration
 
-`QueryService` uses `ConversationHistoryManager` instead of direct repository calls:
+`QueryServiceImpl` uses `ConversationHistoryManager` instead of direct repository calls:
 
 ```java
 // Old approach (removed)
@@ -152,13 +189,37 @@ List<ConversationMessage> history = historyRepository.getHistory(chatId, 0, 11, 
 List<ConversationMessage> history = historyManager.getOptimizedHistory(chatId, true, tracer);
 ```
 
+### Dependency Injection
+
+Both services are Spring-managed beans:
+
+```java
+@Service
+public class ConversationHistoryManagerImpl implements ConversationHistoryManager {
+    private final ConversationHistoryRepository historyRepository;
+    private final TokenCountingService tokenCountingService;
+    private final PromptTemplate summarizeHistoryPromptTemplate;
+    private final ChatClient chatClient;
+    
+    // Constructor injection with @Qualifier for prompt template
+    public ConversationHistoryManagerImpl(
+            ConversationHistoryRepository historyRepository,
+            TokenCountingService tokenCountingService,
+            @Qualifier("summarizeHistoryPromptTemplate") PromptTemplate summarizeHistoryPromptTemplate,
+            ChatClient chatClient) {
+        // ...
+    }
+}
+```
+
 ### Benefits
 
 1. **Automatic Optimization**: No manual intervention needed
 2. **Token-Aware**: Prevents context window overflow
 3. **Context Preservation**: Summarization maintains key information
-4. **Configurable**: Adjust limits per environment
+4. **Configurable**: Adjust limits per environment via `@Value` annotations
 5. **Transparent**: Works automatically without changing query logic
+6. **Execution Tracing**: Supports `ExecutionTracer` for debugging and monitoring
 
 ## Summarization Prompt
 
@@ -214,6 +275,41 @@ Create a concise summary that:
 4. **Summary Caching**: Cache summaries for frequently accessed chats
 5. **Configurable Strategies**: Allow different summarization strategies (aggressive vs. conservative)
 
+## Implementation Details
+
+### Class Structure
+
+```
+com.berdachuk.expertmatch.chat.service
+├── TokenCountingService (interface)
+├── ConversationHistoryManager (interface)
+└── impl/
+    ├── TokenCountingServiceImpl (implementation)
+    └── ConversationHistoryManagerImpl (implementation)
+```
+
+### Key Dependencies
+
+- **ConversationHistoryRepository**: Database access for message retrieval
+- **TokenCountingService**: Token estimation service
+- **PromptTemplate**: Spring AI prompt template for summarization (qualified as "summarizeHistoryPromptTemplate")
+- **ChatClient**: Spring AI chat client for LLM summarization calls
+
+### Configuration Properties
+
+Properties are injected via `@Value` annotations with defaults:
+
+```java
+@Value("${expertmatch.chat.history.max-tokens:2000}")
+private int maxTokens;
+
+@Value("${expertmatch.chat.history.max-messages:10}")
+private int maxMessages;
+
+@Value("${expertmatch.chat.history.max-summary-tokens:500}")
+private int maxSummaryTokens;
+```
+
 ## Testing
 
 ### Unit Tests
@@ -227,6 +323,7 @@ Create a concise summary that:
 - Test summarization quality
 - Test recursive optimization
 - Test configuration overrides
+- Test with `ExecutionTracer` for step tracking
 
 ## Related Documentation
 

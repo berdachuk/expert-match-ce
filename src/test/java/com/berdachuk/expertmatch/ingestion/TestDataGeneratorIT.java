@@ -1,5 +1,6 @@
 package com.berdachuk.expertmatch.ingestion;
 
+import com.berdachuk.expertmatch.ingestion.service.TestDataGenerator;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,33 +19,31 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Integration test for TestDataGenerator.
  * Verifies that generated work experience data includes CSV-aligned metadata fields.
- *
+ * <p>
  * IMPORTANT: This is an internal systems test with database. All LLM calls MUST be mocked.
- *
+ * <p>
  * Configuration:
  * - Uses "test" profile which excludes SpringAIConfig (via @Profile("!test"))
  * - TestAIConfig provides @Primary mocks for ChatModel and EmbeddingModel
  * - BaseIntegrationTest disables Spring AI auto-configuration (spring.ai.ollama.enabled=false, spring.ai.openai.enabled=false)
  * - @Primary annotations ensure mocks are selected over any auto-configured beans
- *
+ * <p>
  * LLM Usage:
  * - TestDataGenerator.generateTestData() does NOT call generateEmbeddings(), so no LLM calls are made
  * - If generateEmbeddings() were called, it would use the mocked EmbeddingModel from TestAIConfig
  * - All ChatModel usage (if any) would use the mocked ChatModel from TestAIConfig
- *
+ * <p>
  * Verification:
  * - No real LLM API calls should be made during these tests
  * - All embedding generation (if called) uses the mock which returns a fixed 1024-dimensional vector
  */
 class TestDataGeneratorIT extends BaseIntegrationTest {
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
     @Autowired
     private TestDataGenerator testDataGenerator;
-
     @Autowired
     private NamedParameterJdbcTemplate namedJdbcTemplate;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
@@ -499,7 +498,7 @@ class TestDataGeneratorIT extends BaseIntegrationTest {
             String projectName = (String) project.get("name");
             for (String bankingProjectType : bankingProjectTypes) {
                 if ((projectType != null && projectType.contains(bankingProjectType)) ||
-                    (projectName != null && projectName.contains(bankingProjectType))) {
+                        (projectName != null && projectName.contains(bankingProjectType))) {
                     hasBankingProjectType = true;
                     break;
                 }
@@ -728,7 +727,7 @@ class TestDataGeneratorIT extends BaseIntegrationTest {
             String projectName = (String) project.get("name");
             for (String healthcareProjectType : healthcareProjectTypes) {
                 if ((projectType != null && projectType.contains(healthcareProjectType)) ||
-                    (projectName != null && projectName.contains(healthcareProjectType))) {
+                        (projectName != null && projectName.contains(healthcareProjectType))) {
                     hasHealthcareProjectType = true;
                     break;
                 }

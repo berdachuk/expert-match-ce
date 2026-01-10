@@ -1,8 +1,9 @@
 package com.berdachuk.expertmatch.retrieval;
 
-import com.berdachuk.expertmatch.data.IdGenerator;
-import com.berdachuk.expertmatch.embedding.EmbeddingService;
+import com.berdachuk.expertmatch.core.util.IdGenerator;
+import com.berdachuk.expertmatch.embedding.service.EmbeddingService;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
+import com.berdachuk.expertmatch.retrieval.service.VectorSearchService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -14,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Integration test for VectorSearchService.
  * Uses Testcontainers PostgreSQL with PgVector.
- *
+ * <p>
  * IMPORTANT: This is an integration test with database. All LLM calls MUST be mocked.
  * - Extends BaseIntegrationTest which uses TestAIConfig mocks
  * - VectorSearchService uses EmbeddingService which uses mocked EmbeddingModel
@@ -68,24 +69,24 @@ class VectorSearchServiceIT extends BaseIntegrationTest {
         embeddingStr.append("]");
 
         String insertSql = """
-            INSERT INTO expertmatch.work_experience 
-                (id, employee_id, project_name, project_summary, embedding, embedding_dimension)
-                    VALUES (:id, :employeeId, :projectName, :summary, :embedding::vector, :dimension)
-            """;
+                INSERT INTO expertmatch.work_experience 
+                    (id, employee_id, project_name, project_summary, embedding, embedding_dimension)
+                        VALUES (:id, :employeeId, :projectName, :summary, :embedding::vector, :dimension)
+                """;
         namedJdbcTemplate.update(insertSql, Map.of(
                 "id", workExperienceId,
                 "employeeId", employeeId,
-            "projectName", "Java Spring Boot Project",
-            "summary", "Developed microservices using Spring Boot and Java",
+                "projectName", "Java Spring Boot Project",
+                "summary", "Developed microservices using Spring Boot and Java",
                 "embedding", embeddingStr.toString(),
                 "dimension", 1024
         ));
 
         // Test vector search - returns Documents, not just IDs
         var results = vectorSearchService.search(
-            testEmbedding, // Use same embedding for query
-            5,
-            0.7
+                testEmbedding, // Use same embedding for query
+                5,
+                0.7
         );
 
         assertNotNull(results);

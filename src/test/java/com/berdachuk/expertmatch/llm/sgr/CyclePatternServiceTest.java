@@ -1,6 +1,7 @@
 package com.berdachuk.expertmatch.llm.sgr;
 
-import com.berdachuk.expertmatch.llm.AnswerGenerationService;
+import com.berdachuk.expertmatch.llm.service.AnswerGenerationService;
+import com.berdachuk.expertmatch.llm.sgr.impl.CyclePatternServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +43,7 @@ class CyclePatternServiceTest {
         lenient().when(cycleConfig.isEnabled()).thenReturn(true);
         lenient().when(cycleEvaluationPromptTemplate.render(any())).thenReturn("test prompt");
 
-        service = new CyclePatternService(chatClient, objectMapper, config, cycleEvaluationPromptTemplate);
+        service = new CyclePatternServiceImpl(chatClient, objectMapper, config, cycleEvaluationPromptTemplate);
     }
 
     // Note: testEvaluateMultipleExperts_Success is skipped due to complex Spring AI ChatClient mocking
@@ -53,7 +54,7 @@ class CyclePatternServiceTest {
         // Arrange - create new service with disabled config to avoid unnecessary stubbings
         SGRPatternConfig disabledConfig = mock(SGRPatternConfig.class);
         when(disabledConfig.isEnabled()).thenReturn(false);
-        CyclePatternService disabledService = new CyclePatternService(chatClient, objectMapper, disabledConfig, cycleEvaluationPromptTemplate);
+        CyclePatternService disabledService = new CyclePatternServiceImpl(chatClient, objectMapper, disabledConfig, cycleEvaluationPromptTemplate);
 
         String query = "Find experts";
         List<AnswerGenerationService.ExpertContext> expertContexts = List.of();
@@ -72,7 +73,7 @@ class CyclePatternServiceTest {
         when(cycleDisabledConfig.getCycle()).thenReturn(disabledCycleConfig);
         when(cycleDisabledConfig.isEnabled()).thenReturn(true);
         when(disabledCycleConfig.isEnabled()).thenReturn(false);
-        CyclePatternService cycleDisabledService = new CyclePatternService(chatClient, objectMapper, cycleDisabledConfig, cycleEvaluationPromptTemplate);
+        CyclePatternService cycleDisabledService = new CyclePatternServiceImpl(chatClient, objectMapper, cycleDisabledConfig, cycleEvaluationPromptTemplate);
 
         String query = "Find experts";
         List<AnswerGenerationService.ExpertContext> expertContexts = List.of();

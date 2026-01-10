@@ -1,6 +1,8 @@
 package com.berdachuk.expertmatch.graph;
 
-import com.berdachuk.expertmatch.data.IdGenerator;
+import com.berdachuk.expertmatch.core.util.IdGenerator;
+import com.berdachuk.expertmatch.graph.service.GraphBuilderService;
+import com.berdachuk.expertmatch.graph.service.GraphService;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

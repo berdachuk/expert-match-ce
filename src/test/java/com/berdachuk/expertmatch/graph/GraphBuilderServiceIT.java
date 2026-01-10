@@ -1,6 +1,8 @@
 package com.berdachuk.expertmatch.graph;
 
-import com.berdachuk.expertmatch.data.IdGenerator;
+import com.berdachuk.expertmatch.core.util.IdGenerator;
+import com.berdachuk.expertmatch.graph.service.GraphBuilderService;
+import com.berdachuk.expertmatch.graph.service.GraphService;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -120,9 +122,9 @@ class GraphBuilderServiceIT extends BaseIntegrationTest {
 
         // Verify expert vertices were created by querying for them
         String expertQuery = """
-            MATCH (e:Expert)
-                    RETURN e.id as expertId
-                LIMIT 10
+                MATCH (e:Expert)
+                        RETURN e.id as expertId
+                    LIMIT 10
                 """;
 
         var expertResults = graphService.executeCypher(expertQuery, new HashMap<>());
@@ -132,10 +134,10 @@ class GraphBuilderServiceIT extends BaseIntegrationTest {
 
         // Verify project vertices were created
         String projectQuery = """
-                MATCH (p:Project)
-                    RETURN p.id as projectId
-                LIMIT 10
-            """;
+                    MATCH (p:Project)
+                        RETURN p.id as projectId
+                    LIMIT 10
+                """;
 
         var projectResults = graphService.executeCypher(projectQuery, new HashMap<>());
         assertNotNull(projectResults);
@@ -484,7 +486,7 @@ class GraphBuilderServiceIT extends BaseIntegrationTest {
                         RETURN r
                         """;
                 List<Map<String, Object>> simpleResults = graphService.executeCypher(simpleQuery, params);
-                assertTrue(!simpleResults.isEmpty(), "Should find WORKED_FOR relationship between expert and customer");
+                assertFalse(simpleResults.isEmpty(), "Should find WORKED_FOR relationship between expert and customer");
             }
         } catch (Exception e) {
             // If query fails, try simpler query
@@ -493,7 +495,7 @@ class GraphBuilderServiceIT extends BaseIntegrationTest {
                     RETURN r
                     """;
             List<Map<String, Object>> simpleResults = graphService.executeCypher(simpleQuery, params);
-            assertTrue(!simpleResults.isEmpty(), "Should find WORKED_FOR relationship between expert and customer");
+            assertFalse(simpleResults.isEmpty(), "Should find WORKED_FOR relationship between expert and customer");
         }
     }
 
@@ -581,7 +583,7 @@ class GraphBuilderServiceIT extends BaseIntegrationTest {
         params.put("customerId", customer1);
 
         List<Map<String, Object>> results = graphService.executeCypher(relationshipQuery, params);
-        assertTrue(!results.isEmpty(), "Should find WORKED_FOR relationship");
+        assertFalse(results.isEmpty(), "Should find WORKED_FOR relationship");
         // If we get results, the relationship exists (MERGE ensures only one)
         assertEquals(1, results.size(), "Should have exactly one relationship (MERGE prevents duplicates)");
     }

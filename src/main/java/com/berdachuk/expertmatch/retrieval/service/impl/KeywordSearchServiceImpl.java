@@ -1,0 +1,122 @@
+package com.berdachuk.expertmatch.retrieval.service;
+
+import com.berdachuk.expertmatch.core.repository.sql.InjectSql;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Service for keyword/full-text search using PostgreSQL.
+ */
+@Slf4j
+@Service
+public class KeywordSearchServiceImpl implements KeywordSearchService {
+
+    private final NamedParameterJdbcTemplate namedJdbcTemplate;
+
+    @InjectSql("/sql/retrieval/keywordSearch.sql")
+    private String keywordSearchSql;
+
+    public KeywordSearchServiceImpl(NamedParameterJdbcTemplate namedJdbcTemplate) {
+        this.namedJdbcTemplate = namedJdbcTemplate;
+    }
+
+    /**
+     * Searches work experience by keywords.
+     */
+    @Override
+    public List<String> searchByKeywords(List<String> keywords, int maxResults) {
+        // Validate input parameters
+        if (keywords == null || keywords.isEmpty()) {
+            throw new IllegalArgumentException("Keywords cannot be null or empty");
+        }
+        if (maxResults < 1) {
+            throw new IllegalArgumentException("Max results must be at least 1, got: " + maxResults);
+        }
+
+        // Build full-text search query
+        // Use plainto_tsquery instead of to_tsquery for better handling of user input
+        // plainto_tsquery automatically handles multi-word terms, special characters, and AND logic
+        String searchTerms = String.join(" ", keywords);
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("searchTerms", searchTerms);
+        params.put("maxResults", maxResults);
+
+        try {
+            return namedJdbcTemplate.query(keywordSearchSql, params, (rs, rowNum) -> rs.getString("employee_id"));
+        } catch (org.springframework.jdbc.UncategorizedSQLException e) {
+            // Handle transaction aborted errors (25P02) and other SQL errors gracefully
+            // This can happen if a previous query in the transaction failed
+            java.sql.SQLException sqlException = e.getSQLException();
+            String sqlState = sqlException != null ? sqlException.getSQLState() : null;
+            if ("25P02".equals(sqlState)) {
+                // Transaction is aborted - return empty results to allow graceful degradation
+                log.warn("Keyword search failed due to aborted transaction - returning empty results to allow graceful degradation. Error: {}",
+                        e.getMessage());
+                log.debug("Transaction aborted error details", e);
+                return List.of();
+            }
+            // Re-throw other SQL errors
+            log.error("SQL error during keyword search", e);
+            throw e;
+        } catch (Exception e) {
+            // Handle any other exceptions (e.g., invalid search terms, connection issues)
+            log.warn("Keyword search failed - returning empty results to allow graceful degradation. Error: {}",
+                    e.getMessage());
+            log.debug("Keyword search error details", e);
+            return List.of();
+        }
+    }
+
+    /**
+     * Searches by exact technology match.
+     */
+    @Override
+    public List<String> searchByTechnologies(List<String> technologies, int maxResults) {
+        // Validate input parameters
+        if (technologies == null || technologies.isEmpty()) {
+            throw new IllegalArgumentException("Technologies cannot be null or empty");
+        }
+        if (maxResults < 1) {
+            throw new IllegalArgumentException("Max results must be at least 1, got: " + maxResults);
+        }
+
+        String sql = """
+                SELECT DISTINCT we.employee_id
+                FROM expertmatch.work_experience we
+                WHERE we.technologies && ARRAY[:technologies]::text[]
+                LIMIT :maxResults
+                """;
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("technologies", technologies.toArray(new String[0]));
+        params.put("maxResults", maxResults);
+
+        try {
+            return namedJdbcTemplate.query(sql, params, (rs, rowNum) -> rs.getString("employee_id"));
+        } catch (org.springframework.jdbc.UncategorizedSQLException e) {
+            // Handle transaction aborted errors (25P02) and other SQL errors gracefully
+            java.sql.SQLException sqlException = e.getSQLException();
+            String sqlState = sqlException != null ? sqlException.getSQLState() : null;
+            if ("25P02".equals(sqlState)) {
+                log.warn("Technology search failed due to aborted transaction - returning empty results to allow graceful degradation. Error: {}",
+                        e.getMessage());
+                log.debug("Transaction aborted error details", e);
+                return List.of();
+            }
+            log.error("SQL error during technology search", e);
+            throw e;
+        } catch (Exception e) {
+            log.warn("Technology search failed - returning empty results to allow graceful degradation. Error: {}",
+                    e.getMessage());
+            log.debug("Technology search error details", e);
+            return List.of();
+        }
+    }
+}
+

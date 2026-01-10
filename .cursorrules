@@ -3,13 +3,24 @@
 ## Test-Driven Development (TDD) Approach
 
 **CRITICAL**: Always follow TDD approach:
-1. **Create test first** - Write the test before implementing the feature
-2. **Run the test** - Verify it fails (red phase)
-3. **Implement the feature** - Write minimal code to make the test pass (green phase)
-4. **Refactor** - Improve code while keeping tests green
-5. **Verify** - Always verify tests and implementation before switching to next task
+1. **Think about testing first** - Before writing any code, think about how to test the new functionality
+2. **Create test first** - Write the test before implementing the feature
+3. **Run the test** - Verify it fails (red phase)
+4. **Implement the feature** - Write minimal code to make the test pass (green phase)
+5. **Verify tests work** - Run tests and verify they work as expected
+6. **Refactor** - Improve code while keeping tests green
+7. **Verify again** - Always verify tests and implementation before switching to next task
 
 ### TDD Workflow
+- **Always think how to test new functionality first** - Before implementing, consider:
+  - What are the test cases?
+  - What are the edge cases?
+  - What are the success scenarios?
+  - What are the failure scenarios?
+  - How can this be tested in isolation?
+- **Then create test** - Write comprehensive tests covering all scenarios
+- **Then implement functionality** - Write minimal code to make tests pass
+- **Verify that tests work as expected** - Run tests and ensure they pass and behave correctly
 - Never skip writing tests
 - Never implement features without tests
 - Always run tests after implementation
@@ -44,6 +55,62 @@
 3. **TDD**: Test-driven development - tests first, then implementation
 4. **Modularity**: Spring Modulith (backend), component-driven (frontend)
 
+### Module Structure
+- **Domain-Driven Module Organization**: Each domain module must follow a consistent, layered structure
+- **Standard Module Layout**: All domain modules should follow this structure:
+  ```
+  [domain-module]/
+  ├── domain/
+  │   ├── [Entity].java
+  │   ├── [RelatedEntity].java
+  │   ├── dto/ (Data Transfer Objects)
+  │   ├── filters/ (query filters)
+  │   └── wrappers/ (response wrappers)
+  ├── repository/
+  │   ├── [Entity]Repository.java (interface)
+  │   ├── [RelatedEntity]Repository.java (interface)
+  │   ├── impl/ (repository implementations)
+  │   └── jdbc/ (JDBC-specific implementations, e.g., RowMappers)
+  ├── service/
+  │   ├── [Entity]Service.java (interface)
+  │   ├── [RelatedEntity]Service.java (interface)
+  │   └── impl/ (service implementations)
+  └── rest/
+      ├── [Entity]RestControllerV2.java
+      └── [Entity]DataRestControllerV2.java
+  ```
+- **Example**: Client module structure:
+  ```
+  client/
+  ├── domain/
+  │   ├── Client.java
+  │   ├── ClientCategory.java
+  │   ├── ClientType.java
+  │   ├── dto/ (Data Transfer Objects)
+  │   ├── filters/ (query filters)
+  │   └── wrappers/ (response wrappers)
+  ├── repository/
+  │   ├── ClientRepository.java (interface)
+  │   ├── ClientCategoryRepository.java (interface)
+  │   ├── impl/ (repository implementations)
+  │   └── jdbc/ (JDBC-specific implementations, e.g., RowMappers)
+  ├── service/
+  │   ├── ClientService.java (interface)
+  │   ├── ClientCategoryService.java (interface)
+  │   └── impl/ (service implementations)
+  └── rest/
+      ├── ClientRestControllerV2.java
+      └── ClientDataRestControllerV2.java
+  ```
+- **Layer Separation**: Each layer has a clear responsibility:
+  - **domain/**: Entity classes, DTOs, enums, constants, filters, wrappers
+  - **repository/**: Data access layer interfaces (JDBC-based), with `impl/` subdirectory for implementations and optional `jdbc/` subdirectory for JDBC-specific implementations (e.g., RowMappers)
+  - **service/**: Business logic layer interfaces, with `impl/` subdirectory for implementations
+  - **rest/**: REST API controllers (API endpoints)
+- **REST API Versioning**: Use versioned REST controllers (e.g., `*RestControllerV2`) and separate data controllers (e.g., `*DataRestControllerV2`) when needed
+- **Self-Contained Modules**: Each domain module should be self-contained with its own domain, repository, service, and REST layers
+- **Benefits**: Clear separation of concerns, consistent structure across domains, easier navigation and maintenance, scalable architecture
+
 ### Planning and Implementation Strategy
 - **Incremental Testable Steps**: Always propose plans with incremental, testable steps
 - **Step-by-Step Improvement**: Each step should produce a working, testable state of the application
@@ -57,12 +124,22 @@
 - **No Big Bang**: Avoid plans that require completing multiple features before anything is testable
 - **Continuous Verification**: After each step, verify the application works and tests pass before proceeding
 
-### Database Migrations (MVP)
-- **MVP Rule**: Use only V1 migration script with all required changes consolidated
-- **Single Migration**: All schema changes must be in V1__initial_schema.sql
-- **No Incremental Migrations**: Do not create V2, V3, V4, etc. for MVP
-- **Consolidation**: When making schema changes, update V1 directly instead of creating new migrations
-- **Post-MVP**: After MVP, can use incremental migrations (V2, V3, etc.)
+### Database Migrations
+- **Learning Path Strategy**: During the learning path, use incremental migration versions (V1, V2, V3, etc.)
+  - Each phase adds a new migration file (e.g., `V1__initial_schema.sql`, `V2__add_employee_table.sql`, `V3__add_chat_table.sql`)
+  - This allows students to see the evolution of the database schema step by step
+  - Each phase builds upon previous migrations
+  - Migration files should be named descriptively: `V{N}__{description}.sql`
+- **MVP Completion Strategy**: After completing the whole MVP, merge all incremental migrations into a single V1 version
+  - Consolidate all schema changes from V1, V2, V3, etc. into `V1__initial_schema.sql`
+  - Remove intermediate migration files (V2, V3, etc.) after consolidation
+  - The consolidated V1 becomes the **etalon** (standard/reference) database structure
+  - This V1 represents the complete MVP database schema
+- **Production/Development Rule**: Use only V1 migration script with all required changes consolidated
+- **Single Migration**: All schema changes must be in V1__initial_schema.sql for production/development
+- **No Incremental Migrations**: Do not create V2, V3, V4, etc. for production/development (use consolidated V1)
+- **Consolidation Process**: When making schema changes, update V1 directly instead of creating new migrations
+- **Post-MVP**: After MVP, can use incremental migrations (V2, V3, etc.) for new features
 
 ### Database Testing
 - **Always use Testcontainers**: Never use H2 or other in-memory databases for database tests
@@ -89,6 +166,23 @@
 - **Important**: Always build the test container image before running tests: `./scripts/build-test-container.sh`
 - **Test Independence**: `mvn clean test` always starts with a fresh database. Regular `mvn test` reuses containers for speed
 
+### Maven Test Configuration
+- **Integration Tests Execution Phase**: Integration tests must NOT be executed before the `mvn package` phase
+  - Integration tests run during the `integration-test` phase, which comes after `package` in the Maven lifecycle
+  - This ensures the application is packaged before integration tests are executed
+  - Configured using Maven Failsafe Plugin with `<phase>integration-test</phase>`
+- **Integration Test Naming Convention**: All integration tests must use the `IT` suffix
+  - Integration test classes must be named `*IT.java` or `*ITCase.java` (e.g., `EmployeeRepositoryIT.java`, `ChatServiceIT.java`)
+  - Unit tests use `*Test.java` or `*Tests.java` suffix and are excluded from integration test execution
+  - Maven Surefire Plugin excludes `**/*IT.java` and `**/*ITCase.java` patterns
+  - Maven Failsafe Plugin includes only `**/*IT.java` and `**/*ITCase.java` patterns
+- **Maven Lifecycle Order**:
+  1. `test` phase → Surefire runs unit tests (`*Test.java`, `*Tests.java`)
+  2. `package` phase → Creates JAR/WAR
+  3. `integration-test` phase → Failsafe runs integration tests (`*IT.java`, `*ITCase.java`)
+  4. `verify` phase → Failsafe verifies integration test results
+- **Benefits**: Clear separation between unit and integration tests, ensures application is packaged before integration testing, prevents integration tests from running prematurely
+
 ## Documentation
 
 ### Documentation Location
@@ -96,9 +190,91 @@
 - **Documentation Types**: API guides, setup instructions, Postman collections, authorization guides, etc.
 - **Build Exclusion**: The `docs` folder is excluded from build targets and should not be included in JAR/WAR files
 
+## Software Engineering Principles
+
+### SOLID Principles
+- **Single Responsibility Principle (SRP)**: Each class should have one reason to change
+  - Classes should have a single, well-defined responsibility
+  - Example: `EmployeeRepository` handles only employee data access, not business logic
+- **Open/Closed Principle (OCP)**: Open for extension, closed for modification
+  - Use interfaces and abstract classes to allow extension without modifying existing code
+  - Example: Service interfaces allow different implementations without changing clients
+- **Liskov Substitution Principle (LSP)**: Subtypes must be substitutable for their base types
+  - Implementations must honor the contract defined by interfaces
+  - Example: Any `EmployeeRepository` implementation should work with `EmployeeService`
+- **Interface Segregation Principle (ISP)**: Clients should not depend on interfaces they don't use
+  - Create focused, specific interfaces rather than large, general ones
+  - Example: Separate `ReadOnlyRepository` and `WritableRepository` if needed
+- **Dependency Inversion Principle (DIP)**: Depend on abstractions, not concretions
+  - High-level modules should not depend on low-level modules; both should depend on abstractions
+  - Example: Services depend on repository interfaces, not implementations
+
+### YAGNI (You Aren't Gonna Need It)
+- **Don't build features until they're actually needed**
+- Avoid over-engineering and premature optimization
+- Focus on current requirements, not hypothetical future needs
+- **Invalid**: Creating complex abstraction layers "just in case"
+- **Valid**: Simple, direct implementation that solves the current problem
+- **Exception**: When building infrastructure that will definitely be needed (e.g., test framework setup)
+
+### KISS (Keep It Simple, Stupid)
+- **Prefer simple solutions over complex ones**
+- Simplicity is the ultimate sophistication
+- If a simple solution works, don't make it more complex
+- **Invalid**: Over-abstracting, unnecessary design patterns, complex inheritance hierarchies
+- **Valid**: Straightforward code that is easy to understand and maintain
+- **Guideline**: If you need to explain complex code, it's probably too complex
+
+### DRY (Don't Repeat Yourself)
+- **Avoid code duplication**
+- Extract common functionality into reusable methods, classes, or utilities
+- Use constants for repeated values
+- **Invalid**: Copy-pasting code blocks, duplicating business logic
+- **Valid**: Shared utilities, base classes, common methods
+- **Balance**: Don't over-abstract - sometimes a little duplication is better than wrong abstraction
+
+### GRASP (General Responsibility Assignment Software Patterns)
+- **Information Expert**: Assign responsibility to the class that has the information needed to fulfill it
+  - Example: `Employee` class knows how to validate itself
+- **Creator**: Assign class B the responsibility to create instances of class A if B uses, aggregates, or contains A
+  - Example: `ChatService` creates `Chat` entities
+- **Controller**: Assign responsibility for handling system events to a class representing the use case
+  - Example: REST controllers handle HTTP requests, delegate to services
+- **Low Coupling**: Minimize dependencies between classes
+  - Example: Services depend on repository interfaces, not implementations
+- **High Cohesion**: Keep related responsibilities together
+  - Example: All employee-related operations in `EmployeeService`
+- **Polymorphism**: Use polymorphic operations to handle variation
+  - Example: Different repository implementations for different data sources
+- **Pure Fabrication**: Create classes that don't represent domain concepts but support the system
+  - Example: `IdGenerator`, `DateUtils` - utility classes
+- **Indirection**: Use intermediate objects to decouple classes
+  - Example: Repository interfaces decouple services from data access
+- **Protected Variations**: Identify points of predicted variation and create stable interfaces
+  - Example: Repository interfaces protect against database changes
+
+### Domain Driven Design (DDD)
+- **Ubiquitous Language**: Use domain terminology consistently in code and conversations
+  - Example: Use "Employee" not "User", "WorkExperience" not "JobHistory"
+- **Bounded Contexts**: Define clear boundaries for domain models
+  - Example: `employee` module, `chat` module, `query` module
+- **Entities**: Objects with unique identity that persist over time
+  - Example: `Employee`, `Chat`, `WorkExperience` - have IDs and lifecycle
+- **Value Objects**: Immutable objects defined by their attributes
+  - Example: `Email`, `Name` - equality by value, not identity
+- **Aggregates**: Cluster of entities and value objects with a root entity
+  - Example: `Chat` aggregate with `ConversationHistory` entities
+- **Domain Services**: Operations that don't naturally belong to entities
+  - Example: `QueryService`, `RetrievalService` - complex domain operations
+- **Repositories**: Abstraction for accessing aggregates
+  - Example: `EmployeeRepository`, `ChatRepository` - data access abstraction
+- **Domain Events**: Represent something that happened in the domain
+  - Example: Future: `EmployeeCreatedEvent`, `ChatMessageAddedEvent`
+
 ## Code Quality
 - Write clean, maintainable code
-- Follow SOLID principles
+- Follow SOLID principles (see Software Engineering Principles section)
+- Apply YAGNI, KISS, DRY, GRASP, and DDD principles
 - Use meaningful variable and method names
 - Add comments for complex logic
 - Keep methods small and focused
@@ -246,6 +422,106 @@
   ```
 - **Repository Batch Methods**: Repositories should provide batch loading methods like `findByEntityIds(List<String> ids)` that return `Map<String, List<RelatedEntity>>` for efficient data loading
 - **Benefits**: Clear separation of concerns, repositories focus on single entity operations, services handle business logic and aggregation, prevents N+1 query problems, better performance, easier to test and maintain
+
+### Interface-Based Design for Services and Repositories
+- **Always Use Interfaces**: All services and repositories must be defined as interfaces with separate implementation classes
+- **Interface Location**: Interfaces should be in the main package (e.g., `service/`, `repository/`)
+- **Implementation Location**: Implementations should be in `impl/` subdirectories (e.g., `service/impl/`, `repository/impl/`)
+- **Naming Convention**: 
+  - Interface: `[Entity]Service` or `[Entity]Repository` (e.g., `EmployeeService`, `ChatRepository`)
+  - Implementation: `[Entity]ServiceImpl` or `[Entity]RepositoryImpl` (e.g., `EmployeeServiceImpl`, `ChatRepositoryImpl`)
+- **Dependency Injection**: Always inject interfaces, never concrete implementations
+- **Invalid**: Direct instantiation of service/repository implementations, injecting concrete classes, classes without interfaces
+- **Valid**: Interfaces with `impl/` subdirectory, dependency injection of interfaces, clear separation between contract and implementation
+- **Example - Service**:
+  ```java
+  // Interface: service/EmployeeService.java
+  public interface EmployeeService {
+      Optional<Employee> findById(String employeeId);
+      List<Employee> findAll();
+  }
+
+  // Implementation: service/impl/EmployeeServiceImpl.java
+  @Service
+  public class EmployeeServiceImpl implements EmployeeService {
+      private final EmployeeRepository employeeRepository;
+      
+      public EmployeeServiceImpl(EmployeeRepository employeeRepository) {
+          this.employeeRepository = employeeRepository;
+      }
+      
+      @Override
+      @Transactional(readOnly = true)
+      public Optional<Employee> findById(String employeeId) {
+          return employeeRepository.findById(employeeId);
+      }
+      
+      @Override
+      @Transactional(readOnly = true)
+      public List<Employee> findAll() {
+          return employeeRepository.findAll();
+      }
+  }
+  ```
+- **Example - Repository**:
+  ```java
+  // Interface: repository/EmployeeRepository.java
+  public interface EmployeeRepository {
+      Optional<Employee> findById(String employeeId);
+      List<Employee> findAll();
+  }
+
+  // Implementation: repository/impl/EmployeeRepositoryImpl.java
+  @Repository
+  public class EmployeeRepositoryImpl implements EmployeeRepository {
+      private final NamedParameterJdbcTemplate namedJdbcTemplate;
+      private final EmployeeMapper employeeMapper;
+      
+      public EmployeeRepositoryImpl(NamedParameterJdbcTemplate namedJdbcTemplate, EmployeeMapper employeeMapper) {
+          this.namedJdbcTemplate = namedJdbcTemplate;
+          this.employeeMapper = employeeMapper;
+      }
+      
+      @Override
+      public Optional<Employee> findById(String employeeId) {
+          // Implementation details
+      }
+      
+      @Override
+      public List<Employee> findAll() {
+          // Implementation details
+      }
+  }
+  ```
+- **Usage in Other Classes**: Always inject interfaces:
+  ```java
+  @Service
+  public class QueryService {
+      private final EmployeeService employeeService;  // Interface, not implementation
+      private final EmployeeRepository employeeRepository;  // Interface, not implementation
+      
+      public QueryService(EmployeeService employeeService, EmployeeRepository employeeRepository) {
+          this.employeeService = employeeService;
+          this.employeeRepository = employeeRepository;
+      }
+  }
+  ```
+- **Testing**: In unit tests, use implementation classes when instantiating directly:
+  ```java
+  @Test
+  void testSomething() {
+      EmployeeRepository repository = new EmployeeRepositoryImpl(mockJdbcTemplate, mockMapper);
+      EmployeeService service = new EmployeeServiceImpl(repository);
+      // Test implementation
+  }
+  ```
+- **Benefits**: 
+  - Better testability (easy to mock interfaces)
+  - Loose coupling between components
+  - Flexibility to swap implementations
+  - Clear separation of contract and implementation
+  - Easier to maintain and refactor
+  - Supports dependency inversion principle (SOLID)
 
 ### Prompt Management
 - **Always Use PromptTemplates and .st Resources**: All LLM prompts must use Spring AI `PromptTemplate` with external `.st` (StringTemplate) files

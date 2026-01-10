@@ -7,7 +7,7 @@
 **Project Name:** ExpertMatch  
 **Version:** 1.0  
 **Date:** 2025-01-27  
-**Last Updated:** 2026-01-07 (Project analysis and PRD update - Spring AI 1.1.1, implementation status review)  
+**Last Updated:** 2026-01-10 (Documentation alignment with coding rules and current implementation)  
 **Status:** Core Implementation Complete (MVP Ready)
 
 **Naming Conventions:**
@@ -1432,9 +1432,13 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 #### 3.6.9 Chat Management Layer (chat module)
 
 - **ChatService**: Manages chat lifecycle (create, retrieve, update, delete, list, default chat management)
-- **ConversationHistoryManager**: Manages conversation history (save, retrieve, paginate, context building for LLM prompts)
+  - **Implementation**: `ChatServiceImpl`
+- **ConversationHistoryManager**: Interface for managing conversation history (save, retrieve, paginate, context building for LLM prompts)
+  - **Implementation**: `ConversationHistoryManagerImpl` - Handles history optimization, token counting, and LLM-based summarization
 - **ConversationHistoryRepository**: JDBC operations for conversation history persistence
-- **TokenCountingService**: Counts tokens in conversation history for context window management
+  - **Implementation**: `ConversationHistoryRepositoryImpl`
+- **TokenCountingService**: Interface for counting tokens in conversation history for context window management
+  - **Implementation**: `TokenCountingServiceImpl` - Estimates tokens using ~4 characters per token
 
 ---
 
@@ -2274,13 +2278,16 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
         - Older messages: Automatically summarized using LLM when limits exceeded
         - Token-aware: Ensures total history fits within `max-tokens` limit
 - **Implementation**:
-- `TokenCountingService`: Estimates tokens in messages and history
-    - `ConversationHistoryManager`: Manages history retrieval, token counting, and summarization
+  - `TokenCountingService` (interface) / `TokenCountingServiceImpl` (implementation): Estimates tokens in messages and history using ~4 characters per token
+  - `ConversationHistoryManager` (interface) / `ConversationHistoryManagerImpl` (implementation): Manages history retrieval, token counting, and summarization
     - Retrieve messages from conversation_history table (up to 50)
-    - Count tokens and optimize if exceeds limits
-    - Summarize old messages using LLM with `summarize-history.st` template
+    - Count tokens using `TokenCountingService` and optimize if exceeds limits
+    - Split history: keep recent messages (half of max-messages), summarize older messages
+    - Summarize old messages using LLM with `summarize-history.st` template via `ChatClient`
+    - Recursively optimize if combined summary + recent messages still exceeds limits
     - Build optimized conversation context string
     - Include in RAG prompt construction
+    - Supports `ExecutionTracer` for debugging and monitoring
 - **Configuration**:
 - `expertmatch.chat.history.max-tokens`: Maximum tokens for history (default: 2000)
     - `expertmatch.chat.history.max-messages`: Maximum messages to include (default: 10)

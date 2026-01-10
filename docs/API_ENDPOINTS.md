@@ -88,8 +88,7 @@ Process natural language query for expert discovery.
 - Default server timeout: 5 minutes (300,000ms) - configured in `application-local.yml`
 - Complex queries with deep research, multiple SGR patterns, or large result sets may take several minutes
 - If you encounter timeout errors, consider:
-
-      - Using `includeExecutionTrace: true` to identify slow processing steps
+- Using `includeExecutionTrace: true` to identify slow processing steps
     - Breaking complex queries into smaller sub-queries
     - Increasing timeout values in `application-local.yml` if needed
 
@@ -442,8 +441,7 @@ Spring Gateway:
 
 1. Validates JWT tokens from clients
 2. Extracts user information from JWT claims:
-
-     - User ID from `sub` claim → `X-User-Id` header
+- User ID from `sub` claim → `X-User-Id` header
     - Roles from `authorities` claim → `X-User-Roles` header (comma-separated)
     - Email from `email` claim → `X-User-Email` header (optional)
 3. Forwards requests to ExpertMatch Service with populated headers

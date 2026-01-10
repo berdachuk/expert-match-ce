@@ -118,7 +118,6 @@ Bob --> Alice: Response
 ```
 
 **Note Styling Rule**: Always include the note styling parameters at the beginning of each diagram:
-
 - `BackgroundColor #FFFFFF` (white/transparent background)
 - `BorderColor #FFD700` (yellow/gold border)
 

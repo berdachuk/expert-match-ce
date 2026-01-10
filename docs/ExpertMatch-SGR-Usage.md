@@ -16,19 +16,19 @@ In ExpertMatch, **SGR** refers to two related but distinct concepts:
 
 ## Current Implementation Status
 
-### SGR Deep Research Pattern: **Implemented** ✅
+### SGR Deep Research Pattern: **Implemented** 
 
 The **SGR Deep Research Pattern** has been implemented and is available in the MVP. It can be enabled via the
 `deepResearch` option in the query request.
 
 **Implementation Details:**
 
-- ✅ `DeepResearchService` - Main service orchestrating the deep research flow
-- ✅ `GapAnalysis` - Data model for gap analysis results
-- ✅ Integration in `QueryService` - Checks `deepResearch` flag and routes to deep research flow
-- ✅ LLM-based gap analysis and query refinement
-- ✅ Result synthesis with weighted scoring
-- ✅ Configuration properties in `application.yml`
+- `DeepResearchService` - Main service orchestrating the deep research flow
+- `GapAnalysis` - Data model for gap analysis results
+- Integration in `QueryService` - Checks `deepResearch` flag and routes to deep research flow
+- LLM-based gap analysis and query refinement
+- Result synthesis with weighted scoring
+- Configuration properties in `application.yml`
 
 **Evidence:**
 
@@ -37,7 +37,7 @@ The **SGR Deep Research Pattern** has been implemented and is available in the M
 - Integrated into `QueryService.processQuery()` method
 - Configuration: API-only via `QueryOptions.deepResearch` parameter (defaults to `false`)
 
-### Schema-Guided Reasoning Patterns: **Implemented** ✅
+### Schema-Guided Reasoning Patterns: **Implemented** 
 
 The **Schema-Guided Reasoning (SGR) Patterns** (Cascade, Routing, Cycle) have been **fully implemented** and are
 available in the MVP. They can be enabled via the respective options in the query request.
@@ -226,7 +226,7 @@ LLM Classifies Query Type
   ↓
 Route to Appropriate Handler:
 
-  - Expert Search
+- Expert Search
   - Team Formation
   - RFP Response
   - Domain Inquiry
@@ -350,7 +350,7 @@ AnswerGenerationService.generateAnswer()
 
 All SGR patterns have been implemented:
 
-### ✅ Implemented (MVP)
+###  Implemented (MVP)
 
 - **Cascade Pattern**: Expert evaluation with structured reasoning steps
 - **Routing Pattern**: LLM-based query classification
@@ -375,10 +375,10 @@ All SGR pattern options are now available in the OpenAPI spec and can be used vi
 
 **Current Status**:
 
-- ✅ API parameter defined in OpenAPI spec
-- ✅ Default value: `false`
-- ✅ Implementation: Fully implemented
-- ✅ Available via REST API
+- API parameter defined in OpenAPI spec
+- Default value: `false`
+- Implementation: Fully implemented
+- Available via REST API
 
 **API Usage**:
 
@@ -399,11 +399,11 @@ All SGR pattern options are now available in the OpenAPI spec and can be used vi
 
 **Current Status**:
 
-- ✅ API parameter defined in OpenAPI spec (added 2025-12-21)
-- ✅ Default value: `false`
-- ✅ Implementation: Fully implemented
-- ✅ Available via REST API
-- ⚠️ **Requires exactly 1 expert result** to activate (falls back to RAG pattern otherwise)
+- API parameter defined in OpenAPI spec (added 2025-12-21)
+- Default value: `false`
+- Implementation: Fully implemented
+- Available via REST API
+- **Requires exactly 1 expert result** to activate (falls back to RAG pattern otherwise)
 
 **API Usage**:
 
@@ -424,10 +424,10 @@ All SGR pattern options are now available in the OpenAPI spec and can be used vi
 
 **Current Status**:
 
-- ✅ API parameter defined in OpenAPI spec (added 2025-12-21)
-- ✅ Default value: `false`
-- ✅ Implementation: Fully implemented
-- ✅ Available via REST API
+- API parameter defined in OpenAPI spec (added 2025-12-21)
+- Default value: `false`
+- Implementation: Fully implemented
+- Available via REST API
 - **Purpose**: Enables LLM-based query classification during parsing
 
 **API Usage**:
@@ -449,11 +449,11 @@ All SGR pattern options are now available in the OpenAPI spec and can be used vi
 
 **Current Status**:
 
-- ✅ API parameter defined in OpenAPI spec (added 2025-12-21)
-- ✅ Default value: `false`
-- ✅ Implementation: Fully implemented
-- ✅ Available via REST API
-- ⚠️ **Requires multiple expert results (>1)** to activate (falls back to RAG pattern otherwise)
+- API parameter defined in OpenAPI spec (added 2025-12-21)
+- Default value: `false`
+- Implementation: Fully implemented
+- Available via REST API
+- **Requires multiple expert results (>1)** to activate (falls back to RAG pattern otherwise)
 
 **API Usage**:
 
@@ -507,31 +507,28 @@ expertmatch:
 **SGR in ExpertMatch**:
 
 1. **SGR Deep Research Pattern**:
-
-    - **Status**: ✅ **Implemented** (MVP)
+- **Status**:  **Implemented** (MVP)
    - **Location**: `DeepResearchService` integrated into `QueryService` retrieval flow
     - **Purpose**: Multi-step iterative retrieval for complex queries
    - **Components**: Gap analysis, query refinement, expanded retrieval, result synthesis
 
 2. **Schema-Guided Reasoning Patterns**:
-
-    - **Status**: ✅ **Implemented** (MVP)
+- **Status**:  **Implemented** (MVP)
    - **Location**: Integrated into `AnswerGenerationService` and `QueryParser`
    - **Purpose**: Structured, predictable LLM reasoning with JSON Schema constraints
    - **Components**:
-
-        - **Cascade Pattern**: `ExpertEvaluationService` for structured expert evaluation
+- **Cascade Pattern**: `ExpertEvaluationService` for structured expert evaluation
       - **Routing Pattern**: `QueryClassificationService` for LLM-based query classification
       - **Cycle Pattern**: `CyclePatternService` for multiple expert evaluations
 
 All **SGR patterns** are now **active in the MVP** and can be enabled via their respective options in query requests:
 
-- `deepResearch`: Enable Deep Research Pattern (✅ Available in OpenAPI spec)
-- `useCascadePattern`: Enable Cascade Pattern for structured expert evaluation (✅ Available in OpenAPI spec as of
+- `deepResearch`: Enable Deep Research Pattern ( Available in OpenAPI spec)
+- `useCascadePattern`: Enable Cascade Pattern for structured expert evaluation ( Available in OpenAPI spec as of
   2025-12-21, requires exactly 1 expert)
-- `useRoutingPattern`: Enable Routing Pattern for LLM-based query classification (✅ Available in OpenAPI spec as of
+- `useRoutingPattern`: Enable Routing Pattern for LLM-based query classification ( Available in OpenAPI spec as of
   2025-12-21)
-- `useCyclePattern`: Enable Cycle Pattern for multiple expert evaluations (✅ Available in OpenAPI spec as of 2025-12-21,
+- `useCyclePattern`: Enable Cycle Pattern for multiple expert evaluations ( Available in OpenAPI spec as of 2025-12-21,
   requires multiple experts)
 
 ---

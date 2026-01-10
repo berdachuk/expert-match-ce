@@ -26,16 +26,16 @@ import java.util.Map;
 public class ToolMetadataService {
     private static final int DATABASE_EMBEDDING_DIMENSION = 1536;
 
-    private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate namedJdbcTemplate;
     private final EmbeddingService embeddingService;
     private final ObjectMapper objectMapper;
 
     public ToolMetadataService(
-            NamedParameterJdbcTemplate jdbcTemplate,
+            NamedParameterJdbcTemplate namedJdbcTemplate,
             EmbeddingService embeddingService,
             ObjectMapper objectMapper
     ) {
-        this.jdbcTemplate = jdbcTemplate;
+        this.namedJdbcTemplate = namedJdbcTemplate;
         this.embeddingService = embeddingService;
         this.objectMapper = objectMapper;
     }
@@ -118,7 +118,7 @@ public class ToolMetadataService {
         params.put("now", java.sql.Timestamp.from(Instant.now()));
 
         try {
-            jdbcTemplate.update(sql, params);
+            namedJdbcTemplate.update(sql, params);
             log.debug("Indexed tool: {} from class {}", toolName, toolClass);
         } catch (Exception e) {
             log.error("Failed to index tool {}: {}", toolName, e.getMessage(), e);
@@ -220,7 +220,7 @@ public class ToolMetadataService {
         String deleteSql = "DELETE FROM expertmatch.tool_metadata WHERE tool_class = :toolClass";
         Map<String, Object> deleteParams = new HashMap<>();
         deleteParams.put("toolClass", toolClass);
-        jdbcTemplate.update(deleteSql, deleteParams);
+        namedJdbcTemplate.update(deleteSql, deleteParams);
 
         // Re-index
         indexTools(toolComponent);

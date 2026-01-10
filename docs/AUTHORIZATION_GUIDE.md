@@ -58,13 +58,11 @@ Spring Gateway should be configured to:
 
 - Validate JWT tokens from OAuth2 authorization server
 - Extract user information from JWT claims:
-
-      - User ID from `sub` claim
+- User ID from `sub` claim
     - Roles from `authorities` claim (array)
     - Email from `email` claim (optional)
 - Add headers to requests:
-
-      - `X-User-Id`: User identifier
+- `X-User-Id`: User identifier
     - `X-User-Roles`: Comma-separated list of roles (e.g., "ROLE_USER,ROLE_ADMIN")
     - `X-User-Email`: User email address (optional)
 
@@ -134,14 +132,14 @@ This allows local development and testing without requiring Spring Gateway.
 
 | Endpoint               | Public | Authenticated | ADMIN Role                       |
 |------------------------|--------|---------------|----------------------------------|
-| `/actuator/health`     | ✅      | -             | -                                |
-| `/actuator/info`       | ✅      | -             | -                                |
-| `/api/v1/query/**`     | -      | ✅             | -                                |
-| `/api/v1/chats/**`     | -      | ✅             | -                                |
-| `/api/v1/test-data/**` | -      | -             | ✅ Required (enforced by Gateway) |
-| `/api/v1/health`       | -      | ✅             | -                                |
-| `/api/v1/metrics`      | -      | ✅             | -                                |
-| `/mcp/**`              | -      | ✅             | -                                |
+| `/actuator/health`     |       | -             | -                                |
+| `/actuator/info`       |       | -             | -                                |
+| `/api/v1/query/**`     | -      |              | -                                |
+| `/api/v1/chats/**`     | -      |              | -                                |
+| `/api/v1/test-data/**` | -      | -             |  Required (enforced by Gateway) |
+| `/api/v1/health`       | -      |              | -                                |
+| `/api/v1/metrics`      | -      |              | -                                |
+| `/mcp/**`              | -      |              | -                                |
 
 ### Role Format
 
@@ -222,8 +220,7 @@ Swagger UI allows you to set headers manually:
 1. Open Swagger UI: `http://localhost:8093/swagger-ui.html`
 2. Click "Authorize" button (if available) or set headers manually
 3. For each request, you can add headers:
-
-     - `X-User-Id`: Your user ID
+- `X-User-Id`: Your user ID
     - `X-User-Roles`: Your roles (comma-separated)
     - `X-User-Email`: Your email (optional)
 
@@ -240,11 +237,11 @@ Swagger UI allows you to set headers manually:
 
 **Allowed Endpoints**:
 
-- ✅ All query endpoints
-- ✅ All chat management endpoints
-- ✅ System endpoints (health, metrics)
-- ✅ MCP server endpoints
-- ❌ Ingestion endpoints (requires ADMIN role, enforced by Gateway)
+- All query endpoints
+- All chat management endpoints
+- System endpoints (health, metrics)
+- MCP server endpoints
+- Ingestion endpoints (requires ADMIN role, enforced by Gateway)
 
 **Test Request**:
 ```bash
@@ -266,8 +263,8 @@ curl -X POST "http://localhost:8093/api/v1/query" \
 
 **Allowed Endpoints**:
 
-- ✅ All regular user endpoints
-- ✅ All ingestion endpoints (if Gateway allows)
+- All regular user endpoints
+- All ingestion endpoints (if Gateway allows)
 
 **Test Request**:
 ```bash

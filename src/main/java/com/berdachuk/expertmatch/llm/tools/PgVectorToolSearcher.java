@@ -22,14 +22,14 @@ public class PgVectorToolSearcher implements ToolSearcher {
 
     private static final int DATABASE_EMBEDDING_DIMENSION = 1536;
 
-    private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate namedJdbcTemplate;
     private final EmbeddingService embeddingService;
 
     public PgVectorToolSearcher(
-            NamedParameterJdbcTemplate jdbcTemplate,
+            NamedParameterJdbcTemplate namedJdbcTemplate,
             EmbeddingService embeddingService
     ) {
-        this.jdbcTemplate = jdbcTemplate;
+        this.namedJdbcTemplate = namedJdbcTemplate;
         this.embeddingService = embeddingService;
     }
 
@@ -78,7 +78,7 @@ public class PgVectorToolSearcher implements ToolSearcher {
     public void clearIndex(String sessionId) {
         // Clear all tool metadata from database
         String sql = "DELETE FROM expertmatch.tool_metadata";
-        jdbcTemplate.update(sql, new HashMap<>());
+        namedJdbcTemplate.update(sql, new HashMap<>());
         log.info("Cleared tool index for sessionId: {}", sessionId);
     }
 
@@ -133,7 +133,7 @@ public class PgVectorToolSearcher implements ToolSearcher {
         params.put("maxResults", maxResults);
 
         // Execute query and convert to ToolReference objects
-        List<Map<String, Object>> results = jdbcTemplate.query(sql, params, (rs, rowNum) -> {
+        List<Map<String, Object>> results = namedJdbcTemplate.query(sql, params, (rs, rowNum) -> {
             Map<String, Object> toolMetadata = new HashMap<>();
             toolMetadata.put("toolName", rs.getString("tool_name"));
             toolMetadata.put("description", rs.getString("description"));

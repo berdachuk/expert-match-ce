@@ -2,7 +2,6 @@ package com.berdachuk.expertmatch.chat;
 
 import com.berdachuk.expertmatch.api.ApiMapper;
 import com.berdachuk.expertmatch.api.ChatsApi;
-import com.berdachuk.expertmatch.api.model.*;
 import com.berdachuk.expertmatch.data.ChatRepository;
 import com.berdachuk.expertmatch.security.HeaderBasedUserContext;
 import com.berdachuk.expertmatch.util.ValidationUtils;
@@ -44,18 +43,18 @@ public class ChatController implements ChatsApi {
      * Create a new chat.
      */
     @Override
-    public ResponseEntity<Chat> createChat(
+    public ResponseEntity<com.berdachuk.expertmatch.api.model.Chat> createChat(
             @RequestHeader(value = "X-User-Id", required = false) String xUserId,
             @RequestHeader(value = "X-User-Roles", required = false) String xUserRoles,
             @RequestHeader(value = "X-User-Email", required = false) String xUserEmail,
-            @Valid @RequestBody(required = false) CreateChatRequest createChatRequest) {
+            @Valid @RequestBody(required = false) com.berdachuk.expertmatch.api.model.CreateChatRequest createChatRequest) {
         // Use xUserId from parameter or fallback to userContext
         String userId = xUserId != null && !xUserId.isBlank() ? xUserId : userContext.getUserIdOrAnonymous();
         String name = createChatRequest != null && createChatRequest.getName() != null
                 ? createChatRequest.getName() : null;
 
         ChatRepository.Chat domainChat = chatService.createChat(userId, name);
-        Chat apiChat = apiMapper.toApiChat(domainChat);
+        com.berdachuk.expertmatch.api.model.Chat apiChat = apiMapper.toApiChat(domainChat);
         return ResponseEntity.status(HttpStatus.CREATED).body(apiChat);
     }
 
@@ -63,7 +62,7 @@ public class ChatController implements ChatsApi {
      * List all chats for the authenticated user.
      */
     @Override
-    public ResponseEntity<ChatListResponse> listChats(
+    public ResponseEntity<com.berdachuk.expertmatch.api.model.ChatListResponse> listChats(
             @RequestHeader(value = "X-User-Id", required = false) String xUserId,
             @RequestHeader(value = "X-User-Roles", required = false) String xUserRoles,
             @RequestHeader(value = "X-User-Email", required = false) String xUserEmail) {
@@ -71,7 +70,7 @@ public class ChatController implements ChatsApi {
         String userId = xUserId != null && !xUserId.isBlank() ? xUserId : userContext.getUserIdOrAnonymous();
         List<ChatRepository.Chat> domainChats = chatService.listChats(userId);
 
-        ChatListResponse response = new ChatListResponse()
+        com.berdachuk.expertmatch.api.model.ChatListResponse response = new com.berdachuk.expertmatch.api.model.ChatListResponse()
                 .chats(apiMapper.toApiChatList(domainChats))
                 .total(domainChats.size());
         return ResponseEntity.ok(response);
@@ -81,7 +80,7 @@ public class ChatController implements ChatsApi {
      * Get chat details.
      */
     @Override
-    public ResponseEntity<Chat> getChat(
+    public ResponseEntity<com.berdachuk.expertmatch.api.model.Chat> getChat(
             @jakarta.validation.constraints.Pattern(regexp = "^[0-9a-fA-F]{24}$") @PathVariable("chatId") String chatId,
             @RequestHeader(value = "X-User-Id", required = false) String xUserId,
             @RequestHeader(value = "X-User-Roles", required = false) String xUserRoles,
@@ -112,7 +111,7 @@ public class ChatController implements ChatsApi {
             );
         }
 
-        Chat apiChat = apiMapper.toApiChat(domainChat.get());
+        com.berdachuk.expertmatch.api.model.Chat apiChat = apiMapper.toApiChat(domainChat.get());
         return ResponseEntity.ok(apiChat);
     }
 
@@ -120,9 +119,9 @@ public class ChatController implements ChatsApi {
      * Update chat (e.g., rename).
      */
     @Override
-    public ResponseEntity<Chat> updateChat(
+    public ResponseEntity<com.berdachuk.expertmatch.api.model.Chat> updateChat(
             @jakarta.validation.constraints.Pattern(regexp = "^[0-9a-fA-F]{24}$") @PathVariable("chatId") String chatId,
-            @Valid @RequestBody UpdateChatRequest updateChatRequest,
+            @Valid @RequestBody com.berdachuk.expertmatch.api.model.UpdateChatRequest updateChatRequest,
             @RequestHeader(value = "X-User-Id", required = false) String xUserId,
             @RequestHeader(value = "X-User-Roles", required = false) String xUserRoles,
             @RequestHeader(value = "X-User-Email", required = false) String xUserEmail) {
@@ -173,7 +172,7 @@ public class ChatController implements ChatsApi {
      * Delete a chat.
      */
     @Override
-    public ResponseEntity<DeleteChatResponse> deleteChat(
+    public ResponseEntity<com.berdachuk.expertmatch.api.model.DeleteChatResponse> deleteChat(
             @jakarta.validation.constraints.Pattern(regexp = "^[0-9a-fA-F]{24}$") @PathVariable("chatId") String chatId,
             @RequestHeader(value = "X-User-Id", required = false) String xUserId,
             @RequestHeader(value = "X-User-Roles", required = false) String xUserRoles,
@@ -219,7 +218,7 @@ public class ChatController implements ChatsApi {
             );
         }
 
-        DeleteChatResponse response = new DeleteChatResponse()
+        com.berdachuk.expertmatch.api.model.DeleteChatResponse response = new com.berdachuk.expertmatch.api.model.DeleteChatResponse()
                 .success(true)
                 .message("Chat deleted successfully");
         return ResponseEntity.ok(response);
@@ -229,7 +228,7 @@ public class ChatController implements ChatsApi {
      * Get conversation history for a chat.
      */
     @Override
-    public ResponseEntity<ConversationHistoryResponse> getHistory(
+    public ResponseEntity<com.berdachuk.expertmatch.api.model.ConversationHistoryResponse> getHistory(
             @jakarta.validation.constraints.Pattern(regexp = "^[0-9a-fA-F]{24}$") @PathVariable("chatId") String chatId,
             @RequestHeader(value = "X-User-Id", required = false) String xUserId,
             @RequestHeader(value = "X-User-Roles", required = false) String xUserRoles,
@@ -287,13 +286,13 @@ public class ChatController implements ChatsApi {
         int totalElements = historyRepository.getTotalMessageCount(chatId);
         int totalPages = pageSize > 0 ? (int) Math.ceil((double) totalElements / pageSize) : 0;
 
-        PageInfo pageInfo = new PageInfo()
+        com.berdachuk.expertmatch.api.model.PageInfo pageInfo = new com.berdachuk.expertmatch.api.model.PageInfo()
                 .number(pageNum)
                 .size(pageSize)
                 .totalElements(totalElements)
                 .totalPages(totalPages);
 
-        ConversationHistoryResponse response = new ConversationHistoryResponse()
+        com.berdachuk.expertmatch.api.model.ConversationHistoryResponse response = new com.berdachuk.expertmatch.api.model.ConversationHistoryResponse()
                 .chatId(chatId)
                 .messages(apiMapper.toApiConversationMessageList(domainMessages))
                 .page(pageInfo);

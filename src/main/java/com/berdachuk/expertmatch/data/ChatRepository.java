@@ -1,6 +1,9 @@
 package com.berdachuk.expertmatch.data;
 
+import com.berdachuk.expertmatch.data.mapper.ChatMapper;
+import com.berdachuk.expertmatch.data.repository.sql.InjectSql;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -18,9 +21,32 @@ import java.util.Optional;
 public class ChatRepository {
 
     private final NamedParameterJdbcTemplate namedJdbcTemplate;
+    private final ChatMapper chatMapper;
 
-    public ChatRepository(NamedParameterJdbcTemplate namedJdbcTemplate) {
+    @InjectSql("/sql/chat/create.sql")
+    private String createSql;
+
+    @InjectSql("/sql/chat/findDefaultChat.sql")
+    private String findDefaultChatSql;
+
+    @InjectSql("/sql/chat/findById.sql")
+    private String findByIdSql;
+
+    @InjectSql("/sql/chat/findAllByUserId.sql")
+    private String findAllByUserIdSql;
+
+    @InjectSql("/sql/chat/updateChatName.sql")
+    private String updateChatNameSql;
+
+    @InjectSql("/sql/chat/deleteChat.sql")
+    private String deleteChatSql;
+
+    @InjectSql("/sql/chat/updateLastActivity.sql")
+    private String updateLastActivitySql;
+
+    public ChatRepository(NamedParameterJdbcTemplate namedJdbcTemplate, ChatMapper chatMapper) {
         this.namedJdbcTemplate = namedJdbcTemplate;
+        this.chatMapper = chatMapper;
     }
 
     /**
@@ -46,14 +72,8 @@ public class ChatRepository {
         params.put("lastActivityAt", java.sql.Timestamp.from(now));
         params.put("messageCount", 0);
 
-        String sql = """
-                    INSERT INTO expertmatch.chat 
-                (id, user_id, name, is_default, created_at, updated_at, last_activity_at, message_count)
-                VALUES (:id, :userId, :name, :isDefault, :createdAt, :updatedAt, :lastActivityAt, :messageCount)
-                """;
-
         try {
-            namedJdbcTemplate.update(sql, params);
+            namedJdbcTemplate.update(createSql, params);
             return new Chat(id, userId, name, isDefault, now, now, now, 0);
         } catch (org.springframework.jdbc.UncategorizedSQLException e) {
             // Handle transaction aborted errors (25P02) gracefully
@@ -83,18 +103,12 @@ public class ChatRepository {
             throw new IllegalArgumentException("User ID cannot be null or empty");
         }
 
-        String sql = """
-                SELECT id, user_id, name, is_default, created_at, updated_at, last_activity_at, message_count
-                    FROM expertmatch.chat
-                WHERE user_id = :userId AND is_default = TRUE
-                """;
-
         Map<String, Object> params = new HashMap<>();
         params.put("userId", userId);
 
         try {
-            List<Chat> results = namedJdbcTemplate.query(sql, params, (rs, rowNum) -> mapRowToChat(rs));
-            return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+            List<Chat> results = namedJdbcTemplate.query(findDefaultChatSql, params, chatMapper);
+            return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
         } catch (org.springframework.jdbc.UncategorizedSQLException e) {
             // Handle transaction aborted errors (25P02) gracefully
             java.sql.SQLException sqlException = e.getSQLException();
@@ -123,18 +137,12 @@ public class ChatRepository {
             throw new IllegalArgumentException("Chat ID cannot be null or empty");
         }
 
-        String sql = """
-                SELECT id, user_id, name, is_default, created_at, updated_at, last_activity_at, message_count
-                    FROM expertmatch.chat
-                WHERE id = :chatId
-                """;
-
         Map<String, Object> params = new HashMap<>();
         params.put("chatId", chatId);
 
         try {
-            List<Chat> results = namedJdbcTemplate.query(sql, params, (rs, rowNum) -> mapRowToChat(rs));
-            return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+            List<Chat> results = namedJdbcTemplate.query(findByIdSql, params, chatMapper);
+            return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
         } catch (org.springframework.jdbc.UncategorizedSQLException e) {
             // Handle transaction aborted errors (25P02) gracefully
             java.sql.SQLException sqlException = e.getSQLException();
@@ -163,18 +171,11 @@ public class ChatRepository {
             throw new IllegalArgumentException("User ID cannot be null or empty");
         }
 
-        String sql = """
-                SELECT id, user_id, name, is_default, created_at, updated_at, last_activity_at, message_count
-                    FROM expertmatch.chat
-                WHERE user_id = :userId
-                ORDER BY last_activity_at DESC
-                """;
-
         Map<String, Object> params = new HashMap<>();
         params.put("userId", userId);
 
         try {
-            return namedJdbcTemplate.query(sql, params, (rs, rowNum) -> mapRowToChat(rs));
+            return namedJdbcTemplate.query(findAllByUserIdSql, params, chatMapper);
         } catch (org.springframework.jdbc.UncategorizedSQLException e) {
             // Handle transaction aborted errors (25P02) gracefully
             java.sql.SQLException sqlException = e.getSQLException();
@@ -206,18 +207,12 @@ public class ChatRepository {
             throw new IllegalArgumentException("Chat name cannot be null");
         }
 
-        String sql = """
-                    UPDATE expertmatch.chat
-                SET name = :name, updated_at = CURRENT_TIMESTAMP
-                WHERE id = :chatId
-                """;
-
         Map<String, Object> params = new HashMap<>();
         params.put("chatId", chatId);
         params.put("name", name);
 
         try {
-            return namedJdbcTemplate.update(sql, params) > 0;
+            return namedJdbcTemplate.update(updateChatNameSql, params) > 0;
         } catch (org.springframework.jdbc.UncategorizedSQLException e) {
             // Handle transaction aborted errors (25P02) gracefully
             java.sql.SQLException sqlException = e.getSQLException();
@@ -246,12 +241,11 @@ public class ChatRepository {
             throw new IllegalArgumentException("Chat ID cannot be null or empty");
         }
 
-        String sql = "DELETE FROM expertmatch.chat WHERE id = :chatId AND is_default = FALSE";
         Map<String, Object> params = new HashMap<>();
         params.put("chatId", chatId);
 
         try {
-            return namedJdbcTemplate.update(sql, params) > 0;
+            return namedJdbcTemplate.update(deleteChatSql, params) > 0;
         } catch (org.springframework.jdbc.UncategorizedSQLException e) {
             // Handle transaction aborted errors (25P02) gracefully
             java.sql.SQLException sqlException = e.getSQLException();
@@ -280,17 +274,11 @@ public class ChatRepository {
             throw new IllegalArgumentException("Chat ID cannot be null or empty");
         }
 
-        String sql = """
-                    UPDATE expertmatch.chat
-                SET last_activity_at = CURRENT_TIMESTAMP
-                WHERE id = :chatId
-                """;
-
         Map<String, Object> params = new HashMap<>();
         params.put("chatId", chatId);
 
         try {
-            namedJdbcTemplate.update(sql, params);
+            namedJdbcTemplate.update(updateLastActivitySql, params);
         } catch (org.springframework.jdbc.UncategorizedSQLException e) {
             // Handle transaction aborted errors (25P02) gracefully
             java.sql.SQLException sqlException = e.getSQLException();
@@ -308,19 +296,6 @@ public class ChatRepository {
             log.debug("updateLastActivity error details", e);
             // Return silently - activity update is not critical
         }
-    }
-
-    private Chat mapRowToChat(java.sql.ResultSet rs) throws java.sql.SQLException {
-        return new Chat(
-                rs.getString("id"),
-                rs.getString("user_id"),
-                rs.getString("name"),
-                rs.getBoolean("is_default"),
-                rs.getTimestamp("created_at").toInstant(),
-                rs.getTimestamp("updated_at").toInstant(),
-                rs.getTimestamp("last_activity_at").toInstant(),
-                rs.getInt("message_count")
-        );
     }
 
     /**

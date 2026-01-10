@@ -16,25 +16,22 @@
 ### Why "ingestion" is not appropriate:
 
 1. **Semantic Mismatch**:
-
-     - "Ingestion" typically refers to **importing/loading data from external sources** (Kafka, files, APIs, databases)
+- "Ingestion" typically refers to **importing/loading data from external sources** (Kafka, files, APIs, databases)
     - Test data generation is about **creating synthetic data internally**
     - These are fundamentally different operations
 
 2. **Future Confusion**:
-
-     - If real ingestion endpoints are added later (Kafka consumers, file uploads, etc.), they would logically go under
+- If real ingestion endpoints are added later (Kafka consumers, file uploads, etc.), they would logically go under
       `/api/v1/ingestion/*`
     - Having test data generation under the same path would be confusing
 
 3. **API Clarity**:
-
-     - Users expect "ingestion" to mean "bring data in from outside"
+- Users expect "ingestion" to mean "bring data in from outside"
     - Test data generation is "create data internally for testing"
 
 ## Proposed Alternatives
 
-### Option 1: `/api/v1/test-data` ⭐ **RECOMMENDED**
+### Option 1: `/api/v1/test-data`  **RECOMMENDED**
 
 **Endpoints**:
 
@@ -45,15 +42,15 @@
 
 **Pros**:
 
-- ✅ Clear and direct - immediately obvious what it does
-- ✅ Common terminology in software development
-- ✅ No confusion with actual data ingestion
-- ✅ Simple and concise
-- ✅ Matches the primary purpose (test data generation)
+- Clear and direct - immediately obvious what it does
+- Common terminology in software development
+- No confusion with actual data ingestion
+- Simple and concise
+- Matches the primary purpose (test data generation)
 
 **Cons**:
 
-- ⚠️ Slightly longer URL for embeddings/graph endpoints
+- Slightly longer URL for embeddings/graph endpoints
 
 ### Option 2: `/api/v1/data-generation`
 
@@ -66,13 +63,13 @@
 
 **Pros**:
 
-- ✅ More descriptive
-- ✅ Clearly indicates data generation (not ingestion)
+- More descriptive
+- Clearly indicates data generation (not ingestion)
 
 **Cons**:
 
-- ❌ Longer URLs
-- ❌ "data-generation" is verbose
+- Longer URLs
+- "data-generation" is verbose
 
 ### Option 3: `/api/v1/setup`
 
@@ -85,13 +82,13 @@
 
 **Pros**:
 
-- ✅ Indicates setup/initialization purpose
-- ✅ Common in development tools
+- Indicates setup/initialization purpose
+- Common in development tools
 
 **Cons**:
 
-- ❌ "setup" is vague - could mean configuration, initialization, etc.
-- ❌ Doesn't clearly indicate test data generation
+- "setup" is vague - could mean configuration, initialization, etc.
+- Doesn't clearly indicate test data generation
 
 ### Option 4: `/api/v1/admin/test-data`
 
@@ -104,13 +101,13 @@
 
 **Pros**:
 
-- ✅ Emphasizes admin-only nature
-- ✅ Groups admin operations together
+- Emphasizes admin-only nature
+- Groups admin operations together
 
 **Cons**:
 
-- ❌ If other admin endpoints exist, they might not fit under `/admin`
-- ❌ Longer URLs
+- If other admin endpoints exist, they might not fit under `/admin`
+- Longer URLs
 
 ### Option 5: `/api/v1/seed`
 
@@ -123,15 +120,15 @@
 
 **Pros**:
 
-- ✅ Common term in software development ("seeding" a database)
-- ✅ Short and clear
+- Common term in software development ("seeding" a database)
+- Short and clear
 
 **Cons**:
 
-- ⚠️ "seed" typically means initial data, not regenerating data
-- ⚠️ Less clear for embeddings/graph operations
+- "seed" typically means initial data, not regenerating data
+- Less clear for embeddings/graph operations
 
-## Recommendation: `/api/v1/test-data` ⭐
+## Recommendation: `/api/v1/test-data` 
 
 ### Rationale:
 
@@ -193,12 +190,12 @@ If we change from `/ingestion/*` to `/test-data/*`:
 
 | Option                 | Clarity | Brevity | Standard | Future-Proof | Score     |
 |------------------------|---------|---------|----------|--------------|-----------|
-| `/test-data`           | ⭐⭐⭐⭐⭐   | ⭐⭐⭐⭐⭐   | ⭐⭐⭐⭐⭐    | ⭐⭐⭐⭐⭐        | **25/25** |
-| `/data-generation`     | ⭐⭐⭐⭐    | ⭐⭐⭐     | ⭐⭐⭐      | ⭐⭐⭐⭐         | 16/25     |
-| `/setup`               | ⭐⭐      | ⭐⭐⭐⭐    | ⭐⭐⭐      | ⭐⭐⭐          | 12/25     |
-| `/admin/test-data`     | ⭐⭐⭐⭐    | ⭐⭐      | ⭐⭐⭐      | ⭐⭐⭐⭐         | 15/25     |
-| `/seed`                | ⭐⭐⭐     | ⭐⭐⭐⭐⭐   | ⭐⭐⭐⭐     | ⭐⭐⭐          | 15/25     |
-| `/ingestion` (current) | ⭐⭐      | ⭐⭐⭐⭐    | ⭐⭐       | ⭐⭐           | 10/25     |
+| `/test-data`           |    |    |     |         | **25/25** |
+| `/data-generation`     |     |      |       |          | 16/25     |
+| `/setup`               |       |     |       |           | 12/25     |
+| `/admin/test-data`     |     |       |       |          | 15/25     |
+| `/seed`                |      |    |      |           | 15/25     |
+| `/ingestion` (current) |       |     |        |            | 10/25     |
 
 ## Conclusion
 
@@ -206,8 +203,8 @@ If we change from `/ingestion/*` to `/test-data/*`:
 
 This provides:
 
-- ✅ Better semantic clarity
-- ✅ Future-proofing for actual ingestion endpoints
-- ✅ Improved developer experience
-- ✅ Standard REST API patterns
+- Better semantic clarity
+- Future-proofing for actual ingestion endpoints
+- Improved developer experience
+- Standard REST API patterns
 

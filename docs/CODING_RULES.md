@@ -18,10 +18,10 @@ methods.
 
 **Examples**:
 
-- ❌ **Don't**: `System.out.println("Debug message");`
-- ❌ **Don't**: `System.err.println("Error occurred");`
-- ✅ **Do**: Use SLF4J logger: `logger.debug("Debug message");`
-- ✅ **Do**: Use SLF4J logger: `logger.error("Error occurred", exception);`
+- **Don't**: `System.out.println("Debug message");`
+- **Don't**: `System.err.println("Error occurred");`
+- **Do**: Use SLF4J logger: `logger.debug("Debug message");`
+- **Do**: Use SLF4J logger: `logger.error("Error occurred", exception);`
 
 **Implementation**:
 
@@ -48,8 +48,8 @@ methods.
 
 **Examples**:
 
-- ❌ **Don't**: Return a default/fallback answer when LLM service is unavailable
-- ✅ **Do**: Throw `IllegalStateException` or let exceptions propagate
+- **Don't**: Return a default/fallback answer when LLM service is unavailable
+- **Do**: Throw `IllegalStateException` or let exceptions propagate
 
 **Implementation**:
 
@@ -79,10 +79,10 @@ methods.
 
 **Examples**:
 
-- ❌ **Don't**: `emp : employees` or `for (Map<String, Object> emp : employees)`
-- ✅ **Do**: `employee : employees` or `for (Map<String, Object> employee : employees)`
-- ❌ **Don't**: `tech : technologies`, `proj : projects`, `exp : experiences`
-- ✅ **Do**: `technology : technologies`, `project : projects`, `experience : experiences`
+- **Don't**: `emp : employees` or `for (Map<String, Object> emp : employees)`
+- **Do**: `employee : employees` or `for (Map<String, Object> employee : employees)`
+- **Don't**: `tech : technologies`, `proj : projects`, `exp : experiences`
+- **Do**: `technology : technologies`, `project : projects`, `experience : experiences`
 
 **Implementation**:
 
@@ -97,34 +97,37 @@ methods.
 - Examples: `FROM expertmatch.work_experience we`, `SELECT e.id FROM employees e`
 - This exception applies only to SQL query strings, not to Java variable names
 
-## JDBC Template Naming Convention
+## JDBC Template Usage
 
-**Rule**: Use consistent naming for Spring JDBC template fields.
+**Rule**: Always use `NamedParameterJdbcTemplate` when possible. Use `JdbcTemplate` only for special cases like `ConnectionCallback`.
 
 **Naming Convention**:
 
 - `namedJdbcTemplate` for `NamedParameterJdbcTemplate` instances
-- `jdbcTemplate` for `JdbcTemplate` instances
+- `jdbcTemplate` for `JdbcTemplate` instances (only when needed for special operations)
 
 **Rationale**:
 
-- Makes the template type explicit and clear
-- Prevents confusion when both templates are used in the same class
-- Improves code readability and maintainability
+- Named parameters improve code readability and maintainability
+- Named parameters prevent parameter order errors
+- Named parameters make SQL queries more self-documenting
+- `JdbcTemplate` should only be used for special cases like `ConnectionCallback` (e.g., Apache AGE LOAD commands)
 
 **Examples**:
 
-- ✅ **Do**: `private final NamedParameterJdbcTemplate namedJdbcTemplate;`
-- ✅ **Do**: `private final JdbcTemplate jdbcTemplate;`
-- ❌ **Don't**: `private final NamedParameterJdbcTemplate jdbcTemplate;` (when both templates exist)
-- ✅ **Acceptable**: `private final NamedParameterJdbcTemplate jdbcTemplate;` (when only one template exists, but
-  `namedJdbcTemplate` is preferred for consistency)
+- **Do**: `private final NamedParameterJdbcTemplate namedJdbcTemplate;`
+- **Do**: Use `:paramName` syntax in SQL queries
+- **Do**: Use `Map<String, Object>` for parameters
+- **Don't**: Use `JdbcTemplate` with positional parameters (`?`) when named parameters can be used
+- **Acceptable**: Use `JdbcTemplate` for `ConnectionCallback` operations (e.g., `jdbcTemplate.execute((ConnectionCallback<...>) ...)`)
 
 **Implementation**:
 
-- When a class uses both `NamedParameterJdbcTemplate` and `JdbcTemplate`, always use `namedJdbcTemplate` and
-  `jdbcTemplate` respectively
-- For consistency across the codebase, prefer `namedJdbcTemplate` even when only `NamedParameterJdbcTemplate` is used
+- Always prefer `NamedParameterJdbcTemplate` for all database operations
+- Use named parameters (`:paramName`) instead of positional parameters (`?`)
+- Use `Map<String, Object>` to pass parameters
+- Use `Collections.emptyMap()` for queries without parameters
+- Only use `JdbcTemplate` when `ConnectionCallback` is required (e.g., Apache AGE extension loading)
 
 ## Apache AGE Cypher Execution
 
@@ -139,10 +142,10 @@ methods.
 
 **Examples**:
 
-- ❌ **Don't**: Catch Cypher exceptions and return empty lists
-- ❌ **Don't**: Suppress Cypher errors with warnings
-- ✅ **Do**: Let `RetrievalException` propagate from `GraphService.executeCypher()`
-- ✅ **Do**: Let exceptions propagate from `GraphSearchService` methods
+- **Don't**: Catch Cypher exceptions and return empty lists
+- **Don't**: Suppress Cypher errors with warnings
+- **Do**: Let `RetrievalException` propagate from `GraphService.executeCypher()`
+- **Do**: Let exceptions propagate from `GraphSearchService` methods
 
 **Implementation**:
 
@@ -165,13 +168,13 @@ many-to-many relationship tables.
 
 **Examples**:
 
-- ✅ **Do**: `expertmatch.chat` (table for chat entities)
-- ✅ **Do**: `expertmatch.employee` (table for employee entities)
-- ✅ **Do**: `expertmatch.work_experience` (table for work experience entities)
-- ✅ **Do**: `expertmatch.project` (table for project entities)
-- ❌ **Don't**: `expertmatch.chats`, `expertmatch.employees`, `expertmatch.work_experiences`
-- ✅ **Do**: `expertmatch.employee_projects` (many-to-many relationship table)
-- ✅ **Do**: `expertmatch.project_technologies` (many-to-many relationship table)
+- **Do**: `expertmatch.chat` (table for chat entities)
+- **Do**: `expertmatch.employee` (table for employee entities)
+- **Do**: `expertmatch.work_experience` (table for work experience entities)
+- **Do**: `expertmatch.project` (table for project entities)
+- **Don't**: `expertmatch.chats`, `expertmatch.employees`, `expertmatch.work_experiences`
+- **Do**: `expertmatch.employee_projects` (many-to-many relationship table)
+- **Do**: `expertmatch.project_technologies` (many-to-many relationship table)
 
 **Implementation**:
 
@@ -199,12 +202,12 @@ restore the database state to what it was before the test.
 
 **Examples**:
 
-- ❌ **Don't**: Rely on data created by other tests
-- ❌ **Don't**: Leave test data in the database after test completion
-- ❌ **Don't**: Assume a clean database state
-- ✅ **Do**: Create all required test data in `@BeforeEach` or test method
-- ✅ **Do**: Clean up test data in `@AfterEach` or use transactions
-- ✅ **Do**: Use `@Transactional` with rollback for test methods when appropriate
+- **Don't**: Rely on data created by other tests
+- **Don't**: Leave test data in the database after test completion
+- **Don't**: Assume a clean database state
+- **Do**: Create all required test data in `@BeforeEach` or test method
+- **Do**: Clean up test data in `@AfterEach` or use transactions
+- **Do**: Use `@Transactional` with rollback for test methods when appropriate
 
 **Implementation**:
 
@@ -256,13 +259,13 @@ void tearDown() {
 
 **Examples**:
 
-- ✅ **Do**: Use `@Data` for simple data classes with getters, setters, toString, equals, and hashCode
-- ✅ **Do**: Use `@Getter` and `@Setter` for controlled access to fields
-- ✅ **Do**: Use `@AllArgsConstructor` and `@NoArgsConstructor` for constructor generation
-- ✅ **Do**: Use `@Builder` for complex object creation
-- ✅ **Do**: Use `@Slf4j` for logger injection
-- ✅ **Do**: Use `@Value` for immutable classes
-- ❌ **Don't**: Write manual getters, setters, constructors, or builders when Lombok can generate them
+- **Do**: Use `@Data` for simple data classes with getters, setters, toString, equals, and hashCode
+- **Do**: Use `@Getter` and `@Setter` for controlled access to fields
+- **Do**: Use `@AllArgsConstructor` and `@NoArgsConstructor` for constructor generation
+- **Do**: Use `@Builder` for complex object creation
+- **Do**: Use `@Slf4j` for logger injection
+- **Do**: Use `@Value` for immutable classes
+- **Don't**: Write manual getters, setters, constructors, or builders when Lombok can generate them
 
 **Implementation**:
 
@@ -356,11 +359,11 @@ Ensure Lombok is properly configured in the project:
 
 **Examples**:
 
-- ✅ **Do**: Use `@Value` to inject prompt resources
-- ✅ **Do**: Use `PromptTemplate` for structured prompt creation
-- ✅ **Do**: Store prompts in resource files (`.st` or `.txt`)
-- ❌ **Don't**: Hardcode prompts in Java code
-- ❌ **Don't**: Use string concatenation for prompt building
+- **Do**: Use `@Value` to inject prompt resources
+- **Do**: Use `PromptTemplate` for structured prompt creation
+- **Do**: Store prompts in resource files (`.st` or `.txt`)
+- **Don't**: Hardcode prompts in Java code
+- **Don't**: Use string concatenation for prompt building
 
 **Implementation**:
 
@@ -455,9 +458,9 @@ Ensure proper Spring AI configuration:
 
 **Examples**:
 
-- ❌ **Don't**: Create `extractSkillsWithHardcodedPrompt()` as a fallback unless explicitly requested
-- ✅ **Do**: Let exceptions propagate and handle them at the appropriate level
-- ✅ **Do**: Create fallback methods only when user requirements explicitly specify graceful degradation
+- **Don't**: Create `extractSkillsWithHardcodedPrompt()` as a fallback unless explicitly requested
+- **Do**: Let exceptions propagate and handle them at the appropriate level
+- **Do**: Create fallback methods only when user requirements explicitly specify graceful degradation
 
 **Implementation**:
 
@@ -470,3 +473,198 @@ Ensure proper Spring AI configuration:
 
 - Fallback methods may be created when user requirements explicitly specify graceful degradation
 - Fallback methods may be created for critical system components where availability is paramount
+
+## Markdown List Formatting
+
+**Rule**: Always include an empty line between a list header and the list items.
+
+**Rationale**:
+
+- Ensures proper Markdown rendering
+- Improves readability
+- Prevents formatting issues in documentation
+- Consistent formatting across all documents
+
+**Examples**:
+
+- **Don't**:
+  ```markdown
+  **Функциональность**:
+  - Item 1
+  - Item 2
+  ```
+
+- **Do**:
+  ```markdown
+  **Функциональность**:
+
+  - Item 1
+  - Item 2
+  ```
+
+**Implementation**:
+
+- Always add an empty line after headers that introduce lists (e.g., `**Функциональность**:`, `**Технологии**:`, `**Предварительные требования**:`)
+- Apply this rule to all Markdown documents
+- Check all documentation files for compliance
+
+**Exception**:
+
+- No exceptions - all list headers must have an empty line before the list
+
+## Code Samples Language
+
+**Rule**: Always use English in code samples, comments, variable names, method names, and all code-related content.
+
+**Rationale**:
+
+- Code is international and should be readable by developers worldwide
+- English is the standard language for programming
+- Consistency across the codebase
+- Better integration with libraries, frameworks, and tools
+- Easier code reviews and collaboration
+
+**Examples**:
+
+- **Don't**:
+  ```java
+  // Поиск экспертов
+  List<Сотрудник> сотрудники = сервис.найтиЭкспертов("Java");
+  ```
+  
+- **Do**:
+  ```java
+  // Search for experts
+  List<Employee> employees = service.findExperts("Java");
+  ```
+
+**Implementation**:
+
+- All code samples in documentation must use English
+- Variable names, method names, class names in English
+- Comments in code samples in English
+- Error messages in code samples in English
+- Only documentation text (outside code blocks) can be in other languages
+
+**Exception**:
+
+- Documentation text outside code blocks can be in any language
+- User-facing messages in the application can be localized
+- Only code samples, code comments, and code-related content must be in English
+
+## Imports and Class Names
+
+**Rule**: Always use imports and simple class names for domain/data classes. Use fully qualified names for API/web model classes when there's a naming conflict.
+
+**Rationale**:
+
+- Domain/data classes are used more frequently in business logic, so shorter names improve readability
+- API/web model classes are typically used less frequently and at boundaries, so fully qualified names provide clarity
+- This pattern clearly distinguishes between domain models and API models
+- Consistent approach across the codebase
+
+**Examples**:
+
+- **Do**: `import com.berdachuk.expertmatch.data.Employee;` then `List<Employee> employees = ...`
+- **Do**: `List<com.berdachuk.expertmatch.api.model.Employee> apiEmployees = ...` (fully qualified for API models)
+- **Don't**: `List<com.berdachuk.expertmatch.data.Employee> employees = ...` (use import instead)
+- **Do**: `import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;` then `NamedParameterJdbcTemplate template;`
+
+**Implementation**:
+
+- Always import domain/data classes (e.g., `com.berdachuk.expertmatch.data.*`)
+- Use fully qualified names for API/web model classes when there's a naming conflict (e.g., `com.berdachuk.expertmatch.api.model.Employee`)
+- Import all third-party and standard library classes
+- Organize imports: project domain imports first, then third-party, then standard library
+- Let IDE handle import organization and cleanup
+
+**Naming Conflict Resolution**:
+
+- When both domain and API classes have the same simple name (e.g., `Employee`):
+  - **Import the domain class**: `import com.berdachuk.expertmatch.data.Employee;`
+  - **Use fully qualified name for API class**: `com.berdachuk.expertmatch.api.model.Employee`
+- This pattern applies to all domain/API conflicts (Employee, Chat, Project, etc.)
+- In interface implementations, use fully qualified names for API types that conflict with imported domain types
+
+**Best Practices**:
+
+- Import domain/data classes at the top of the file
+- Use fully qualified names for API/web model classes in method signatures and variable declarations
+- Use static imports for constants and utility methods when appropriate
+- Keep imports organized and clean (IDEs can do this automatically)
+- Remove unused imports regularly
+
+## Application Configuration Files
+
+**Rule**: Always use YAML (`.yml` or `.yaml`) files for Spring Boot application properties instead of `.properties` files.
+
+**Rationale**:
+
+- YAML provides better readability with hierarchical structure
+- Easier to manage complex nested configurations
+- More concise syntax for lists and maps
+- Better support for multi-line values
+- Industry standard for modern Spring Boot applications
+- Easier to maintain and review in version control
+
+**Examples**:
+
+- **Don't**: Use `application.properties`:
+  ```properties
+  spring.datasource.url=jdbc:postgresql://localhost:5433/expertmatch
+  spring.datasource.username=postgres
+  spring.datasource.password=password
+  expertmatch.query.enabled=true
+  expertmatch.query.max-results=10
+  ```
+
+- **Do**: Use `application.yml`:
+  ```yaml
+  spring:
+    datasource:
+      url: jdbc:postgresql://localhost:5433/expertmatch
+      username: postgres
+      password: password
+  
+  expertmatch:
+    query:
+      enabled: true
+      max-results: 10
+  ```
+
+**Implementation**:
+
+- Use `application.yml` or `application.yaml` as the main configuration file
+- Place configuration files in `src/main/resources/`
+- Use profile-specific files: `application-{profile}.yml` (e.g., `application-dev.yml`, `application-prod.yml`)
+- Use proper YAML indentation (2 spaces, not tabs)
+- Group related properties under common prefixes
+- Use lists and maps when appropriate for better organization
+
+**File Naming**:
+
+- Main configuration: `application.yml` or `application.yaml`
+- Profile-specific: `application-{profile}.yml` (e.g., `application-dev.yml`)
+- Test configuration: `application-test.yml` (if needed)
+- Both `.yml` and `.yaml` extensions are acceptable, but prefer `.yml` for consistency
+
+**Best Practices**:
+
+- Use hierarchical structure to group related properties
+- Use comments (`#`) to document configuration sections
+- Keep sensitive values in environment variables or external configuration
+- Use Spring profiles for environment-specific configurations
+- Validate YAML syntax before committing (most IDEs provide validation)
+- Use consistent indentation (2 spaces recommended)
+- **PostgreSQL default port**: Use port `5433` by default for PostgreSQL connections (instead of standard `5432`) to avoid conflicts with system PostgreSQL installations
+
+**PostgreSQL Port Convention**:
+
+- Default PostgreSQL port in application configuration: `5433`
+- This avoids conflicts with system PostgreSQL installations that typically use port `5432`
+- Example: `jdbc:postgresql://localhost:5433/expertmatch`
+- Production environments may override this via environment variables or profile-specific configurations
+
+**Exception**:
+
+- No exceptions - all application configuration must use YAML format

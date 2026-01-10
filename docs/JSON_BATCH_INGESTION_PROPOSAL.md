@@ -1,6 +1,8 @@
-# JSON Batch Ingestion - Implementation Complete ✅
+# JSON Batch Ingestion - Implementation Complete 
 
-**Status**: ✅ **Fully Implemented** (2026-01-04)
+**Status**:
+
+**Fully Implemented** (2026-01-04)
 
 This document describes the implemented JSON batch ingestion functionality for ExpertMatch.
 
@@ -66,12 +68,12 @@ GraphBuilderService.buildGraph()
     - `createWorkExperienceRecord()`: Creates work experience with metadata
 
 2. **Data Models**:
-    - `EmployeeProfile`: Root record (employee + summary + projects)
+- `EmployeeProfile`: Root record (employee + summary + projects)
     - `EmployeeData`: Employee fields (id, name, email, seniority, etc.)
     - `ProjectData`: Project fields (code, name, dates, technologies, etc.)
 
 3. **Database Operations**:
-    - Employee: `INSERT ... ON CONFLICT DO UPDATE`
+- Employee: `INSERT ... ON CONFLICT DO UPDATE`
     - Work Experience: `INSERT ... ON CONFLICT DO NOTHING`
     - Projects: Created/found via project name matching
 
@@ -93,7 +95,7 @@ GraphBuilderService.buildGraph()
    ```
 
 3. **Partial Data Handling**: Gracefully handle missing fields:
-    - Missing `summary` → Use empty string or null
+- Missing `summary` → Use empty string or null
     - Missing `projects` → Skip work experience creation
     - Missing optional employee fields → Use defaults or skip
     - Missing project fields → Use defaults or skip project
@@ -512,32 +514,33 @@ public record IngestionResult(
 #### Test Cases
 
 1. **Array Format Parsing**:
-    - Test parsing array of profiles
+
+- Test parsing array of profiles
     - Test parsing single object (backward compatibility)
     - Test invalid JSON structure
 
 2. **Partial Data Handling**:
-    - Test missing optional employee fields (email, seniority, etc.)
+- Test missing optional employee fields (email, seniority, etc.)
     - Test missing summary
     - Test missing projects array
     - Test missing optional project fields
     - Test missing required fields (should fail gracefully)
 
 3. **Database Operations**:
-    - Test employee insertion with defaults
+- Test employee insertion with defaults
     - Test employee update on conflict
     - Test work experience creation
     - Test duplicate prevention
     - Test project creation/finding
 
 4. **Error Recovery**:
-    - Test processing continues after one profile fails
+- Test processing continues after one profile fails
     - Test processing continues after one project fails
     - Test invalid date formats
     - Test database constraint violations
 
 5. **Integration Tests**:
-    - Test full ingestion flow
+- Test full ingestion flow
     - Test with real database (Testcontainers)
     - Test idempotency (re-running ingestion)
 

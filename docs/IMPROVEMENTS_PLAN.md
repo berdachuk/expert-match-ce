@@ -68,8 +68,7 @@ SET r.role = rel.role
 **Proposed Solution**:
 
 - Create indexes on frequently queried vertex properties:
-
-      - `Expert.id` (already indexed via PostgreSQL)
+- `Expert.id` (already indexed via PostgreSQL)
     - `Project.id` (already indexed via PostgreSQL)
     - `Technology.name` (may benefit from graph index)
 - Consider composite indexes for common query patterns
@@ -312,8 +311,7 @@ SET r.role = rel.role
 **Proposed Solution**:
 
 - Split into focused services:
-
-      - `GraphVertexBuilder` - vertex creation
+- `GraphVertexBuilder` - vertex creation
     - `GraphRelationshipBuilder` - relationship creation
     - `GraphBatchProcessor` - batch operations
 - Use strategy pattern for different relationship types
@@ -448,26 +446,22 @@ SET r.role = rel.role
 ## Next Steps
 
 1. **Immediate (Week 1)**:
-
-     - Implement participation relationships batch optimization
+- Implement participation relationships batch optimization
     - Add graph indexes
     - Optimize connection pool
 
 2. **Short-term (Weeks 2-4)**:
-
-     - Enhance transaction management
+- Enhance transaction management
     - Improve error handling
     - Add performance benchmarks
 
 3. **Medium-term (Months 2-3)**:
-
-     - Expand integration test coverage
+- Expand integration test coverage
     - Externalize configuration
     - Improve documentation
 
 4. **Long-term (Months 4-6)**:
-
-     - Consider service refactoring
+- Consider service refactoring
     - Evaluate async processing needs
     - Continuous optimization based on metrics
 

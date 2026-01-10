@@ -113,7 +113,7 @@ User -> API: POST /api/v1/query\n{query, options}
 note right
   Headers:
 
-  - accept: application/json
+- accept: application/json
   - Content-Type: application/json
 end note
 
@@ -171,18 +171,16 @@ end
 
 * **Step 2.1**: Generate unique `queryId` using `IdGenerator.generateId()`
 * **Step 2.2**: Save user message to conversation history:
-
-      - `chatId`: Default chat ID
+- `chatId`: Default chat ID
     - `role`: "user"
     - `content`: "Looking for experts in Java, Spring Boot, and AWS"
     - `sequenceNumber`: Next available sequence number
   - `tokensUsed`: null (user messages don't consume tokens)
 
 * **Step 2.3**: Load and optimize conversation history using `ConversationHistoryManager`:
-
-    - **Token Counting**: Estimates tokens for all messages using `TokenCountingService` (~4 characters per token)
+- **Token Counting**: Estimates tokens for all messages using `TokenCountingService` (~4 characters per token)
     - **History Optimization**:
-        - If within limits (`max-tokens`: 2000, `max-messages`: 10): Returns history as-is
+- If within limits (`max-tokens`: 2000, `max-messages`: 10): Returns history as-is
         - If exceeds limits: Automatically summarizes older messages using LLM
         - Keeps recent messages (half of `max-messages`), summarizes older ones to fit within token budget
     - **Summarization**: Uses `summarize-history.st` prompt template to condense old messages
@@ -218,15 +216,13 @@ Extractor --> QueryService: ExtractedEntities\n{technologies, skills, domains, r
 
 * **Step 3.1**: `QueryParser.parse()` analyzes the natural language query using LLM-based skill extraction with Spring
   AI PromptTemplate:
-
-      - **Extracted Skills**: Java, Spring Boot, AWS (via LLM with PromptTemplate and fallback to rule-based)
+- **Extracted Skills**: Java, Spring Boot, AWS (via LLM with PromptTemplate and fallback to rule-based)
     - **Technologies**: Java, Spring Boot, AWS
     - **Seniority**: Not specified (defaults to any level)
     - **Intent**: `expert_search` (default for expert discovery queries)
 
 * **Step 3.2**: `EntityExtractor.extract()` performs additional entity extraction:
-
-      - **Technologies**: Java, Spring Boot, AWS
+- **Technologies**: Java, Spring Boot, AWS
     - **Skills**: Java programming, Spring Boot development, AWS cloud
     - **Domains**: Software development, cloud computing
     - **Roles**: Java developer, Spring Boot developer, AWS architect
@@ -316,13 +312,11 @@ Retrieval --> QueryService: RetrievalResult\n{expertIds, relevanceScores}
 - Return expert IDs with exact matches
 
 * **Step 4.2**: `ResultFusionService.fuseResults()` combines results:
-
 - Apply Reciprocal Rank Fusion (RRF) algorithm
 - Use default weights: vector=1.0, graph=0.8, keyword=0.6
 - Deduplicate expert IDs, keeping highest scores
 
 * **Step 4.3**: `SemanticReranker.rerank()` (enabled by `rerank=true`):
-
 - Use LLM to calculate semantic relevance scores
 - Re-score results based on query context
 - Return final ranked list with relevance scores
@@ -400,14 +394,12 @@ end
 * **Step DR.4**: **Gap Analysis** (LLM-based)
 
 - Build gap analysis prompt with:
-
-      - Original query
+- Original query
     - Initial results summary
     - Expert summaries (top 5 experts)
 - Send to LLM for analysis
 - Parse JSON response containing:
-
-      - `identifiedGaps`: Missing information areas
+- `identifiedGaps`: Missing information areas
     - `ambiguities`: Unclear requirements
     - `missingInformation`: Specific missing details
     - `needsExpansion`: Boolean decision
@@ -421,8 +413,7 @@ end
 * **Step DR.6**: **Query Refinement** (LLM-based)
 
 - Build query refinement prompt with:
-
-      - Original query
+- Original query
     - Identified gaps and ambiguities
 - Send to LLM for refined query generation
 - Parse JSON response containing array of 2-3 refined queries
@@ -430,8 +421,7 @@ end
 * **Step DR.7**: **Expanded Retrieval**
 
 - For each refined query:
-
-      - Create new `QueryRequest` with refined query text
+- Create new `QueryRequest` with refined query text
     - Parse refined query
     - Perform standard hybrid retrieval
     - Collect expanded results
@@ -439,8 +429,7 @@ end
 * **Step DR.8**: **Result Synthesis**
 
 - Combine initial and expanded results using weighted scoring:
-
-      - Initial results: 60% weight (`SYNTHESIS_WEIGHT_INITIAL = 0.6`)
+- Initial results: 60% weight (`SYNTHESIS_WEIGHT_INITIAL = 0.6`)
     - Expanded results: 40% weight (`SYNTHESIS_WEIGHT_EXPANDED = 0.4`)
 - For duplicate experts: Use weighted average of scores
 - Sort by combined score and limit to `maxResults`
@@ -449,8 +438,7 @@ end
 * **Step DR.9**: Continue with standard flow
 
 - After deep research returns results, processing continues with:
-
-      - Expert enrichment (Phase 5)
+- Expert enrichment (Phase 5)
     - Answer generation (Phase 6)
     - Response finalization (Phase 7)
 
@@ -481,7 +469,7 @@ note right: For gap analysis context
 note right
   Identifies:
 
-  - Information gaps
+- Information gaps
   - Ambiguities
   - Missing context
   - Expansion decision
@@ -497,8 +485,7 @@ if (needsExpansion?) then (yes)
   :Synthesize results;
   note right
     Weighted combination:
-
-    - Initial: 60%
+- Initial: 60%
     - Expanded: 40%
   end note
 else (no)
@@ -628,29 +615,24 @@ Enrichment --> QueryService: List<ExpertMatch>\n{id, name, email, seniority, ski
 ```
 
 * **Step 5.1**: `ExpertEnrichmentService.enrichExperts()` fetches detailed data:
-
 - Fetch employee records from `employee` table
 - Fetch work experience from `work_experience` table
 
 * **Step 5.2**: For each expert, calculate skill matches:
-
 - **Must-have skills**: Java, Spring Boot, AWS
 - **Nice-to-have skills**: Any additional matching skills
 - **Match score**: (matched skills) / (total required skills)
 
 * **Step 5.3**: Build relevant projects:
-
 - Filter projects containing Java, Spring Boot, or AWS
 - Sort by recency (most recent first)
 - Limit to top 5 projects
 - Calculate project duration
 
 * **Step 5.4**: Build experience indicators:
-
 - ETL, high-performance, architecture, monitoring, etc.
 
 * **Step 5.5**: Create `ExpertMatch` objects with:
-
 - Expert ID, name, email, seniority
 - Matched skills and match scores
 - Relevant projects with details
@@ -690,7 +672,6 @@ AnswerGen --> QueryService: Generated answer
 ```
 
 * **Step 6.1**: Build expert contexts for LLM prompt:
-
 - Extract skills, projects, and metadata for each expert
 - Create structured `ExpertContext` objects
 
@@ -770,19 +751,16 @@ Controller --> User: HTTP 200 OK\n{answer, experts, sources, confidence}
 ```
 
 * **Step 7.1**: Save assistant response to conversation history:
-
 - `role`: "assistant"
 - `content`: Generated answer text
 - `sequenceNumber`: Next available number
 - `tokensUsed`: Estimated token count
 
 * **Step 7.2**: Update chat metadata:
-
 - `lastActivity`: Current timestamp
 - `messageCount`: Incremented count
 
 * **Step 7.3**: Build response components:
-
 - **Sources**: Expert and project citations with metadata
 - **Entities**: Extracted technologies, skills, domains
 - **Confidence**: Average relevance score (0.0-1.0)
@@ -1121,15 +1099,15 @@ Controller --> User: HTTP 200 OK
 
 ### Source Code References
 
-- [`QueryController.java`](src/main/java/com/berdachuk/expertmatch/query/QueryController.java)
-- [`QueryService.java`](src/main/java/com/berdachuk/expertmatch/query/QueryService.java)
-- [`QueryRequest.java`](src/main/java/com/berdachuk/expertmatch/query/QueryRequest.java)
-- [`QueryParser.java`](src/main/java/com/berdachuk/expertmatch/query/QueryParser.java) (with PromptTemplate integration)
-- [`HybridRetrievalService.java`](src/main/java/com/berdachuk/expertmatch/retrieval/HybridRetrievalService.java)
-- [`DeepResearchService.java`](src/main/java/com/berdachuk/expertmatch/retrieval/DeepResearchService.java)
-- [`ExpertEnrichmentService.java`](src/main/java/com/berdachuk/expertmatch/data/ExpertEnrichmentService.java)
-- [`AnswerGenerationService.java`](src/main/java/com/berdachuk/expertmatch/llm/AnswerGenerationService.java)
-- [`skill-extraction.st`](src/main/resources/prompts/skill-extraction.st) (PromptTemplate resource)
+- `QueryController.java` - REST API endpoint handler
+- `QueryService.java` - Main orchestration service
+- `QueryRequest.java` - API request model
+- `QueryParser.java` - Query parsing with PromptTemplate integration
+- `HybridRetrievalService.java` - Hybrid retrieval orchestration
+- `DeepResearchService.java` - Deep research SGR pattern implementation
+- `ExpertEnrichmentService.java` - Expert data enrichment
+- `AnswerGenerationService.java` - LLM answer generation
+- `skill-extraction.st` - PromptTemplate resource for skill extraction
 
 ### Tools and Technologies
 

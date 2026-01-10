@@ -237,7 +237,7 @@ mvn clean test             # Fresh database container
 
 - Tests automatically use mock AI providers (ChatModel, EmbeddingModel)
 - No real LLM API calls are made during tests
-- Verify mock usage: `mvn test 2>&1 | grep -E "(MOCK|REAL|⚠️)"`
+- Verify mock usage: `mvn test 2>&1 | grep -E "(MOCK|REAL|)"`
 - If you see real LLM usage, check for running application instances:
   ```bash
   ps aux | grep ExpertMatchApplication | grep -v grep
@@ -377,14 +377,13 @@ dev/staging/prod prefer OpenAI).
 
 1. **Backend**:
 
-     - Add controller method in appropriate controller
+- Add controller method in appropriate controller
     - Update OpenAPI spec: `src/main/resources/api/openapi.yaml`
     - Add tests
     - Rebuild backend
 
 2. **Frontend**:
-
-    - Update Thymeleaf templates to use new API endpoints
+- Update Thymeleaf templates to use new API endpoints
     - Update JavaScript code for API calls if needed
     - Test UI integration
 
@@ -527,6 +526,266 @@ mvn clean install
 - Use Bootstrap or custom CSS for styling
 - Keep templates organized in fragments for reusability
 
+## Data Access Patterns
+
+ExpertMatch follows standardized data access patterns inspired by WCA-Backend for consistency, maintainability, and scalability.
+
+### Overview
+
+The project uses three key patterns for data access:
+
+1. **External SQL Files** - SQL queries stored in separate `.sql` files
+2. **Dedicated Row Mappers** - Reusable mapper classes for ResultSet mapping
+3. **DataAccessUtils.uniqueResult()** - Standard Spring pattern for single-result queries
+
+### Pattern 1: External SQL Files with @InjectSql
+
+**Purpose**: Separate SQL logic from Java code for better maintainability and IDE support.
+
+**Infrastructure**:
+- `@InjectSql` annotation: Marks fields for SQL injection
+- `SqlInjectBeanPostProcessor`: Loads SQL files at startup and injects them into annotated fields
+- SQL files stored in `src/main/resources/sql/{module}/{operation}.sql`
+
+**Usage Example**:
+
+```java
+@Repository
+public class EmployeeRepository {
+    @InjectSql("/sql/employee/findById.sql")
+    private String findByIdSql;
+
+    @InjectSql("/sql/employee/findByEmail.sql")
+    private String findByEmailSql;
+
+    public Optional<Employee> findById(String id) {
+        Map<String, Object> params = Map.of("id", id);
+        List<Employee> results = namedJdbcTemplate.query(findByIdSql, params, employeeMapper);
+        return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
+    }
+}
+```
+
+**SQL File** (`src/main/resources/sql/employee/findById.sql`):
+```sql
+SELECT id, name, email, seniority, language_english, availability_status
+FROM expertmatch.employee
+WHERE id = :id
+```
+
+**File Organization**:
+```
+src/main/resources/sql/
+├── employee/
+│   ├── findById.sql
+│   ├── findByEmail.sql
+│   ├── findByIds.sql
+│   └── findEmployeeIdsByName.sql
+└── chat/
+    ├── findById.sql
+    ├── findAllByUserId.sql
+    └── create.sql
+```
+
+**Benefits**:
+- ✅ Full SQL syntax highlighting in IDE
+- ✅ SQL changes reviewed independently
+- ✅ Easier to maintain complex queries
+- ✅ Separation of concerns
+- ✅ No runtime performance overhead (loaded at startup)
+
+**Error Handling**: `SqlInjectBeanPostProcessor` throws `BeanCreationException` at startup if SQL file is not found (fail-fast).
+
+### Pattern 2: Dedicated Row Mapper Classes
+
+**Purpose**: Centralize ResultSet mapping logic for reusability and testability.
+
+**Implementation**:
+
+Create mapper classes implementing Spring's `RowMapper<T>`:
+
+```java
+@Component
+public class EmployeeMapper implements RowMapper<EmployeeRepository.Employee> {
+    @Override
+    public EmployeeRepository.Employee mapRow(ResultSet rs, int rowNum) throws SQLException {
+        return new EmployeeRepository.Employee(
+                rs.getString("id"),
+                rs.getString("name"),
+                rs.getString("email"),
+                rs.getString("seniority"),
+                rs.getString("language_english"),
+                rs.getString("availability_status")
+        );
+    }
+}
+```
+
+**Usage in Repository**:
+
+```java
+@Repository
+public class EmployeeRepository {
+    private final NamedParameterJdbcTemplate namedJdbcTemplate;
+    private final EmployeeMapper employeeMapper;
+
+    public EmployeeRepository(
+            NamedParameterJdbcTemplate namedJdbcTemplate,
+            EmployeeMapper employeeMapper) {
+        this.namedJdbcTemplate = namedJdbcTemplate;
+        this.employeeMapper = employeeMapper;
+    }
+
+    public Optional<Employee> findById(String id) {
+        Map<String, Object> params = Map.of("id", id);
+        List<Employee> results = namedJdbcTemplate.query(findByIdSql, params, employeeMapper);
+        return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
+    }
+
+    public Optional<Employee> findByEmail(String email) {
+        Map<String, Object> params = Map.of("email", email);
+        List<Employee> results = namedJdbcTemplate.query(findByEmailSql, params, employeeMapper);
+        return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
+    }
+}
+```
+
+**Benefits**:
+- ✅ Reusable across multiple repository methods
+- ✅ Testable independently (unit test mapping logic)
+- ✅ Centralized mapping logic (easier to maintain)
+- ✅ Consistent pattern across all repositories
+- ✅ Handles complex entities and nested objects well
+
+**Null Handling Example** (ChatMapper):
+
+```java
+@Component
+public class ChatMapper implements RowMapper<ChatRepository.Chat> {
+    @Override
+    public ChatRepository.Chat mapRow(ResultSet rs, int rowNum) throws SQLException {
+        return new ChatRepository.Chat(
+                rs.getString("id"),
+                rs.getString("user_id"),
+                rs.getString("name"),
+                rs.getBoolean("is_default"),
+                mapTimestamp(rs, "created_at"),
+                mapTimestamp(rs, "updated_at"),
+                mapTimestamp(rs, "last_activity_at"),
+                rs.getInt("message_count")
+        );
+    }
+
+    private Instant mapTimestamp(ResultSet rs, String columnName) throws SQLException {
+        var timestamp = rs.getTimestamp(columnName);
+        return timestamp != null ? timestamp.toInstant() : null;
+    }
+}
+```
+
+### Pattern 3: DataAccessUtils.uniqueResult()
+
+**Purpose**: Standard Spring pattern for handling single-result queries with automatic validation.
+
+**Usage**:
+
+```java
+import org.springframework.dao.support.DataAccessUtils;
+
+public Optional<Employee> findById(String id) {
+    Map<String, Object> params = Map.of("id", id);
+    List<Employee> results = namedJdbcTemplate.query(findByIdSql, params, employeeMapper);
+    return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
+}
+```
+
+**Behavior**:
+- **Single Result**: Returns the element if exactly one result exists
+- **No Results**: Returns `null` (wrapped in `Optional.empty()`)
+- **Multiple Results**: Throws `IncorrectResultSizeDataAccessException` (data integrity check)
+
+**Benefits**:
+- ✅ Concise and readable code
+- ✅ Validates exactly one result (fails fast on unexpected duplicates)
+- ✅ Standard Spring Framework pattern
+- ✅ Better data integrity (detects constraint violations or query errors)
+- ✅ Consistent with WCA-Backend approach
+
+**Before (Manual Check)**:
+```java
+List<Employee> results = namedJdbcTemplate.query(sql, params, mapper);
+return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+```
+
+**After (DataAccessUtils)**:
+```java
+List<Employee> results = namedJdbcTemplate.query(sql, params, mapper);
+return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
+```
+
+### Complete Example
+
+**Repository with All Patterns**:
+
+```java
+@Repository
+public class EmployeeRepository {
+    private final NamedParameterJdbcTemplate namedJdbcTemplate;
+    private final EmployeeMapper employeeMapper;
+
+    @InjectSql("/sql/employee/findById.sql")
+    private String findByIdSql;
+
+    @InjectSql("/sql/employee/findByEmail.sql")
+    private String findByEmailSql;
+
+    public EmployeeRepository(
+            NamedParameterJdbcTemplate namedJdbcTemplate,
+            EmployeeMapper employeeMapper) {
+        this.namedJdbcTemplate = namedJdbcTemplate;
+        this.employeeMapper = employeeMapper;
+    }
+
+    public Optional<Employee> findById(String id) {
+        Map<String, Object> params = Map.of("id", id);
+        List<Employee> results = namedJdbcTemplate.query(findByIdSql, params, employeeMapper);
+        return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
+    }
+
+    public Optional<Employee> findByEmail(String email) {
+        Map<String, Object> params = Map.of("email", email);
+        List<Employee> results = namedJdbcTemplate.query(findByEmailSql, params, employeeMapper);
+        return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
+    }
+}
+```
+
+### Migration Checklist
+
+When creating new repositories or migrating existing ones:
+
+- [ ] Create SQL files in `src/main/resources/sql/{module}/`
+- [ ] Add `@InjectSql` annotations to repository fields
+- [ ] Create dedicated mapper class implementing `RowMapper<T>`
+- [ ] Inject mapper via constructor
+- [ ] Use `DataAccessUtils.uniqueResult()` for single-result queries
+- [ ] Remove inline SQL strings and lambda mappers
+- [ ] Run tests to verify functionality
+
+### When to Use Each Pattern
+
+**External SQL Files**: Always use for all SQL queries (separation of concerns, IDE support)
+
+**Dedicated Mappers**: Use for all entities (reusability, testability, maintainability)
+
+**DataAccessUtils.uniqueResult()**: Use for all single-result queries (`findById`, `findByEmail`, etc.)
+
+### References
+
+- **WCA-Backend Pattern**: `/home/berdachuk/projects/wca-lab/wca-backend`
+- **Spring DataAccessUtils**: `org.springframework.dao.support.DataAccessUtils`
+- **Spring RowMapper**: `org.springframework.jdbc.core.RowMapper`
+
 ## Additional Resources
 
 - [Testing Guide](TESTING.md) - Detailed testing patterns
@@ -544,5 +803,5 @@ mvn clean install
 
 ---
 
-*Last updated: 2025-12-21 - Added timeout configuration documentation*
+*Last updated: 2026-01-09 - Added Data Access Patterns documentation*
 

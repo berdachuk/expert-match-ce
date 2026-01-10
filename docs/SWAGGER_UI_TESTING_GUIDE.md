@@ -94,8 +94,7 @@ Before testing query functionality, you need to generate sample data.
 2. **Find endpoint**: `POST /api/v1/test-data`
 3. **Click**: "Try it out"
 4. **Set parameters**:
-
-     - `size`: Select `small` from dropdown (or enter one of: `tiny`, `small`, `medium`, `large`, `huge`)
+- `size`: Select `small` from dropdown (or enter one of: `tiny`, `small`, `medium`, `large`, `huge`)
 5. **Click**: "Execute"
 6. **Wait**: This may take 1-2 minutes for small dataset (~50 employees)
 
@@ -157,8 +156,7 @@ Instead of steps 3.1-3.3, you can use the complete dataset generation:
 2. **Find endpoint**: `POST /api/v1/test-data/complete`
 3. **Click**: "Try it out"
 4. **Set parameters**:
-
-     - `size`: Select `small` from dropdown
+- `size`: Select `small` from dropdown
 5. **Click**: "Execute"
 6. **Wait**: This performs all three steps (data + embeddings + graph) and may take 3-7 minutes
 
@@ -239,8 +237,7 @@ Instead of steps 3.1-3.3, you can use the complete dataset generation:
 2. **Find endpoint**: `GET /api/v1/chats/{chatId}`
 3. **Click**: "Try it out"
 4. **Set path parameter**:
-
-     - `chatId`: Paste the chat ID from step 4.2
+- `chatId`: Paste the chat ID from step 4.2
 5. **Click**: "Execute"
 
 **Expected Response**: Chat details with message count and timestamps.
@@ -260,8 +257,7 @@ Instead of steps 3.1-3.3, you can use the complete dataset generation:
    ```
 5. **Click**: "Execute"
 6. **Wait**: This may take 10-30 seconds as it:
-
-     - Generates embeddings for the query
+- Generates embeddings for the query
     - Searches vector database
     - Reranks results (if enabled)
     - Generates answer using LLM
@@ -382,11 +378,9 @@ This tests a complete RFP response scenario with detailed requirements.
 2. **Find endpoint**: `GET /api/v1/chats/{chatId}/history`
 3. **Click**: "Try it out"
 4. **Set path parameter**:
-
-     - `chatId`: Your chat ID from step 4.2
+- `chatId`: Your chat ID from step 4.2
 5. **Set query parameters** (optional):
-
-     - `page`: `0` (first page)
+- `page`: `0` (first page)
     - `size`: `20` (items per page)
     - `sort`: `sequence_number,asc` (sort order)
 6. **Click**: "Execute"
@@ -489,8 +483,7 @@ data: {"status":"complete","response":{...}}
 2. **Find endpoint**: `GET /api/v1/ingestion/status/{sourceName}`
 3. **Click**: "Try it out"
 4. **Set path parameter**:
-
-     - `sourceName`: `test-data`
+- `sourceName`: `test-data`
 5. **Click**: "Execute"
 
 ## Step 9: Test Error Scenarios
@@ -516,8 +509,7 @@ data: {"status":"complete","response":{...}}
 2. **Find endpoint**: `GET /api/v1/chats/{chatId}`
 3. **Click**: "Try it out"
 4. **Set path parameter**:
-
-     - `chatId`: `invalid-id-123`
+- `chatId`: `invalid-id-123`
 5. **Click**: "Execute"
 
 **Expected Response**: `400 Bad Request` or `404 Not Found`
@@ -528,8 +520,7 @@ data: {"status":"complete","response":{...}}
 2. **Find endpoint**: `GET /api/v1/chats/{chatId}/history`
 3. **Click**: "Try it out"
 4. **Set query parameters**:
-
-     - `page`: `-1` (invalid)
+- `page`: `-1` (invalid)
     - `size`: `200` (exceeds max of 100)
 5. **Click**: "Execute"
 

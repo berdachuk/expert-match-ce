@@ -30,8 +30,7 @@
   - Database columns: CHAR(24)
 
 ### Technology Stack
-- Backend: Spring Boot 3.5.8, Java 21, PostgreSQL 16, PgVector, Apache AGE, Spring AI
-- Frontend: Next.js 14, React 18, TypeScript, EPAM UUI, React Query
+- Backend: Spring Boot 3.5.9, Java 21, PostgreSQL 16, PgVector, Apache AGE, Spring AI
 - Testing: JUnit 5, Testcontainers, Mockito
 
 ### Naming Conventions
@@ -135,6 +134,119 @@
 - **Valid**: Throwing exceptions, returning error responses, or logging errors and failing
 - **Benefits**: Makes errors visible, prevents silent failures, improves debugging and reliability
 
+### Transaction Management
+- **Service-Level Transactions**: Always manage transactions at the service layer, not at the repository or controller layer
+- **Use @Transactional**: Use Spring's `@Transactional` annotation on service methods that perform database operations
+- **Transaction Boundaries**: Define transaction boundaries at service methods that represent business operations
+- **Invalid**: `@Transactional` on repository methods, controller methods, or private methods
+- **Valid**: `@Transactional` on public service methods that orchestrate multiple repository calls
+- **Propagation**: Use default `REQUIRED` propagation for most cases; use `REQUIRES_NEW` only when isolation is needed (e.g., checking graph existence without aborting main transaction)
+- **Read-Only Transactions**: Use `readOnly = true` for read-only operations to optimize performance
+- **Example**:
+  ```java
+  @Service
+  public class MyService {
+      private final MyRepository repository;
+      
+      @Transactional
+      public void performBusinessOperation(String id) {
+          // Multiple repository calls in one transaction
+          repository.update(id);
+          repository.log(id);
+          // All operations succeed or all rollback
+      }
+      
+      @Transactional(readOnly = true)
+      public MyEntity findById(String id) {
+          return repository.findById(id);
+      }
+      
+      @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
+      public boolean checkStatus() {
+          // Separate transaction to avoid aborting main transaction
+          return repository.checkStatus();
+      }
+  }
+  ```
+- **Benefits**: Clear transaction boundaries, atomic business operations, proper error handling and rollback, better performance with read-only transactions
+
+### Repository Design - Single Entity Principle
+- **Single Entity Focus**: Repositories should always work with one entity type. Each repository method should operate on a single entity or collection of the same entity type
+- **Related Data Loading**: If related entity data needs to be loaded, prefer doing it in a single SQL query with JOINs and proper mapping
+- **Service-Level Aggregation**: If related data cannot be loaded in a single SQL query, the aggregation should happen at the service layer, not in the repository
+- **Invalid**: Loading related entities in repository methods (e.g., `loadSkills()`, `loadProjects()` methods that modify entities after query)
+- **Valid**: Single SQL query with JOINs that returns all needed data, then mapping in repository
+- **Valid**: Service layer orchestrating multiple repository calls to aggregate related data
+- **Example - Invalid**:
+  ```java
+  @Repository
+  public class EmployeeRepository {
+      public List<Employee> findAll() {
+          List<Employee> employees = namedJdbcTemplate.query(findAllSql, employeeMapper);
+          // Invalid: Loading related data in repository
+          employees.forEach(this::loadSkills);
+          return employees;
+      }
+      
+      private void loadSkills(Employee employee) {
+          // This should be in service layer
+          List<String> skills = namedJdbcTemplate.query(loadSkillsSql, ...);
+          employee.setSkills(skills);
+      }
+  }
+  ```
+- **Example - Valid (Single Query)**:
+  ```java
+  @Repository
+  public class EmployeeRepository {
+      public List<Employee> findAll() {
+          // Single SQL query with JOIN to get skills
+          return namedJdbcTemplate.query(findAllWithSkillsSql, employeeWithSkillsMapper);
+      }
+  }
+  ```
+- **Example - Valid (Service Layer with Batch Loading)**:
+  ```java
+  @Service
+  public class EmployeeService {
+      private final EmployeeRepository employeeRepository;
+      private final SkillRepository skillRepository;
+      
+      @Transactional(readOnly = true)
+      public List<Employee> findAll() {
+          List<Employee> employees = employeeRepository.findAll();
+          // Batch load all skills for all employees in one query
+          List<String> employeeIds = employees.stream().map(Employee::getId).toList();
+          Map<String, List<String>> skillsByEmployeeId = skillRepository.findByEmployeeIds(employeeIds);
+          // Map skills to employees
+          employees.forEach(emp -> {
+              List<String> skills = skillsByEmployeeId.getOrDefault(emp.getId(), List.of());
+              emp.setSkills(skills);
+          });
+          return employees;
+      }
+  }
+  ```
+- **Batch Loading Requirement**: When loading related data for a collection of entities, always use batch loading methods that accept a collection of IDs and return a Map. This prevents N+1 query problems.
+- **Invalid**: Loading related data in a loop (N+1 queries):
+  ```java
+  employees.forEach(emp -> {
+      List<String> skills = skillRepository.findByEmployeeId(emp.getId()); // N+1 queries!
+      emp.setSkills(skills);
+  });
+  ```
+- **Valid**: Batch loading with single query:
+  ```java
+  List<String> employeeIds = employees.stream().map(Employee::getId).toList();
+  Map<String, List<String>> skillsByEmployeeId = skillRepository.findByEmployeeIds(employeeIds); // Single query
+  employees.forEach(emp -> {
+      List<String> skills = skillsByEmployeeId.getOrDefault(emp.getId(), List.of());
+      emp.setSkills(skills);
+  });
+  ```
+- **Repository Batch Methods**: Repositories should provide batch loading methods like `findByEntityIds(List<String> ids)` that return `Map<String, List<RelatedEntity>>` for efficient data loading
+- **Benefits**: Clear separation of concerns, repositories focus on single entity operations, services handle business logic and aggregation, prevents N+1 query problems, better performance, easier to test and maintain
+
 ### Prompt Management
 - **Always Use PromptTemplates and .st Resources**: All LLM prompts must use Spring AI `PromptTemplate` with external `.st` (StringTemplate) files
 - **Template Location**: Store all prompt templates in `src/main/resources/prompts/` directory
@@ -154,14 +266,14 @@
               .templateResource(new ClassPathResource("/prompts/my-prompt.st"))
               .build();
   }
-  
+
   // Usage in service
   private final PromptTemplate myPromptTemplate;
-  
+
   public MyService(@Qualifier("myPromptTemplate") PromptTemplate myPromptTemplate) {
       this.myPromptTemplate = myPromptTemplate;
   }
-  
+
   private String buildPrompt(String variable) {
       Map<String, Object> variables = new HashMap<>();
       variables.put("variable", variable);
@@ -170,3 +282,11 @@
   ```
 - **Benefits**: Centralized prompt management, easier to update prompts without code changes, better separation of concerns, version control for prompts
 
+### Code Language
+- **Always Use English**: All code, comments, project files, README, documentation, and technical content must be in English
+- **Code Comments**: All code comments must be in English
+- **Variable/Method Names**: All variable and method names must be in English
+- **Project Files**: All project files (README.md, CHANGELOG.md, etc.) must be in English
+- **Documentation**: All technical documentation must be in English
+- **Exception**: User-facing messages in the application can be localized, but code and technical content must remain in English
+- **Benefits**: International collaboration, standard practice, better code readability, easier maintenance

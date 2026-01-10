@@ -2,10 +2,6 @@ package com.berdachuk.expertmatch.query;
 
 import com.berdachuk.expertmatch.api.ApiMapper;
 import com.berdachuk.expertmatch.api.QueryApi;
-import com.berdachuk.expertmatch.api.model.QueryExample;
-import com.berdachuk.expertmatch.api.model.QueryExamplesResponse;
-import com.berdachuk.expertmatch.api.model.QueryRequest;
-import com.berdachuk.expertmatch.api.model.QueryResponse;
 import com.berdachuk.expertmatch.chat.ChatService;
 import com.berdachuk.expertmatch.exception.ResourceNotFoundException;
 import com.berdachuk.expertmatch.exception.ValidationException;
@@ -56,8 +52,8 @@ public class QueryController implements QueryApi {
      * Process natural language query for expert discovery.
      */
     @Override
-    public ResponseEntity<QueryResponse> processQuery(
-            @Valid @RequestBody QueryRequest queryRequest,
+    public ResponseEntity<com.berdachuk.expertmatch.api.model.QueryResponse> processQuery(
+            @Valid @RequestBody com.berdachuk.expertmatch.api.model.QueryRequest queryRequest,
             @RequestHeader(value = "X-User-Id", required = false) String xUserId,
             @RequestHeader(value = "X-User-Roles", required = false) String xUserRoles,
             @RequestHeader(value = "X-User-Email", required = false) String xUserEmail) {
@@ -109,7 +105,7 @@ public class QueryController implements QueryApi {
                 queryService.processQuery(domainRequest, chatId, userId);
 
         // Convert domain model to API model
-        QueryResponse apiResponse = apiMapper.toApiQueryResponse(domainResponse);
+        com.berdachuk.expertmatch.api.model.QueryResponse apiResponse = apiMapper.toApiQueryResponse(domainResponse);
 
         return ResponseEntity.ok(apiResponse);
     }
@@ -134,14 +130,14 @@ public class QueryController implements QueryApi {
      * Implements QueryApi interface method.
      */
     @Override
-    public ResponseEntity<QueryExamplesResponse> getQueryExamples() {
+    public ResponseEntity<com.berdachuk.expertmatch.api.model.QueryExamplesResponse> getQueryExamples() {
         log.debug("Getting query examples");
         List<QueryExamplesService.QueryExample> serviceExamples = queryExamplesService.getExamples();
 
         // Convert service QueryExample records to API model QueryExample objects
-        List<QueryExample> apiExamples = serviceExamples.stream()
+        List<com.berdachuk.expertmatch.api.model.QueryExample> apiExamples = serviceExamples.stream()
                 .map(serviceExample -> {
-                    QueryExample apiExample = new QueryExample();
+                    com.berdachuk.expertmatch.api.model.QueryExample apiExample = new com.berdachuk.expertmatch.api.model.QueryExample();
                     apiExample.setCategory(serviceExample.category());
                     apiExample.setTitle(serviceExample.title());
                     apiExample.setQuery(serviceExample.query());
@@ -149,7 +145,7 @@ public class QueryController implements QueryApi {
                 })
                 .toList();
 
-        QueryExamplesResponse response = new QueryExamplesResponse();
+        com.berdachuk.expertmatch.api.model.QueryExamplesResponse response = new com.berdachuk.expertmatch.api.model.QueryExamplesResponse();
         response.setExamples(apiExamples);
 
         return ResponseEntity.ok(response);

@@ -64,20 +64,20 @@ ExpertMatch leverages a **Hybrid GraphRAG architecture** combining:
 
 ## Key Features
 
-- ✅ **Expert Matching**: Automatically matches project requirements with qualified experts
-- ✅ **SGR Deep Research**: Multi-step iterative retrieval for complex queries with gap analysis and query refinement
-- ✅ **SGR Patterns**: Full Schema-Guided Reasoning implementation (Cascade, Routing, Cycle patterns) for structured LLM
+- **Expert Matching**: Automatically matches project requirements with qualified experts
+- **SGR Deep Research**: Multi-step iterative retrieval for complex queries with gap analysis and query refinement
+- **SGR Patterns**: Full Schema-Guided Reasoning implementation (Cascade, Routing, Cycle patterns) for structured LLM
   reasoning
-- ✅ **Smart Tool Selection**: Tool Search Tool pattern with 34-64% token savings through dynamic tool discovery
-- ✅ **RFP Response Support**: Quickly identifies experts for RFP responses
-- ✅ **Team Formation**: Recommends optimal team compositions
-- ✅ **Hybrid GraphRAG**: Combines vector, graph, and keyword search
-- ✅ **Customer Relationships**: Expert-Customer (WORKED_FOR) and Project-Customer (FOR_CUSTOMER) graph relationships
-- ✅ **Multi-Source Data Integration**: Work experience, Jira, presale materials
-- ✅ **JSON Batch Ingestion**: Import expert profiles from JSON files (array or single object format) with partial data
+- **Smart Tool Selection**: Tool Search Tool pattern with 34-64% token savings through dynamic tool discovery
+- **RFP Response Support**: Quickly identifies experts for RFP responses
+- **Team Formation**: Recommends optimal team compositions
+- **Hybrid GraphRAG**: Combines vector, graph, and keyword search
+- **Customer Relationships**: Expert-Customer (WORKED_FOR) and Project-Customer (FOR_CUSTOMER) graph relationships
+- **Multi-Source Data Integration**: Work experience, Jira, presale materials
+- **JSON Batch Ingestion**: Import expert profiles from JSON files (array or single object format) with partial data
   support
-- ✅ **Conversation History**: Intelligent context management with token counting and summarization
-- ✅ **Enterprise Scale**: PostgreSQL with Citus for horizontal scaling
+- **Conversation History**: Intelligent context management with token counting and summarization
+- **Enterprise Scale**: PostgreSQL with Citus for horizontal scaling
 
 ## Architecture Overview
 

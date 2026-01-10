@@ -134,8 +134,7 @@ The ExpertMatch system consists of several key components:
 **3. Query Analysis (QueryService)**
 
 - Parses the natural language query to extract:
-
-      - Required skills and technologies
+- Required skills and technologies
     - Seniority levels
     - Query intent (expert search, team formation, RFP response)
 - Extracts entities (technologies, domains, roles) for enhanced matching
@@ -143,18 +142,20 @@ The ExpertMatch system consists of several key components:
 **4. Hybrid Retrieval (QueryService → Retrieval → Database)**
 
 - **If `deepResearch` is disabled**: `HybridRetrievalService` executes standard retrieval:
-
-    - **Vector Search**: Semantic similarity matching using PgVector embeddings
+- **Vector Search**: Semantic similarity matching using PgVector embeddings
     - **Graph Traversal**: Relationship-based discovery using Apache AGE
     - **Keyword Search**: Traditional full-text matching
 
 - **If `deepResearch` is enabled**: `DeepResearchService` performs multi-step iterative retrieval:
-
-    - Initial hybrid retrieval (vector + graph + keyword)
+- Initial hybrid retrieval (vector + graph + keyword)
     - Gap analysis using LLM to identify missing information
     - Query refinement to generate additional search queries
     - Expanded retrieval with refined queries
     - Result synthesis with weighted scoring
+
+---
+
+## Deep Research Flow (SGR Pattern)
 
 ```plantuml
 @startuml Hybrid_Retrieval_Flow_With_DeepResearch
@@ -242,8 +243,7 @@ end
 **5. Expert Enrichment (QueryService → Enrichment → Database)**
 
 - **Expert Enrichment Service** fetches detailed information for each expert:
-
-      - Employee records (name, email, seniority, language proficiency)
+- Employee records (name, email, seniority, language proficiency)
     - Work experience history
     - Project participation details
 - Calculates skill matches, identifies relevant projects, and builds experience indicators
@@ -252,8 +252,7 @@ end
 **6. Answer Generation (QueryService → AnswerGen → LLM)**
 
 - **Answer Generation Service** builds a RAG (Retrieval-Augmented Generation) prompt:
-
-      - Includes conversation history for context
+- Includes conversation history for context
     - Incorporates user query and extracted requirements
     - Adds detailed expert information from enrichment phase
     - Provides intent-specific instructions
@@ -265,8 +264,7 @@ end
 
 - QueryService saves the assistant response to conversation history
 - Builds the final `QueryResponse` object containing:
-
-      - Generated answer with expert recommendations
+- Generated answer with expert recommendations
     - List of matched experts with details
     - Sources and citations
     - Confidence scores and match summaries
@@ -393,13 +391,12 @@ partition "Parallel Search Execution" {
 note right
   Default weights:
 
-  - vector: 1.0
+- vector: 1.0
   - graph: 0.8
   - keyword: 0.6
   
   Adjusted for:
-
-  - Technology-specific queries
+- Technology-specific queries
   - Team formation intent
 end note
 
@@ -524,8 +521,7 @@ note right
   score = Σ(weight_i / (rank_i + k))
   
   Where:
-
-  - rank_i = position in result set i
+- rank_i = position in result set i
   - weight_i = weight for result set i
   - k = constant (typically 60)
 end note
@@ -633,7 +629,7 @@ note right: skills + technologies
 note right
   Matching logic:
 
-  - skill.toLowerCase().contains(tech.toLowerCase())
+- skill.toLowerCase().contains(tech.toLowerCase())
   OR
   - tech.toLowerCase().contains(skill.toLowerCase())
 end note
@@ -727,8 +723,7 @@ partition "Prompt Construction" {
     
     note right
       Intent-specific instructions:
-
-      - expert_search: Rank and explain matches
+- expert_search: Rank and explain matches
       - team_formation: Suggest team composition
       - rfp_response: Format for RFP context
     end note
@@ -781,7 +776,7 @@ end note
 note right of Experts
   For each expert:
 
-  - Name, Email, Seniority
+- Name, Email, Seniority
   - Skills (matched)
   - Relevant Projects
   - Match/Relevance Scores
@@ -790,7 +785,7 @@ end note
 note right of Instructions
   Based on intent:
 
-  - Format recommendations
+- Format recommendations
   - Explain matches
   - Suggest alternatives
 end note
@@ -913,30 +908,26 @@ showing all components, services, and data flows involved in the process.
 #### **Phase 1: Request Reception and Initial Processing**
 
 1. **User Request**: The user sends a POST request to `/api/v1/query` endpoint with:
-
-     - Natural language query describing expert requirements
+- Natural language query describing expert requirements
     - Optional `chatId` for conversation context
     - Query options (maxResults, minConfidence, rerank flag)
 
 2. **QueryController**: Receives the HTTP request, validates it, and delegates to `QueryService`
 
 3. **Conversation Management**:
-
-     - Saves the user message to conversation history
+- Saves the user message to conversation history
     - Loads previous conversation context (last 10 messages) for continuity
 
 #### **Phase 2: Query Analysis and Entity Extraction**
 
 4. **QueryParser**: Analyzes the natural language query and extracts:
-
-     - **Skills**: Technical skills mentioned (e.g., "Java", "Spring Boot")
+- **Skills**: Technical skills mentioned (e.g., "Java", "Spring Boot")
     - **Technologies**: Technologies required (e.g., "AWS", "MongoDB")
     - **Seniority Levels**: Experience levels (e.g., "A3", "A4")
     - **Intent**: Query purpose (expert_search, team_formation, rfp_response)
 
 5. **EntityExtractor**: Performs additional entity extraction:
-
-     - **Domains**: Industry or business domains
+- **Domains**: Industry or business domains
     - **Roles**: Job roles or responsibilities
     - **Technologies**: Additional technology mentions
     - Returns structured `ExtractedEntities` object
@@ -946,35 +937,30 @@ showing all components, services, and data flows involved in the process.
 6. **HybridRetrievalService**: Orchestrates three parallel search strategies:
 
    **a. Vector Search (VectorSearchService)**:
-
-     - Converts query to embedding vector
+- Converts query to embedding vector
     - Performs semantic similarity search using PgVector
     - Finds experts with similar project experiences
     - Returns ranked list of expert IDs
 
    **b. Graph Traversal (GraphSearchService)**:
-
-     - Executes Cypher queries on Apache AGE graph
+- Executes Cypher queries on Apache AGE graph
     - Traverses relationships: Expert → Project → Technology
     - Finds experts connected to required technologies
     - Supports AND/OR logic for multiple technologies
 
    **c. Keyword Search (KeywordSearchService)**:
-
-     - Performs traditional full-text search
+- Performs traditional full-text search
     - Matches exact technology names and skills
     - Fast lookup for specific terms
 
 7. **Result Fusion (ResultFusionService)**:
-
-     - Combines results from all three search strategies
+- Combines results from all three search strategies
    - Applies [Reciprocal Rank Fusion (RRF) algorithm](RECIPROCAL_RANK_FUSION.md)
     - Weights results based on query characteristics
     - Deduplicates expert IDs while preserving scores
 
 8. **Semantic Reranking (SemanticReranker)** [Optional]:
-
-     - If reranking is enabled, uses LLM to re-score results
+- If reranking is enabled, uses LLM to re-score results
     - Calculates semantic relevance scores
     - Improves precision of top results
     - Returns final ranked list with relevance scores
@@ -984,14 +970,12 @@ showing all components, services, and data flows involved in the process.
 9. **ExpertEnrichmentService**: Enriches expert IDs with detailed information:
 
    **a. Data Fetching**:
-
-     - Fetches employee records from database
+- Fetches employee records from database
     - Retrieves work experience for all expert IDs
     - Builds employee map for efficient lookup
 
    **b. For Each Expert**:
-
-     - **Skill Matching**: Calculates match score for must-have and nice-to-have skills
+- **Skill Matching**: Calculates match score for must-have and nice-to-have skills
     - **Matched Skills**: Identifies which specific skills match
     - **Relevant Projects**: Filters and sorts projects by relevance and recency
     - **Experience Indicators**: Extracts indicators (ETL, architecture, monitoring, etc.)
@@ -1002,34 +986,28 @@ showing all components, services, and data flows involved in the process.
 #### **Phase 5: Answer Generation**
 
 10. **Context Building**:
-
-    - Builds expert contexts from enriched expert data
+- Builds expert contexts from enriched expert data
     - Prepares structured data for LLM prompt
 
 11. **AnswerGenerationService**: Generates natural language response:
-
-    - **RAG Prompt Construction**: Builds comprehensive prompt with:
-
-          - System context and role definition
+- **RAG Prompt Construction**: Builds comprehensive prompt with:
+- System context and role definition
         - Conversation history (if available)
         - User query
         - Expert information with all details
         - Intent-specific instructions
     - **LLM Orchestration**: Uses Spring AI ChatClient to:
-
-          - Send prompt to LLM (Ollama or other provider)
+- Send prompt to LLM (Ollama or other provider)
         - Receive generated answer
         - Format response text
 
 #### **Phase 6: Response Finalization**
 
 12. **Response Building**:
-
-    - Saves assistant response to conversation history
+- Saves assistant response to conversation history
     - Updates chat metadata (last activity, message count)
     - Builds `QueryResponse` object with:
-
-          - Generated answer text
+- Generated answer text
         - List of expert matches
         - Sources and citations
         - Extracted entities
@@ -1037,11 +1015,9 @@ showing all components, services, and data flows involved in the process.
         - Match summary
 
 13. **Response Delivery**:
-
-    - QueryController formats and returns HTTP response
+- QueryController formats and returns HTTP response
     - User receives expert recommendations with:
-
-          - Natural language explanation
+- Natural language explanation
         - Ranked list of experts
         - Detailed expert profiles
         - Match scores and justifications
@@ -1049,20 +1025,17 @@ showing all components, services, and data flows involved in the process.
 #### **Key Data Flows**
 
 - **Database Interactions**:
-
-      - Vector similarity searches via PgVector
+- Vector similarity searches via PgVector
     - Graph traversals via Apache AGE
     - Relational queries for employee and work experience data
     - Conversation history storage and retrieval
 
 - **LLM Interactions**:
-
-      - Semantic reranking (optional)
+- Semantic reranking (optional)
     - Answer generation with RAG pattern
 
 - **Internal Service Communication**:
-
-      - Synchronous service calls within QueryService
+- Synchronous service calls within QueryService
     - Data transformation between layers
     - Result aggregation and enrichment
 
@@ -1075,8 +1048,7 @@ showing all components, services, and data flows involved in the process.
     - Answer Generation: 1-5 seconds (LLM processing)
 
 - **Scalability**:
-
-      - Parallel search execution (vector, graph, keyword)
+- Parallel search execution (vector, graph, keyword)
     - Efficient database queries with indexes
     - Caching of conversation history
     - Optimized for enterprise-scale data volumes

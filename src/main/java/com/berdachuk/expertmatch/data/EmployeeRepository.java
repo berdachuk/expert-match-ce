@@ -1,5 +1,7 @@
 package com.berdachuk.expertmatch.data;
 
+import com.berdachuk.expertmatch.data.mapper.EmployeeMapper;
+import com.berdachuk.expertmatch.data.repository.sql.InjectSql;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +9,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -23,16 +26,37 @@ import java.util.Optional;
 public class EmployeeRepository {
 
     private final NamedParameterJdbcTemplate namedJdbcTemplate;
+    private final EmployeeMapper employeeMapper;
     private final ChatClient chatClient;
     private final PromptTemplate nameMatchingPromptTemplate;
     private final ObjectMapper objectMapper;
 
+    @InjectSql("/sql/employee/findById.sql")
+    private String findByIdSql;
+
+    @InjectSql("/sql/employee/findByEmail.sql")
+    private String findByEmailSql;
+
+    @InjectSql("/sql/employee/findByIds.sql")
+    private String findByIdsSql;
+
+    @InjectSql("/sql/employee/findEmployeeIdsByName.sql")
+    private String findEmployeeIdsByNameSql;
+
+    @InjectSql("/sql/employee/findEmployeeIdsByNameSimilarity.sql")
+    private String findEmployeeIdsByNameSimilaritySql;
+
+    @InjectSql("/sql/employee/findEmployeeIdsByNameSimilarityCandidates.sql")
+    private String findEmployeeIdsByNameSimilarityCandidatesSql;
+
     public EmployeeRepository(
             NamedParameterJdbcTemplate namedJdbcTemplate,
+            EmployeeMapper employeeMapper,
             @Lazy ChatClient chatClient,
             @Qualifier("nameMatchingPromptTemplate") PromptTemplate nameMatchingPromptTemplate,
             ObjectMapper objectMapper) {
         this.namedJdbcTemplate = namedJdbcTemplate;
+        this.employeeMapper = employeeMapper;
         this.chatClient = chatClient;
         this.nameMatchingPromptTemplate = nameMatchingPromptTemplate;
         this.objectMapper = objectMapper;
@@ -42,52 +66,18 @@ public class EmployeeRepository {
      * Finds employee by ID.
      */
     public Optional<Employee> findById(String employeeId) {
-        String sql = """
-                SELECT id, name, email, seniority, language_english, availability_status
-                    FROM expertmatch.employee
-                WHERE id = :id
-                """;
-
         Map<String, Object> params = Map.of("id", employeeId);
-
-        List<Employee> results = namedJdbcTemplate.query(sql, params, (rs, rowNum) ->
-                new Employee(
-                        rs.getString("id"),
-                        rs.getString("name"),
-                        rs.getString("email"),
-                        rs.getString("seniority"),
-                        rs.getString("language_english"),
-                        rs.getString("availability_status")
-                )
-        );
-
-        return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+        List<Employee> results = namedJdbcTemplate.query(findByIdSql, params, employeeMapper);
+        return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
     }
 
     /**
      * Finds employee by email.
      */
     public Optional<Employee> findByEmail(String email) {
-        String sql = """
-                SELECT id, name, email, seniority, language_english, availability_status
-                    FROM expertmatch.employee
-                WHERE email = :email
-                """;
-
         Map<String, Object> params = Map.of("email", email);
-
-        List<Employee> results = namedJdbcTemplate.query(sql, params, (rs, rowNum) ->
-                new Employee(
-                        rs.getString("id"),
-                        rs.getString("name"),
-                        rs.getString("email"),
-                        rs.getString("seniority"),
-                        rs.getString("language_english"),
-                        rs.getString("availability_status")
-                )
-        );
-
-        return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+        List<Employee> results = namedJdbcTemplate.query(findByEmailSql, params, employeeMapper);
+        return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
     }
 
     /**
@@ -98,24 +88,8 @@ public class EmployeeRepository {
             return List.of();
         }
 
-        String sql = """
-                SELECT id, name, email, seniority, language_english, availability_status
-                    FROM expertmatch.employee
-                WHERE id = ANY(:ids)
-                """;
-
         Map<String, Object> params = Map.of("ids", employeeIds.toArray(new String[0]));
-
-        return namedJdbcTemplate.query(sql, params, (rs, rowNum) ->
-                new Employee(
-                        rs.getString("id"),
-                        rs.getString("name"),
-                        rs.getString("email"),
-                        rs.getString("seniority"),
-                        rs.getString("language_english"),
-                        rs.getString("availability_status")
-                )
-        );
+        return namedJdbcTemplate.query(findByIdsSql, params, employeeMapper);
     }
 
     /**
@@ -127,13 +101,6 @@ public class EmployeeRepository {
             return List.of();
         }
 
-        String sql = """
-                SELECT id
-                FROM expertmatch.employee
-                WHERE LOWER(name) LIKE LOWER(:namePattern)
-                LIMIT :maxResults
-                """;
-
         // Use ILIKE pattern matching - wrap in % for partial match
         String namePattern = "%" + name.trim() + "%";
 
@@ -142,7 +109,7 @@ public class EmployeeRepository {
                 "maxResults", maxResults
         );
 
-        return namedJdbcTemplate.query(sql, params, (rs, rowNum) -> rs.getString("id"));
+        return namedJdbcTemplate.query(findEmployeeIdsByNameSql, params, (rs, rowNum) -> rs.getString("id"));
     }
 
     /**
@@ -162,18 +129,6 @@ public class EmployeeRepository {
         // Use pg_trgm extension for trigram similarity
         // similarity() function returns a value between 0 and 1
         // word_similarity() is better for partial matches (e.g., "John" matching "John Doe")
-        String sql = """
-                SELECT id
-                FROM expertmatch.employee
-                WHERE similarity(LOWER(name), LOWER(:name)) >= :threshold
-                   OR word_similarity(LOWER(:name), LOWER(name)) >= :threshold
-                ORDER BY GREATEST(
-                    similarity(LOWER(name), LOWER(:name)),
-                    word_similarity(LOWER(:name), LOWER(name))
-                ) DESC
-                LIMIT :maxResults
-                """;
-
         Map<String, Object> params = Map.of(
                 "name", name.trim(),
                 "threshold", similarityThreshold,
@@ -181,7 +136,7 @@ public class EmployeeRepository {
         );
 
         try {
-            return namedJdbcTemplate.query(sql, params, (rs, rowNum) -> rs.getString("id"));
+            return namedJdbcTemplate.query(findEmployeeIdsByNameSimilaritySql, params, (rs, rowNum) -> rs.getString("id"));
         } catch (org.springframework.jdbc.BadSqlGrammarException |
                  org.springframework.jdbc.UncategorizedSQLException e) {
             // Handle case where pg_trgm extension is not available
@@ -221,15 +176,6 @@ public class EmployeeRepository {
         try {
             // First, get candidate employee names using a simple LIKE query to limit candidates
             // This prevents sending thousands of names to the LLM
-            String candidateSql = """
-                    SELECT id, name
-                    FROM expertmatch.employee
-                    WHERE LOWER(name) LIKE LOWER(:namePattern)
-                       OR LOWER(name) LIKE LOWER(:firstPattern)
-                       OR LOWER(name) LIKE LOWER(:lastPattern)
-                    LIMIT 100
-                    """;
-
             String namePattern = "%" + name.trim() + "%";
             String[] nameParts = name.trim().split("\\s+");
             String firstPattern = nameParts.length > 0 ? "%" + nameParts[0] + "%" : namePattern;
@@ -242,7 +188,7 @@ public class EmployeeRepository {
 
             // Get candidate employees with their IDs and names
             Map<String, String> candidateMap = new HashMap<>(); // name -> id
-            namedJdbcTemplate.query(candidateSql, candidateParams, (rs, rowNum) -> {
+            namedJdbcTemplate.query(findEmployeeIdsByNameSimilarityCandidatesSql, candidateParams, (rs, rowNum) -> {
                 String employeeId = rs.getString("id");
                 String employeeName = rs.getString("name");
                 candidateMap.put(employeeName, employeeId);

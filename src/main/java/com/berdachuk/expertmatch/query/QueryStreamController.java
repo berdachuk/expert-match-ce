@@ -1,7 +1,6 @@
 package com.berdachuk.expertmatch.query;
 
 import com.berdachuk.expertmatch.api.ApiMapper;
-import com.berdachuk.expertmatch.api.model.QueryRequest;
 import com.berdachuk.expertmatch.chat.ChatService;
 import com.berdachuk.expertmatch.security.HeaderBasedUserContext;
 import com.berdachuk.expertmatch.util.ValidationUtils;
@@ -69,7 +68,7 @@ public class QueryStreamController {
     )
     public SseEmitter processQueryStream(
             @RequestHeader(value = "X-User-Id", required = false) String xUserId,
-            @Valid @RequestBody QueryRequest queryRequest,
+            @Valid @RequestBody com.berdachuk.expertmatch.api.model.QueryRequest queryRequest,
             @RequestHeader(value = "X-User-Roles", required = false) String xUserRoles,
             @RequestHeader(value = "X-User-Email", required = false) String xUserEmail) {
         SseEmitter emitter = new SseEmitter(300_000L); // 5 minute timeout

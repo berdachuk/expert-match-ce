@@ -101,7 +101,7 @@ start
 note right
   Uses standard hybrid retrieval:
 
-  - Vector search
+- Vector search
   - Graph traversal
   - Keyword search
   - Result fusion
@@ -118,7 +118,7 @@ endif
 note right
   Enrich initial experts with:
 
-  - Full profile data
+- Full profile data
   - Skills and technologies
   - Project history
   - Seniority level
@@ -128,7 +128,7 @@ end note
 note right
   LLM analyzes:
 
-  - Missing information
+- Missing information
   - Ambiguities
   - Gaps in coverage
   - Need for expansion
@@ -156,7 +156,7 @@ endif
 note right
   For each refined query:
 
-  - Perform hybrid retrieval
+- Perform hybrid retrieval
   - Collect results
 end note
 
@@ -170,7 +170,7 @@ endif
 note right
   Combine initial and expanded results:
 
-  - Weighted scoring
+- Weighted scoring
   - Initial: 60% weight
   - Expanded: 40% weight
   - Deduplicate and rank
@@ -373,7 +373,7 @@ end note
 note right
   For each expert ID:
 
-  - If in initial: add initial score
+- If in initial: add initial score
   - If in expanded: add expanded score
   - If in both: weighted average
 end note

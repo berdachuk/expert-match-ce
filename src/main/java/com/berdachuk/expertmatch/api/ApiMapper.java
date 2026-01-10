@@ -1,6 +1,5 @@
 package com.berdachuk.expertmatch.api;
 
-import com.berdachuk.expertmatch.api.model.*;
 import com.berdachuk.expertmatch.chat.ConversationHistoryRepository;
 import com.berdachuk.expertmatch.data.ChatRepository;
 import com.berdachuk.expertmatch.query.QueryRequest;
@@ -26,7 +25,7 @@ public interface ApiMapper {
     QueryRequest toDomainQueryRequest(com.berdachuk.expertmatch.api.model.QueryRequest apiRequest);
 
     @Named("mapQueryOptions")
-    default QueryRequest.QueryOptions mapQueryOptions(QueryOptions apiOptions) {
+    default QueryRequest.QueryOptions mapQueryOptions(com.berdachuk.expertmatch.api.model.QueryOptions apiOptions) {
         if (apiOptions == null) {
             return null;
         }
@@ -55,7 +54,7 @@ public interface ApiMapper {
     com.berdachuk.expertmatch.api.model.QueryResponse toApiQueryResponse(QueryResponse domainResponse);
 
     @Named("mapExpertMatches")
-    default List<ExpertMatch> mapExpertMatches(List<QueryResponse.ExpertMatch> domainExperts) {
+    default List<com.berdachuk.expertmatch.api.model.ExpertMatch> mapExpertMatches(List<QueryResponse.ExpertMatch> domainExperts) {
         if (domainExperts == null) {
             return List.of();
         }
@@ -69,24 +68,24 @@ public interface ApiMapper {
     @Mapping(target = "matchedSkills", source = "matchedSkills", qualifiedByName = "mapMatchedSkills")
     @Mapping(target = "relevantProjects", source = "relevantProjects", qualifiedByName = "mapRelevantProjects")
     @Mapping(target = "experience", source = "experience", qualifiedByName = "mapExperience")
-    ExpertMatch toApiExpertMatch(QueryResponse.ExpertMatch domainExpert);
+    com.berdachuk.expertmatch.api.model.ExpertMatch toApiExpertMatch(QueryResponse.ExpertMatch domainExpert);
 
     @Named("mapLanguageProficiency")
-    default LanguageProficiency mapLanguageProficiency(QueryResponse.LanguageProficiency domainLang) {
+    default com.berdachuk.expertmatch.api.model.LanguageProficiency mapLanguageProficiency(QueryResponse.LanguageProficiency domainLang) {
         if (domainLang == null) {
             return null;
         }
-        LanguageProficiency lang = new LanguageProficiency();
+        com.berdachuk.expertmatch.api.model.LanguageProficiency lang = new com.berdachuk.expertmatch.api.model.LanguageProficiency();
         lang.setEnglish(domainLang.english());
         return lang;
     }
 
     @Named("mapSkillMatch")
-    default SkillMatch mapSkillMatch(QueryResponse.SkillMatch domainSkillMatch) {
+    default com.berdachuk.expertmatch.api.model.SkillMatch mapSkillMatch(QueryResponse.SkillMatch domainSkillMatch) {
         if (domainSkillMatch == null) {
             return null;
         }
-        SkillMatch skillMatch = new SkillMatch();
+        com.berdachuk.expertmatch.api.model.SkillMatch skillMatch = new com.berdachuk.expertmatch.api.model.SkillMatch();
         skillMatch.setMustHaveMatched(domainSkillMatch.mustHaveMatched());
         skillMatch.setMustHaveTotal(domainSkillMatch.mustHaveTotal());
         skillMatch.setNiceToHaveMatched(domainSkillMatch.niceToHaveMatched());
@@ -96,24 +95,24 @@ public interface ApiMapper {
     }
 
     @Named("mapMatchedSkills")
-    default MatchedSkills mapMatchedSkills(QueryResponse.MatchedSkills domainMatchedSkills) {
+    default com.berdachuk.expertmatch.api.model.MatchedSkills mapMatchedSkills(QueryResponse.MatchedSkills domainMatchedSkills) {
         if (domainMatchedSkills == null) {
             return null;
         }
-        MatchedSkills matchedSkills = new MatchedSkills();
+        com.berdachuk.expertmatch.api.model.MatchedSkills matchedSkills = new com.berdachuk.expertmatch.api.model.MatchedSkills();
         matchedSkills.setMustHave(domainMatchedSkills.mustHave());
         matchedSkills.setNiceToHave(domainMatchedSkills.niceToHave());
         return matchedSkills;
     }
 
     @Named("mapRelevantProjects")
-    default List<RelevantProject> mapRelevantProjects(List<QueryResponse.RelevantProject> domainProjects) {
+    default List<com.berdachuk.expertmatch.api.model.RelevantProject> mapRelevantProjects(List<QueryResponse.RelevantProject> domainProjects) {
         if (domainProjects == null) {
             return List.of();
         }
         return domainProjects.stream()
                 .map(domainProject -> {
-                    RelevantProject apiProject = new RelevantProject();
+                    com.berdachuk.expertmatch.api.model.RelevantProject apiProject = new com.berdachuk.expertmatch.api.model.RelevantProject();
                     apiProject.setName(domainProject.name());
                     apiProject.setTechnologies(domainProject.technologies());
                     apiProject.setRole(domainProject.role());
@@ -124,11 +123,11 @@ public interface ApiMapper {
     }
 
     @Named("mapExperience")
-    default Experience mapExperience(QueryResponse.Experience domainExperience) {
+    default com.berdachuk.expertmatch.api.model.Experience mapExperience(QueryResponse.Experience domainExperience) {
         if (domainExperience == null) {
             return null;
         }
-        Experience experience = new Experience();
+        com.berdachuk.expertmatch.api.model.Experience experience = new com.berdachuk.expertmatch.api.model.Experience();
         experience.setEtlPipelines(domainExperience.etlPipelines());
         experience.setHighPerformanceServices(domainExperience.highPerformanceServices());
         experience.setSystemArchitecture(domainExperience.systemArchitecture());
@@ -138,17 +137,17 @@ public interface ApiMapper {
     }
 
     @Named("mapSources")
-    default List<Source> mapSources(List<QueryResponse.Source> domainSources) {
+    default List<com.berdachuk.expertmatch.api.model.Source> mapSources(List<QueryResponse.Source> domainSources) {
         if (domainSources == null) {
             return List.of();
         }
         return domainSources.stream()
                 .map(domainSource -> {
-                    Source apiSource = new Source();
+                    com.berdachuk.expertmatch.api.model.Source apiSource = new com.berdachuk.expertmatch.api.model.Source();
                     try {
-                        apiSource.setType(Source.TypeEnum.fromValue(domainSource.type()));
+                        apiSource.setType(com.berdachuk.expertmatch.api.model.Source.TypeEnum.fromValue(domainSource.type()));
                     } catch (IllegalArgumentException e) {
-                        apiSource.setType(Source.TypeEnum.EXPERT);
+                        apiSource.setType(com.berdachuk.expertmatch.api.model.Source.TypeEnum.EXPERT);
                     }
                     apiSource.setId(domainSource.id());
                     apiSource.setTitle(domainSource.title());
@@ -162,17 +161,17 @@ public interface ApiMapper {
     }
 
     @Named("mapEntities")
-    default List<Entity> mapEntities(List<QueryResponse.Entity> domainEntities) {
+    default List<com.berdachuk.expertmatch.api.model.Entity> mapEntities(List<QueryResponse.Entity> domainEntities) {
         if (domainEntities == null) {
             return List.of();
         }
         return domainEntities.stream()
                 .map(domainEntity -> {
-                    Entity apiEntity = new Entity();
+                    com.berdachuk.expertmatch.api.model.Entity apiEntity = new com.berdachuk.expertmatch.api.model.Entity();
                     try {
-                        apiEntity.setType(Entity.TypeEnum.fromValue(domainEntity.type()));
+                        apiEntity.setType(com.berdachuk.expertmatch.api.model.Entity.TypeEnum.fromValue(domainEntity.type()));
                     } catch (IllegalArgumentException e) {
-                        apiEntity.setType(Entity.TypeEnum.PERSON);
+                        apiEntity.setType(com.berdachuk.expertmatch.api.model.Entity.TypeEnum.PERSON);
                     }
                     apiEntity.setName(domainEntity.name());
                     apiEntity.setId(domainEntity.id());
@@ -182,11 +181,11 @@ public interface ApiMapper {
     }
 
     @Named("mapMatchSummary")
-    default MatchSummary mapMatchSummary(QueryResponse.MatchSummary domainSummary) {
+    default com.berdachuk.expertmatch.api.model.MatchSummary mapMatchSummary(QueryResponse.MatchSummary domainSummary) {
         if (domainSummary == null) {
             return null;
         }
-        MatchSummary apiSummary = new MatchSummary();
+        com.berdachuk.expertmatch.api.model.MatchSummary apiSummary = new com.berdachuk.expertmatch.api.model.MatchSummary();
         apiSummary.setTotalExpertsFound(domainSummary.totalExpertsFound());
         apiSummary.setPerfectMatches(domainSummary.perfectMatches());
         apiSummary.setGoodMatches(domainSummary.goodMatches());
@@ -249,9 +248,9 @@ public interface ApiMapper {
     @Mapping(target = "createdAt", expression = "java(domainChat.createdAt() != null ? domainChat.createdAt().atOffset(java.time.ZoneOffset.UTC) : null)")
     @Mapping(target = "updatedAt", expression = "java(domainChat.updatedAt() != null ? domainChat.updatedAt().atOffset(java.time.ZoneOffset.UTC) : null)")
     @Mapping(target = "lastActivityAt", expression = "java(domainChat.lastActivityAt() != null ? domainChat.lastActivityAt().atOffset(java.time.ZoneOffset.UTC) : null)")
-    Chat toApiChat(ChatRepository.Chat domainChat);
+    com.berdachuk.expertmatch.api.model.Chat toApiChat(ChatRepository.Chat domainChat);
 
-    List<Chat> toApiChatList(List<ChatRepository.Chat> domainChats);
+    List<com.berdachuk.expertmatch.api.model.Chat> toApiChatList(List<ChatRepository.Chat> domainChats);
 
     @Mapping(target = "messageType", expression = "java(com.berdachuk.expertmatch.api.model.ConversationMessage.MessageTypeEnum.fromValue(domainMessage.messageType()))")
     @Mapping(target = "createdAt", expression = "java(domainMessage.createdAt() != null ? domainMessage.createdAt().atOffset(java.time.ZoneOffset.UTC) : null)")

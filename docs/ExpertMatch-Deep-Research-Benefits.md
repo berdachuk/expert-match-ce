@@ -189,8 +189,7 @@ Deep Research Process:
 1. Initial: Finds experts with cloud migration or AWS experience
 2. Gap Analysis: Identifies need for both cloud migration AND AWS together
 3. Refined Queries:
-
-   - "AWS cloud migration projects"
+- "AWS cloud migration projects"
    - "Cloud migration AWS services"
    - "AWS migration architecture"
 4. Expanded: Finds experts matching refined queries
@@ -472,19 +471,18 @@ Deep Research Process:
 ### When to Enable
 
 Enable Deep Research (`deepResearch: true`) when:
-
-- ✅ Query is complex or multi-faceted
-- ✅ Comprehensive coverage is critical
-- ✅ Query may be ambiguous or incomplete
-- ✅ Quality is more important than speed
-- ✅ Missing experts has significant consequences
+- Query is complex or multi-faceted
+- Comprehensive coverage is critical
+- Query may be ambiguous or incomplete
+- Quality is more important than speed
+- Missing experts has significant consequences
 
 Use Standard Retrieval (default) when:
 
-- ✅ Query is simple and specific
-- ✅ Performance is critical
-- ✅ Initial results are likely sufficient
-- ✅ Resource usage needs to be minimized
+- Query is simple and specific
+- Performance is critical
+- Initial results are likely sufficient
+- Resource usage needs to be minimized
 
 ---
 

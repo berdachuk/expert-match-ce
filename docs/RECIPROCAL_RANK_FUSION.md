@@ -57,7 +57,7 @@ private static final int RRF_K = 60;
 
 1. **Multiple Retrieval Methods**: Each method (vector, graph, keyword) returns a ranked list of expert IDs
 2. **RRF Score Calculation**: For each unique expert ID across all lists:
-    - Calculate RRF contribution from each method where the expert appears
+- Calculate RRF contribution from each method where the expert appears
     - Apply method-specific weight
     - Sum all contributions
 3. **Deduplication**: Automatically handles experts that appear in multiple lists
@@ -169,29 +169,28 @@ Given three ranking lists:
 3. Expert E (rank 2)
 
 **RRF Score Calculation** (k=60):
-
 - **Expert A**:
-    - Vector: `1.0 * (1 / (60 + 0)) = 0.01667`
+- Vector: `1.0 * (1 / (60 + 0)) = 0.01667`
     - Graph: `0.8 * (1 / (60 + 2)) = 0.01290`
     - Keyword: `0.6 * (1 / (60 + 1)) = 0.00984`
     - **Total: 0.03941**
 
 - **Expert B**:
-    - Vector: `1.0 * (1 / (60 + 1)) = 0.01639`
+- Vector: `1.0 * (1 / (60 + 1)) = 0.01639`
     - Graph: `0.8 * (1 / (60 + 0)) = 0.01333`
     - **Total: 0.02972**
 
 - **Expert C**:
-    - Vector: `1.0 * (1 / (60 + 2)) = 0.01613`
+- Vector: `1.0 * (1 / (60 + 2)) = 0.01613`
     - Keyword: `0.6 * (1 / (60 + 0)) = 0.01000`
     - **Total: 0.02613**
 
 - **Expert D**:
-    - Graph: `0.8 * (1 / (60 + 1)) = 0.01311`
+- Graph: `0.8 * (1 / (60 + 1)) = 0.01311`
     - **Total: 0.01311**
 
 - **Expert E**:
-    - Keyword: `0.6 * (1 / (60 + 2)) = 0.00968`
+- Keyword: `0.6 * (1 / (60 + 2)) = 0.00968`
     - **Total: 0.00968`
 
 **Final Ranking**:
@@ -256,7 +255,7 @@ note right of Fusion
   score = Σ(weight_i / (k + rank_i))
   
   Where:
-  - k = 60
+- k = 60
   - weight_i = method weight
   - rank_i = position in list
 end note
@@ -304,7 +303,7 @@ alt Gaps identified
   DeepResearch -> Fusion: Combine all results
   note right of Fusion
     RRF combines:
-    - Initial results
+- Initial results
     - Refined results
     - Expanded results
   end note
@@ -365,7 +364,6 @@ The `HybridRetrievalService` dynamically adjusts weights based on query analysis
 ## Related Documentation
 
 - [Expert Search Flow](ExpertMatch-Expert-Search-Flow.md) - Complete flow including RRF fusion
-- [Hybrid Retrieval Architecture](ExpertMatch.md#hybrid-retrieval) - Overview of retrieval methods
-- [Result Fusion Service](../src/main/java/com/berdachuk/expertmatch/retrieval/ResultFusionService.java) -
-  Implementation code
+- [Retrieval Algorithms](ExpertMatch.md#8-retrieval-algorithms) - Overview of retrieval methods
+- `ResultFusionService.java` - Implementation code (see source code repository)
 

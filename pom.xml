@@ -157,6 +157,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Apache Commons IO for file operations -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.18.0</version>
+        </dependency>
+
         <!-- Datafaker for synthetic test data generation -->
         <dependency>
             <groupId>net.datafaker</groupId>

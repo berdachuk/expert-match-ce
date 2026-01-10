@@ -46,7 +46,7 @@ ConversationHistoryManager.getOptimizedHistory()
 - **Method**: ~4 characters per token (conservative estimate for English text)
 - **Accuracy**: Reasonable approximation for most use cases
 - **Note**: Actual token counts may vary based on:
-    - Language (non-English may have different ratios)
+- Language (non-English may have different ratios)
     - Model tokenizer (different models tokenize differently)
     - Special characters and whitespace
 
@@ -64,23 +64,23 @@ ConversationHistoryManager.getOptimizedHistory()
 When history exceeds limits, the system:
 
 1. **Splits History**:
-    - Recent messages: Keep as-is (half of `max-messages`)
+- Recent messages: Keep as-is (half of `max-messages`)
     - Older messages: Summarize
 
 2. **Summarization**:
-    - Uses LLM with `summarize-history.st` prompt template
+- Uses LLM with `summarize-history.st` prompt template
     - Preserves key context, requirements, and decisions
     - Maintains information about experts, technologies, and skills
     - Removes redundant information
     - Limited to `max-summary-tokens` (default: 500)
 
 3. **Combination**:
-    - Creates synthetic summary message: `[Previous conversation summary] {summary}`
+- Creates synthetic summary message: `[Previous conversation summary] {summary}`
     - Combines: Summary + Recent messages
     - Checks if still within limits
 
 4. **Recursive Optimization**:
-    - If still exceeds token limit, further optimizes by summarizing oldest messages
+- If still exceeds token limit, further optimizes by summarizing oldest messages
     - Continues until within limits
 
 ### Example
@@ -176,6 +176,7 @@ token count.
 ## Instructions
 
 Create a concise summary that:
+
 - Preserves important context, requirements, and decisions
 - Maintains key information about experts, technologies, and skills mentioned
 - Removes redundant information and verbose explanations

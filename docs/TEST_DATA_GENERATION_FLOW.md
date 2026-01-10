@@ -57,8 +57,7 @@ Based on `size` parameter:
 - Creates normalized technology catalog in `expertmatch.technology` table
 - Inserts ~20 base technologies (Java, Spring Boot, Python, React, etc.)
 - Each technology includes:
-
-      - `id`: MongoDB-compatible 24-char hex ID
+- `id`: MongoDB-compatible 24-char hex ID
     - `name`: Normalized technology name
     - `category`: Technology category (e.g., "Backend", "Frontend", "Database")
     - `normalized_name`: Lowercase normalized version for matching
@@ -71,8 +70,7 @@ Based on `size` parameter:
 **Method**: `generateProjects(int projectCount)`
 
 - Generates project records with:
-
-      - `id`: External system format (19-digit numeric string)
+- `id`: External system format (19-digit numeric string)
     - `name`: Generated using Datafaker (e.g., "Innovative Banking Platform")
     - `summary`: Project description
     - `project_type`: Random from predefined types (Web Application, Microservices, ETL Pipeline, etc.)
@@ -87,8 +85,7 @@ Based on `size` parameter:
 **Method**: `generateEmployees(int employeeCount)`
 
 - Generates employee records with:
-
-      - `id`: External system format (19-digit numeric string)
+- `id`: External system format (19-digit numeric string)
     - `name`: Generated using Datafaker (first + last name)
     - `email`: Unique email address (Datafaker-generated)
     - `seniority`: Random from levels A1-A5, B1-B3, C1-C2
@@ -103,8 +100,7 @@ Based on `size` parameter:
 For each employee, generates multiple work experience records:
 
 - **Basic Fields**:
-
-      - `id`: MongoDB-compatible 24-char hex ID
+- `id`: MongoDB-compatible 24-char hex ID
     - `employee_id`: References employee
     - `project_id`: References project (or null if project doesn't exist)
     - `project_name`: Project name
@@ -151,8 +147,7 @@ For each employee, generates multiple work experience records:
 
 - Queries all `work_experience` records where `embedding IS NULL`
 - Retrieves:
-
-      - `id`: Work experience record ID
+- `id`: Work experience record ID
     - `project_summary`: Project description
     - `responsibilities`: Responsibilities text
     - `technologies`: Array of technologies
@@ -180,19 +175,16 @@ For each record, builds text from:
 ### Step 2.4: Normalize and Store Embedding
 
 - Normalizes embedding to 1536 dimensions (database schema requirement):
-
-      - If 1024-dim: pads with zeros to 1536
+- If 1024-dim: pads with zeros to 1536
     - If 1536-dim: uses as-is
     - If other: pads or truncates as needed
 - Updates `work_experience` table:
-
-      - `embedding`: Vector stored as PostgreSQL `vector` type
+- `embedding`: Vector stored as PostgreSQL `vector` type
     - `embedding_dimension`: Original dimension (1024 or 1536)
 
 **Database Fields**: `expertmatch.work_experience.embedding`, `embedding_dimension`
 
 **Progress Logging**: Logs progress every 100 records with:
-
 - Processed count / total count
 - Success / failed counts
 - Items per second
@@ -218,8 +210,7 @@ Creates graph vertices in this order:
 - **Source**: `expertmatch.employee` table
 - **Vertex Type**: `Expert`
 - **Properties**:
-
-      - `id`: Employee ID (external system format)
+- `id`: Employee ID (external system format)
     - `name`: Employee name
     - `email`: Employee email
     - `seniority`: Seniority level
@@ -230,8 +221,7 @@ Creates graph vertices in this order:
 - **Source**: `expertmatch.project` table
 - **Vertex Type**: `Project`
 - **Properties**:
-
-      - `id`: Project ID (external system format)
+- `id`: Project ID (external system format)
     - `name`: Project name
     - `summary`: Project summary
     - `project_type`: Project type
@@ -242,8 +232,7 @@ Creates graph vertices in this order:
 - **Source**: `expertmatch.technology` table
 - **Vertex Type**: `Technology`
 - **Properties**:
-
-      - `id`: Technology ID (MongoDB-compatible)
+- `id`: Technology ID (MongoDB-compatible)
     - `name`: Technology name
     - `category`: Technology category
     - `normalized_name`: Normalized name for matching
@@ -254,8 +243,7 @@ Creates graph vertices in this order:
 - **Source**: Distinct industries from `expertmatch.work_experience.industry`
 - **Vertex Type**: `Domain`
 - **Properties**:
-
-      - `id`: Generated MongoDB-compatible ID
+- `id`: Generated MongoDB-compatible ID
     - `name`: Industry/domain name (e.g., "Banking", "E-commerce")
 - **Cypher**: `CREATE (d:Domain {id: $id, name: $name})`
 
@@ -264,8 +252,7 @@ Creates graph vertices in this order:
 - **Source**: Distinct customer names from `expertmatch.work_experience.customer_name`
 - **Vertex Type**: `Customer`
 - **Properties**:
-
-      - `id`: Generated customer ID (external system format, or generated if null)
+- `id`: Generated customer ID (external system format, or generated if null)
     - `name`: Customer name
 - **Cypher**: `MERGE (c:Customer {id: $id}) SET c.name = $name`
 
@@ -291,8 +278,7 @@ Creates graph relationships using batch `UNWIND` operations:
 - **Source**: `expertmatch.work_experience` table
 - **Direction**: `Expert -[:PARTICIPATED_IN]-> Project`
 - **Properties**:
-
-      - `role`: Role in project
+- `role`: Role in project
     - `start_date`: Start date
     - `end_date`: End date
 - **Cypher**:

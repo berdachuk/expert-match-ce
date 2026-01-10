@@ -7,7 +7,7 @@
 **Project Name:** ExpertMatch  
 **Version:** 1.0  
 **Date:** 2025-01-27  
-**Last Updated:** 2026-01-04 (Added Person Name Search functionality and JSON Batch Ingestion)  
+**Last Updated:** 2026-01-07 (Project analysis and PRD update - Spring AI 1.1.1, implementation status review)  
 **Status:** Core Implementation Complete (MVP Ready)
 
 **Naming Conventions:**
@@ -35,17 +35,17 @@ recommendations based on technical skills, experience, seniority, and project hi
 
 ### Implementation Status
 
-**Current Status:** ✅ **Core Implementation Complete** (MVP Ready)
+**Current Status:**  **Core Implementation Complete** (MVP Ready)
 
 The ExpertMatch service has achieved **core implementation completion** with all MVP features implemented and tested:
 
-- ✅ **91 Java source files** across 9 modules (query, retrieval, llm, chat, data, embedding, graph, ingestion, mcp)
-- ✅ **31 test files** with comprehensive test coverage using Testcontainers
-- ✅ **All MVP features implemented**: Query processing, hybrid GraphRAG retrieval, SGR patterns, chat management, test
+- **111 Java source files** across 9 modules (query, retrieval, llm, chat, data, embedding, graph, ingestion, mcp)
+- **56 test files** with comprehensive test coverage using Testcontainers
+- **All MVP features implemented**: Query processing, hybrid GraphRAG retrieval, SGR patterns, chat management, test
   data generation
-- ✅ **Full API implementation**: REST API with OpenAPI 3.0 specification, MCP Server endpoints
-- ✅ **Complete development environment**: Docker Compose setup with PostgreSQL, Apache AGE, PgVector, Ollama
-- ✅ **Production-ready architecture**: Spring Boot 3.5.9, Java 21, Spring Modulith modular monolith
+- **Full API implementation**: REST API with OpenAPI 3.0 specification, MCP Server endpoints
+- **Complete development environment**: Docker Compose setup with PostgreSQL, Apache AGE, PgVector, Ollama
+- **Production-ready architecture**: Spring Boot 3.5.9, Java 21, Spring Modulith modular monolith
 
 **Key Implemented Features:**
 
@@ -78,8 +78,7 @@ their work experience, project history, technologies used, and domain expertise.
   expert discovery
 - **Smart Tool Selection**: Tool Search Tool pattern delivers 34-64% token savings through dynamic tool discovery
 - **Multi-Source Data Integration**:
-
-      - **Work Experience Data**: Primary source for expert discovery (project participation, technologies, roles,
+- **Work Experience Data**: Primary source for expert discovery (project participation, technologies, roles,
       customer experience)
     - **Jira/Intakes Data**: Secondary source for expert discovery (contributors, assignees, reporters, recent activity)
     - **Presale Materials**: Tertiary source for expert discovery (owners, contacts, case studies)
@@ -90,47 +89,43 @@ their work experience, project history, technologies used, and domain expertise.
 
 **MVP (Minimum Viable Product) Scope:**
 
-✅ **All MVP features have been implemented and are ready for use.** The following functionality is **fully implemented
+ **All MVP features have been implemented and are ready for use.** The following functionality is **fully implemented
 **:
-
-- ✅ **Core Expert Matching**: Query processing, hybrid GraphRAG retrieval, expert recommendations
-- ✅ **SGR Patterns**: All SGR patterns implemented (Cascade, Routing, Cycle, Deep Research)
-- ✅ **SGR Deep Research Pattern**: Multi-step iterative retrieval with gap analysis, query refinement, and result
+- **Core Expert Matching**: Query processing, hybrid GraphRAG retrieval, expert recommendations
+- **SGR Patterns**: All SGR patterns implemented (Cascade, Routing, Cycle, Deep Research)
+- **SGR Deep Research Pattern**: Multi-step iterative retrieval with gap analysis, query refinement, and result
   synthesis
-- ✅ **Chat Management**: Default chat, create/delete chats, conversation history, per-chat memory
-- ✅ **Test Data Generation**: Generate synthetic test data with different database sizes (small, medium, large, custom)
-- ✅ **Docker Compose Setup**: Full local development environment with all required services in containers
-- ✅ **Local Development**: Complete development environment setup for Linux (Ubuntu 22.04), Mac OS, and Windows 11
-- ✅ **All Core Features**: Query processing, vector search, graph traversal, semantic reranking, LLM orchestration
-- ✅ **REST API**: All query and chat management endpoints with OpenAPI 3.0 specification
-- ✅ **MCP Server**: Model Context Protocol server for AI assistant integration
-- ✅ **Authentication**: Header-based authentication (Spring Gateway handles JWT validation)
-- ✅ **Smart Tool Selection**: Tool Search Tool pattern with 34-64% token savings
-- ✅ **Multi-Provider AI Support**: Ollama, OpenAI, OpenAI-compatible providers
+- **Chat Management**: Default chat, create/delete chats, conversation history, per-chat memory
+- **Test Data Generation**: Generate synthetic test data with different database sizes (small, medium, large, custom)
+- **Docker Compose Setup**: Full local development environment with all required services in containers
+- **Local Development**: Complete development environment setup for Linux (Ubuntu 22.04), Mac OS, and Windows 11
+- **All Core Features**: Query processing, vector search, graph traversal, semantic reranking, LLM orchestration
+- **REST API**: All query and chat management endpoints with OpenAPI 3.0 specification
+- **MCP Server**: Model Context Protocol server for AI assistant integration
+- **Authentication**: Header-based authentication (Spring Gateway handles JWT validation)
+- **Smart Tool Selection**: Tool Search Tool pattern with 34-64% token savings
+- **Multi-Provider AI Support**: Ollama, OpenAI, OpenAI-compatible providers
 
 **MVP Data Sources:**
 
-✅ **Implemented**: The system uses **synthetic test data** generated using Datafaker:
-
-- ✅ Test data generation with configurable sizes (small, medium, large, custom)
-- ✅ All databases run in Docker containers
-- ✅ No external data source dependencies
-- ✅ Full functionality demonstration with realistic fake data
+ **Implemented**: The system uses **synthetic test data** generated using Datafaker:
+- Test data generation with configurable sizes (small, medium, large, custom)
+- All databases run in Docker containers
+- No external data source dependencies
+- Full functionality demonstration with realistic fake data
 
 **MVP Deployment:**
 
-✅ **Implemented**: Complete Docker Compose deployment setup:
-
-- ✅ **Local Development Environment**: Docker Compose setup with all services containerized
-- ✅ **All Databases in Containers**: PostgreSQL 17, Apache AGE 1.6.0, PgVector 0.8.0 extensions
-- ✅ **Ollama Integration**: Multiple deployment options supported:
-
-      - ✅ **Option 1**: Ollama in Docker container (default, fully self-contained)
-    - ✅ **Option 2**: Ollama as remote service on another computer (for shared resources, GPU access, or centralized
+ **Implemented**: Complete Docker Compose deployment setup:
+- **Local Development Environment**: Docker Compose setup with all services containerized
+- **All Databases in Containers**: PostgreSQL 17, Apache AGE 1.6.0, PgVector 0.8.0 extensions
+- **Ollama Integration**: Multiple deployment options supported:
+- **Option 1**: Ollama in Docker container (default, fully self-contained)
+    - **Option 2**: Ollama as remote service on another computer (for shared resources, GPU access, or centralized
       model
       management)
-- ✅ **No Cloud Dependencies**: Fully self-contained local environment (or local network with remote Ollama)
-- ✅ **Remote Server Support**: SSH-based remote server deployment documented and tested
+- **No Cloud Dependencies**: Fully self-contained local environment (or local network with remote Ollama)
+- **Remote Server Support**: SSH-based remote server deployment documented and tested
 
 ---
 
@@ -165,8 +160,7 @@ A GraphRAG-powered expert discovery service that:
 - Analyzes project requirements (skills, seniority, responsibilities, technical stack) using natural language processing
 - Performs hybrid retrieval: vector similarity + graph traversal + semantic reranking to find matching experts
 - Matches project requirements with employee profiles based on:
-
-      - Technical skills (must-have and nice-to-have)
+- Technical skills (must-have and nice-to-have)
     - Seniority levels (A3, A4, A5, B1, etc.)
     - Project experience and domain expertise
     - Technology stack familiarity
@@ -189,7 +183,6 @@ A GraphRAG-powered expert discovery service that:
 #### Use Case 1: RFP Response - Finding Experts for Project Requirements
 
 **Input**: Project requirements document with:
-
 - Seniority: A3 - A4
 - English: B2
 - Must-have skills: Java, AWS, MongoDB, Spring Boot, Gradle, Java 21+
@@ -199,7 +192,6 @@ A GraphRAG-powered expert discovery service that:
   Cassandra, MongoDB, Micrometer, Datadog
 
 **Sample User Queries** (Human Readable Format):
-
 - "I need experts for an RFP response. We need A3-A4 level developers with Java 21+, Spring Boot, AWS, and MongoDB
   experience. They should have experience with ETL pipelines, system architecture, and on-call rotation."
 - "Find me senior developers (A3-A4) who know Java 21+, Spring Boot, AWS, MongoDB, and have worked with monitoring tools
@@ -214,8 +206,7 @@ A GraphRAG-powered expert discovery service that:
 1. **Parse Requirements**: Extract skills, seniority, responsibilities, technical stack
 2. **Vector Search**: Find employees with similar project experiences and technologies
 3. **Graph Traversal**:
-
-     - Find experts → Java/Spring Boot projects → AWS projects → MongoDB projects
+- Find experts → Java/Spring Boot projects → AWS projects → MongoDB projects
     - Find experts with on-call experience → monitoring/observability projects
     - Find experts with ETL experience → data pipeline projects
 4. **Skill Matching**: Match must-have and nice-to-have skills against employee work experience
@@ -223,8 +214,7 @@ A GraphRAG-powered expert discovery service that:
 6. **Semantic Reranking**: Prioritize experts with most relevant experience
 7. **Context Enrichment**: Include past projects, technologies used, customer contexts
 8. **Answer Generation**: Generate ranked list of experts with:
-
-     - Name, contact information, seniority
+- Name, contact information, seniority
     - Matched skills (must-have and nice-to-have)
     - Relevant project experience
     - Technology stack familiarity
@@ -236,15 +226,15 @@ A GraphRAG-powered expert discovery service that:
 Based on the project requirements, I found the following experts:
 
 1. **John Doe** (A4, English B2+)
-   - Must-have skills: ✅ Java 21+, Spring Boot, AWS, MongoDB, Gradle
-   - Nice-to-have: ✅ Kubernetes, Terraform, Datadog
+   - Must-have skills:  Java 21+, Spring Boot, AWS, MongoDB, Gradle
+   - Nice-to-have:  Kubernetes, Terraform, Datadog
    - Relevant experience: Built ETL pipelines handling 10M+ records/day, Spring WebFlux microservices
    - Projects: [Project X - AWS, MongoDB], [Project Y - Kubernetes, Terraform]
    - Contact: john.doe@example.com
 
 2. **Jane Smith** (A3, English B2+)
-   - Must-have skills: ✅ Java 21+, Spring Boot, AWS, MongoDB
-   - Nice-to-have: ✅ Helm, Datadog
+   - Must-have skills:  Java 21+, Spring Boot, AWS, MongoDB
+   - Nice-to-have:  Helm, Datadog
    - Relevant experience: On-call rotation, monitoring with Datadog, Spring Boot services
    - Projects: [Project Z - Production systems, 24/7 support]
    - Contact: jane.smith@example.com
@@ -347,7 +337,6 @@ deactivate API
 #### Use Case 2: Team Formation - Technical Lead and Team Members
 
 **Input**: Project description requiring:
-
 - Role: Team and Technical Lead
 - Technical stack: Java, Spring Boot, MongoDB, Kafka, REST API, Docker, Git
 - Nice-to-have: GraphQL, Reactive (Flux, Netty)
@@ -355,7 +344,6 @@ deactivate API
 - Requirements: Leadership experience, code review, technical decisions, L3 support, mentoring
 
 **Sample User Queries** (Human Readable Format):
-
 - "I need to form a team for a new project. We need a Technical Lead (A4 or A5) with Java, Spring Boot, MongoDB, and
   Kafka experience. The lead should have leadership experience and be able to mentor the team."
 - "Looking for a Technical Lead and team members for a Spring Boot project. The lead needs to be A4-A5 level with
@@ -370,8 +358,7 @@ deactivate API
 1. **Role Identification**: Identify need for Technical Lead (A4/A5) and team members
 2. **Vector Search**: Find employees with Spring Boot, MongoDB, Kafka experience
 3. **Graph Traversal**:
-
-     - Find Technical Leads → projects with similar stack → team leadership experience
+- Find Technical Leads → projects with similar stack → team leadership experience
     - Find team members → same projects → collaboration patterns
 4. **Experience Matching**: Match leadership, mentoring, code review experience
 5. **Team Composition**: Recommend lead + team members with complementary skills
@@ -487,7 +474,6 @@ deactivate API
 **Query**: "Looking for experts in Semantic/Industrial Modeling for an urgent customer need."
 
 **Sample User Queries** (Human Readable Format):
-
 - "Looking for experts in Semantic/Industrial Modeling for an urgent customer need."
 - "I need to find someone with semantic modeling experience ASAP. This is urgent for a customer proposal."
 - "Who has experience with industrial modeling? We have an urgent RFP that needs this expertise."
@@ -601,7 +587,6 @@ deactivate API
 **Query**: "Need experts with Java 21+, Spring Boot, AWS, and MongoDB experience for a new project."
 
 **Sample User Queries** (Human Readable Format):
-
 - "Need experts with Java 21+, Spring Boot, AWS, and MongoDB experience for a new project."
 - "Who has experience with Java 21+, Spring Boot, AWS, and MongoDB? We're starting a new project and need skilled
   developers."
@@ -856,31 +841,27 @@ flow between components.
 The service is organized into four main layers:
 
 1. **API Layer (REST + MCP Server)**:
-
-     - **REST API Endpoints**: HTTP RESTful API for query processing, chat management, and system operations
+- **REST API Endpoints**: HTTP RESTful API for query processing, chat management, and system operations
     - **MCP Server**: Model Context Protocol server exposing ExpertMatch functionality as tools and resources for AI
       assistants
     - **OpenAPI Docs**: Interactive API documentation (Swagger UI) for API exploration and testing
 
 2. **Query Processing Layer**:
-
-     - **Query Parser & Enricher**: Parses natural language queries, extracts entities (skills, technologies, seniority),
+- **Query Parser & Enricher**: Parses natural language queries, extracts entities (skills, technologies, seniority),
       and identifies query intent
     - **Hybrid Query Planner**: Plans the optimal retrieval strategy based on query characteristics
     - **Context Builder**: Builds comprehensive context from conversation history, extracted entities, and query
       requirements
 
 3. **Hybrid Retrieval Engine (GraphRAG)**:
-
-     - **Vector Search (PgVector)**: Semantic similarity search using vector embeddings with HNSW indexing for fast
+- **Vector Search (PgVector)**: Semantic similarity search using vector embeddings with HNSW indexing for fast
       approximate nearest neighbor search
     - **Graph Traversal (Apache AGE)**: Relationship-based discovery traversing project-technology-expert relationships
       in the graph
     - **Semantic Reranker**: Re-ranks retrieved results using semantic similarity to improve precision
 
 4. **LLM Orchestration (Spring AI 1.1.1)**:
-
-     - **Prompt Builder**: Constructs RAG (Retrieval-Augmented Generation) prompts with expert contexts and conversation
+- **Prompt Builder**: Constructs RAG (Retrieval-Augmented Generation) prompts with expert contexts and conversation
       history
     - **RAG Pattern**: Implements the Retrieval-Augmented Generation pattern for context-aware answer generation
     - **Response Formatter**: Formats LLM responses with proper citations, source attribution, and structured output
@@ -914,8 +895,7 @@ The universal ingestion layer provides a unified processing pipeline for all dat
    answer generation
 
 2. **Data Storage**: All data is stored in the unified PostgreSQL instance, with different access patterns:
-
-     - Vector search queries PgVector for semantic similarity
+- Vector search queries PgVector for semantic similarity
     - Graph traversal queries Apache AGE for relationship exploration
     - Relational queries access traditional tables for structured data
 
@@ -937,7 +917,7 @@ The universal ingestion layer provides a unified processing pipeline for all dat
 - **Java**: 21 (LTS)
 - **Spring Boot**: 3.5.9
 - **Spring Modulith**: Latest (modular monolith architecture, module boundaries, event publication)
-- **Spring AI**: 1.1.0 (GA) - Latest stable release (November 12, 2025)
+- **Spring AI**: 1.1.1 (GA) - Latest stable release (includes improvements from 1.1.0 GA released November 12, 2025)
 - **Lombok**: Latest (for boilerplate reduction)
 - **Spring JDBC**: NamedParameterJdbcTemplate (no JPA/Spring Data)
 - **OpenAPI/Swagger**: SpringDoc OpenAPI 3 (for API First Development)
@@ -1069,18 +1049,15 @@ multiple data sources while maintaining a single, unified data model.
 **Processing Stages**:
 
 1. **Source Adapter**:
-
-     - **Kafka Adapter**: Handles Kafka topic consumption and Avro deserialization
+- **Kafka Adapter**: Handles Kafka topic consumption and Avro deserialization
     - **PostgreSQL Adapter**: Handles database queries and JSON parsing
     - **REST/File Adapter**: Handles HTTP requests and file uploads
     - Normalizes data from different sources into a common format
     - Abstracts source-specific details from downstream processing
 
 2. **Entity Extraction & Normalization**:
-
-    - Extracts structured entities from normalized data:
-
-          - **Skills**: Technical skills and competencies
+- Extracts structured entities from normalized data:
+- **Skills**: Technical skills and competencies
         - **Technologies**: Technologies, frameworks, and tools
         - **Projects**: Project names, descriptions, and metadata
         - **Employees**: Employee identifiers, roles, and participation details
@@ -1089,39 +1066,33 @@ multiple data sources while maintaining a single, unified data model.
     - Identifies relationships between entities
 
 3. **Embedding Generation**:
-
-     - Generates vector embeddings for extracted entities
+- Generates vector embeddings for extracted entities
     - Uses consistent embedding models across all sources
     - Creates embeddings for project descriptions, work experience, and technology usage
     - Ensures semantic consistency for retrieval operations
 
 4. **Graph Relationship Extraction**:
-
-     - Builds graph relationships from extracted entities
+- Builds graph relationships from extracted entities
     - Creates Project-Technology, Expert-Project, and Technology-Expert relationships
     - Maintains relationship metadata (dates, roles, responsibilities)
     - Ensures graph consistency across all sources
 
 5. **Deduplication**:
-
-     - Removes duplicate records based on entity IDs and content
+- Removes duplicate records based on entity IDs and content
     - Prevents duplicate entries from multiple sources
     - Merges data from different sources for the same entities
     - Maintains data integrity and reduces storage overhead
 
 6. **Validation**:
-
-     - Validates data integrity and completeness
+- Validates data integrity and completeness
     - Checks required fields and data types
     - Validates relationships and referential integrity
     - Ensures data quality before storage
 
 7. **Batch Insert**:
-
-     - Batches validated data for efficient database insertion
+- Batches validated data for efficient database insertion
     - Inserts into three PostgreSQL components:
-
-          - **Vector Store (PgVector)**: Stores vector embeddings with HNSW indexing
+- **Vector Store (PgVector)**: Stores vector embeddings with HNSW indexing
         - **Graph DB (Apache AGE)**: Stores graph relationships and nodes
         - **Relational Tables**: Stores structured employee, project, and work experience data
     - Implements transaction management for data consistency
@@ -1222,88 +1193,71 @@ multi-stage pipeline that combines hybrid retrieval, semantic reranking, and LLM
 **Processing Stages**:
 
 1. **Query Parser**:
-
-     - Receives natural language query from user
+- Receives natural language query from user
     - Extracts structured information:
-
-          - **Entities**: Skills, technologies, domains, roles mentioned in the query
+- **Entities**: Skills, technologies, domains, roles mentioned in the query
         - **Concepts**: Abstract concepts and requirements
         - **Intent**: Query intent classification (expert search, team formation, RFP response)
     - Parses seniority levels, language requirements, and other constraints
     - Normalizes extracted entities for consistent matching
 
 2. **Hybrid Query Planner**:
-
-     - Analyzes parsed query to determine optimal retrieval strategy
+- Analyzes parsed query to determine optimal retrieval strategy
     - Plans which search strategies to use based on query characteristics:
-
-          - **Vector Search**: Best for semantic similarity and concept matching
+- **Vector Search**: Best for semantic similarity and concept matching
         - **Graph Traversal**: Best for relationship-based discovery
         - **Keyword Search**: Best for exact term matching
     - Determines weights for each search strategy
     - Optimizes query plan for performance and relevance
 
 3. **Hybrid Retrieval (Parallel Execution)**:
-
-    - **Vector Search (PgVector)**:
-
-          - Performs semantic similarity search using query embeddings
+- **Vector Search (PgVector)**:
+- Performs semantic similarity search using query embeddings
         - Finds experts with similar project experiences and skills
         - Uses HNSW indexing for fast approximate nearest neighbor search
         - Returns ranked list of expert IDs with similarity scores
     - **Graph Traversal (Apache AGE)**:
-
-          - Traverses project-technology-expert relationships
+- Traverses project-technology-expert relationships
         - Discovers experts through relationship paths
         - Finds experts connected to required technologies and projects
         - Returns expert IDs discovered through graph paths
     - **Keyword Search (Full-text)**:
-
-          - Performs traditional full-text search on skills and technologies
+- Performs traditional full-text search on skills and technologies
         - Matches exact terms and phrases
         - Searches across work experience descriptions and project summaries
         - Returns expert IDs matching keyword criteria
 
 4. **Result Fusion**:
-
-     - Combines results from all three search strategies
+- Combines results from all three search strategies
     - Uses Reciprocal Rank Fusion (RRF) algorithm:
-
-          - Calculates weighted scores based on rank positions
+- Calculates weighted scores based on rank positions
         - Combines scores from multiple result sets
         - Deduplicates expert IDs (keeps highest score)
     - Produces unified ranked list of expert candidates
 
 5. **Semantic Reranking**:
-
-     - Re-ranks fused results using semantic similarity
+- Re-ranks fused results using semantic similarity
     - Uses reranking model to improve precision:
-
-          - Calculates relevance scores between query and each expert
+- Calculates relevance scores between query and each expert
         - Prioritizes experts with higher semantic relevance
         - Filters results below confidence threshold
     - Produces final ranked list with relevance scores
 
 6. **Context Builder**:
-
-     - Enriches ranked expert IDs with detailed information
+- Enriches ranked expert IDs with detailed information
     - Fetches expert data from relational tables:
-
-          - Employee records (name, email, seniority, language)
+- Employee records (name, email, seniority, language)
         - Work experience history
         - Project participation details
     - Builds expert contexts with:
-
-          - **Relationships**: Project-technology-expert connections
+- **Relationships**: Project-technology-expert connections
         - **Metadata**: Experience indicators, skill matches, relevant projects
         - **Expert Details**: Comprehensive expert profiles
     - Prepares enriched contexts for LLM prompt
 
 7. **LLM Orchestration**:
-
-    - Builds Retrieval-Augmented Generation (RAG) prompt:
-
-          - Includes conversation history for context
+- Builds Retrieval-Augmented Generation (RAG) prompt:
+- Includes conversation history for context
         - Incorporates user query and extracted requirements
         - Adds detailed expert information from context builder
         - Provides intent-specific instructions
@@ -1311,27 +1265,22 @@ multi-stage pipeline that combines hybrid retrieval, semantic reranking, and LLM
     - Manages LLM interactions and response handling
 
 8. **Answer Generation**:
-
-     - Generates comprehensive answer with expert recommendations
+- Generates comprehensive answer with expert recommendations
     - Uses LLM to create natural language response:
-
-          - Summarizes expert recommendations
+- Summarizes expert recommendations
         - Highlights key strengths of each expert
         - Explains why experts are good matches
         - Mentions gaps or limitations if applicable
     - Provides actionable next steps
 
 9. **Response Formatter**:
-
-     - Formats answer with proper structure and citations
+- Formats answer with proper structure and citations
     - Adds source attribution:
-
-          - **Citations**: References to projects and experiences
+- **Citations**: References to projects and experiences
         - **Sources**: Expert IDs, project names, metadata
         - **Confidence Scores**: Relevance and match scores
     - Structures response with:
-
-          - Main answer text
+- Main answer text
         - Expert recommendations list
         - Sources and citations
         - Confidence scores and match summaries
@@ -1353,37 +1302,32 @@ multi-stage pipeline that combines hybrid retrieval, semantic reranking, and LLM
 The service follows **API First Development** methodology:
 
 1. **OpenAPI Specification First**:
-
-     - API contracts defined in OpenAPI 3.0 specification files
+- API contracts defined in OpenAPI 3.0 specification files
     - Specifications stored in `src/main/resources/api/openapi.yaml`
     - Version-controlled and reviewed before implementation
     - Single source of truth for API contract
 
 2. **Code Generation**:
-
-     - Generate controller interfaces and models from OpenAPI spec
+- Generate controller interfaces and models from OpenAPI spec
     - Use OpenAPI Generator Maven Plugin (v7.5.0) with Spring generator
     - Generated interfaces: `QueryApi`, `QueryStreamApi`, `ChatsApi`, `IngestionApi`, `HealthApi`, `MetricsApi`
    - Generated models in `com.berdachuk.expertmatch.api.model` package
     - Controllers implement generated interfaces to ensure contract compliance
 
 3. **Model Mapping**:
-
-     - Use MapStruct (v1.6.2) for type-safe mapping between API and domain models
+- Use MapStruct (v1.6.2) for type-safe mapping between API and domain models
     - `ApiMapper` interface handles all conversions (compile-time generated)
     - Eliminates manual mapping code and runtime reflection overhead
     - Null-safe mapping with `NullValuePropertyMappingStrategy.IGNORE`
 
 4. **Contract Testing**:
-
-     - Validate implementation against OpenAPI spec
+- Validate implementation against OpenAPI spec
     - Generate API documentation automatically via SpringDoc OpenAPI
     - Enable API consumers to develop in parallel
     - All endpoints documented and accessible via Swagger UI
 
 5. **Benefits**:
-
-     - Clear API contracts before implementation
+- Clear API contracts before implementation
    - Parallel development of client applications and backend
     - Automatic API documentation (always in sync)
     - Contract validation and testing
@@ -1396,27 +1340,23 @@ The service follows **API First Development** methodology:
 The service follows **Test-Driven Development** with Cucumber for BDD:
 
 1. **TDD Cycle**:
-
-     - **Red**: Write failing test (Cucumber feature/scenario)
+- **Red**: Write failing test (Cucumber feature/scenario)
     - **Green**: Write minimal code to pass test
     - **Refactor**: Improve code while keeping tests green
 
 2. **Cucumber BDD**:
-
-     - Feature files written in Gherkin syntax
+- Feature files written in Gherkin syntax
     - Step definitions in Java
     - Integration with Spring Boot for dependency injection
     - Executable specifications that serve as documentation
 
 3. **Test Layers**:
-
-     - **Acceptance Tests**: Cucumber feature files (Given-When-Then)
+- **Acceptance Tests**: Cucumber feature files (Given-When-Then)
     - **Integration Tests**: Spring Boot Test + Testcontainers
     - **Unit Tests**: JUnit 5 + Mockito
 
 4. **Benefits**:
-
-     - Executable specifications
+- Executable specifications
     - Living documentation
     - Regression prevention
     - Better test coverage
@@ -1506,15 +1446,12 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 
 - **Description**: Accept and analyze project requirements, RFP documents, or team formation requests
 - **Input**:
-
-      - Natural language query (e.g., "Looking for experts in Semantic/Industrial Modeling")
+- Natural language query (e.g., "Looking for experts in Semantic/Industrial Modeling")
     - Structured project requirements (skills, seniority, responsibilities, technical stack)
     - RFP documents with requirements
 - **Processing**:
-
-    - **Requirements Extraction**:
-
-          - Extract must-have and nice-to-have skills
+- **Requirements Extraction**:
+- Extract must-have and nice-to-have skills
         - Extract seniority levels (A3, A4, A5, etc.)
         - Extract technical stack requirements
         - Extract responsibilities and role requirements
@@ -1535,8 +1472,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
   search. This is the **primary functionality** of the service - matching experts to RFP requirements and team formation
   needs.
 - **Data Sources for Expert Discovery**:
-
-      - **Work Experience Data**: Primary source for expert discovery
+- **Work Experience Data**: Primary source for expert discovery
         - Employee project participation and roles
         - Technologies and tools used
         - Project descriptions and responsibilities
@@ -1554,9 +1490,8 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
         - **Contacts**: Experts listed as contacts in presale materials
         - Material descriptions and slide content (for domain/skill matching)
 - **Matching Criteria**:
-
-    - **Person Name Matching**:
-        - **Direct Name Lookup**: When person entities are detected in queries, performs direct employee name search
+- **Person Name Matching**:
+- **Direct Name Lookup**: When person entities are detected in queries, performs direct employee name search
         - **Exact Match**: Case-insensitive full name matching (e.g., "Siarhei Berdachuk")
         - **Partial Match**: Matches first name or last name independently (e.g., "Siarhei" or "Berdachuk")
         - **Fuzzy Matching**: Handles typos and spelling variations using PostgreSQL `pg_trgm` extension
@@ -1568,73 +1503,59 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
             - Returns best matches based on LLM analysis
         - **Priority**: Person name matches receive highest weight (2.0-3.0) in result fusion
         - **Use Cases**:
-            - Direct expert lookup: "Find Siarhei Berdachuk"
+- Direct expert lookup: "Find Siarhei Berdachuk"
             - Typo-tolerant search: "Looking for Sergei Berdachuk" (handles common misspellings)
             - Partial name search: "Find experts named John" (matches multiple Johns)
     - **Skill Matching**:
-
-        - Match must-have skills (higher priority) from requirements with:
-
-              - Technologies/tools from work experience
+- Match must-have skills (higher priority) from requirements with:
+- Technologies/tools from work experience
             - Technologies mentioned in Jira ticket descriptions
             - Technologies mentioned in presale materials
         - Match nice-to-have skills (lower priority) for bonus scoring
         - Extract skills from project requirements text (e.g., "Java", "Spring Boot", "AWS")
         - Match against technologies used in past projects
     - **Role Matching**:
-
-        - Match required roles (e.g., "Tech Lead", "Developer", "Architect") with:
-
-              - Project roles from work experience
+- Match required roles (e.g., "Tech Lead", "Developer", "Architect") with:
+- Project roles from work experience
             - Roles inferred from Jira ticket assignments (assignee = responsible role)
         - Support role hierarchy and synonyms
     - **Seniority Matching**:
-
-          - Filter and rank by required seniority levels (A3, A4, A5, etc.)
+- Filter and rank by required seniority levels (A3, A4, A5, etc.)
         - Support range matching (e.g., "A3-A4")
         - Infer seniority from project roles and responsibilities
     - **Technology Matching**:
-
-          - Match technical stack requirements with technologies used in past projects
+- Match technical stack requirements with technologies used in past projects
         - Support technology variations and synonyms (e.g., "Java 21", "Java21", "Java")
         - Extract technologies from:
-
-              - Work experience tools/technologies lists
+- Work experience tools/technologies lists
             - Jira ticket descriptions
             - Presale material content
     - **Experience Matching**:
-
-          - Match responsibilities and role requirements with past project experiences
+- Match responsibilities and role requirements with past project experiences
         - Match project types (e.g., "New product development", "ETL pipelines", "Microservices")
         - Consider project recency (recent projects weighted higher)
     - **Domain Matching**:
-
-          - Match industry/domain requirements with customer/industry experience
+- Match industry/domain requirements with customer/industry experience
         - Match customer names and industries
         - Extract domain from Jira project types and presale material categories
     - **Language Matching**:
-
-          - Filter by language requirements (e.g., "English B2")
+- Filter by language requirements (e.g., "English B2")
     - **Activity Matching**:
-
-          - Consider recent Jira ticket involvement (active contributors/assignees)
+- Consider recent Jira ticket involvement (active contributors/assignees)
         - Weight recent work experience higher than older experience
         - Consider presale material ownership (indicates current expertise)
 - **Retrieval Components**:
-
-    - **Vector Search**: PgVector HNSW index for semantic similarity of:
-
-          - Project descriptions and requirements
+- **Vector Search**: PgVector HNSW index for semantic similarity of:
+- Project descriptions and requirements
         - Employee participation descriptions
         - Project responsibilities
     - **Graph Traversal**: Apache AGE for relationship-based retrieval:
-
-          - Experts → projects → technologies → similar experts
+- Experts → projects → technologies → similar experts
         - Experts → customers → industries → domain experts
         - Experts → teams → collaborations → team members
     - **Keyword Search**: PostgreSQL full-text search for exact skill/technology matching
   - **Person Name Search**: Direct employee lookup by name with multi-tier fallback:
-      - **Tier 1 - Exact/Partial Match**: Case-insensitive LIKE pattern matching for full names or name parts
+- **Tier 1 - Exact/Partial Match**: Case-insensitive LIKE pattern matching for full names or name parts
       - **Tier 2 - Similarity Search**: PostgreSQL `pg_trgm` extension for fuzzy matching (handles typos, spelling
         variations)
           - Uses `similarity()` and `word_similarity()` functions with configurable threshold (default: 0.3)
@@ -1646,12 +1567,11 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
           - Returns matched employee IDs based on LLM analysis
       - **Activation**: Automatically triggered when person entities are detected in the query by EntityExtractor
       - **Use Cases**:
-          - Direct expert lookup: "Looking for Siarhei Berdachuk"
+- Direct expert lookup: "Looking for Siarhei Berdachuk"
           - Typo-tolerant search: "Find Sergei Berdachuk" (handles "Sergei" vs "Siarhei")
           - Partial name search: "Find experts like John" (matches "John Doe", "John Smith", etc.)
 - **Fusion Strategy**: Reciprocal Rank Fusion (RRF) with weighted scoring based on:
-
-      - **Person name matches** (weight: 2.0-3.0) - Very high priority when person names are explicitly mentioned
+- **Person name matches** (weight: 2.0-3.0) - Very high priority when person names are explicitly mentioned
         - Default weight: 2.0 for person name search results
         - Increased to 3.0 when person entities are detected in query (explicit name search)
         - Ensures direct name searches rank highest in results
@@ -1666,8 +1586,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
     - Presale ownership (weight: 0.15) - Material ownership indicates domain expertise
     - Customer/industry match (weight: 0.4)
 - **Output**: Ranked list of experts with:
-
-      - Match scores (overall and per criterion)
+- Match scores (overall and per criterion)
     - Matched skills (must-have and nice-to-have)
     - Relevant project evidence
     - Seniority and language levels
@@ -1678,48 +1597,40 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 
 - **Description**: Automatically enrich expert recommendations with relevant context from knowledge base
 - **Sources**:
-
-    - **Work Experience Data** (from Kafka and PostgreSQL):
-
-          - Project histories and participation details
+- **Work Experience Data** (from Kafka and PostgreSQL):
+- Project histories and participation details
         - Technology usage and expertise levels (tools, technologies lists)
         - Project roles and responsibilities
         - Customer/industry experience
         - Project dates (start/end) for recency assessment
         - Project types (for domain matching)
     - **Jira/Intakes Data**:
-
-          - Ticket involvement (contributor, assignee, reporter, participant)
+- Ticket involvement (contributor, assignee, reporter, participant)
         - Recent ticket activity (indicates current expertise areas)
         - Ticket descriptions and summaries (for skill evidence)
         - Associated Jira projects (for project type matching)
         - Ticket creation/resolution dates (for activity recency)
     - **Presale Materials**:
-
-          - Material ownership (indicates domain expertise)
+- Material ownership (indicates domain expertise)
         - Contact listings (indicates involvement in sales/presales)
         - Material descriptions and slide content (for domain/skill evidence)
     - **Team Collaboration Patterns**:
-
-          - Experts who worked on same projects (from work experience)
+- Experts who worked on same projects (from work experience)
         - Experts who collaborated on same Jira tickets (from contributors/participants)
         - Experts who co-created presale materials (from contacts/owners)
     - **Project Success Indicators**:
-
-          - Project duration (longer projects may indicate success)
+- Project duration (longer projects may indicate success)
         - Project recency (recent projects indicate current expertise)
         - Multiple projects in same domain (indicates deep expertise)
 - **Enrichment Methods**:
-
-      - **Project Context**: Include relevant past projects with similar requirements
+- **Project Context**: Include relevant past projects with similar requirements
     - **Technology Context**: Show technologies used, proficiency levels, recency
     - **Team Context**: Show collaboration patterns, team roles, leadership experience
     - **Customer Context**: Show customer/industry experience relevant to requirements
     - **Skill Evidence**: Provide specific project examples demonstrating required skills
     - **Relationship Context**: Show expert networks, similar experts, project connections
 - **Output**: Enriched expert profiles with:
-
-      - Matched skills with evidence (project examples)
+- Matched skills with evidence (project examples)
     - Relevant project history
     - Technology stack familiarity
     - Customer/industry experience
@@ -1734,8 +1645,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
     - **Recommended (SOTA)**: Qwen3-Reranker-8B (best precision improvement, significant Recall optimization)
     - **Alternative**: BAAI/bge-reranker-v2-m3 (proven performance)
 - **Features**:
-
-      - Cross-encoder reranking for relevance
+- Cross-encoder reranking for relevance
     - Diversity promotion
     - Recency weighting
     - Critical step after initial retrieval (KNN search) to filter irrelevant results before LLM
@@ -1748,10 +1658,8 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 - **Framework**: Spring AI 1.1.1
 - **Pattern**: Retrieval-Augmented Generation (RAG)
 - **Features**:
-
-    - **Recommendation Formatting**: Structure expert recommendations with:
-
-          - Expert name, contact information, seniority level
+- **Recommendation Formatting**: Structure expert recommendations with:
+- Expert name, contact information, seniority level
         - Skill match summary (must-have and nice-to-have)
         - Relevant project experience with details
         - Technology stack familiarity
@@ -1790,8 +1698,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
         - Format: Jira REST API (JSON)
         - Processing: Fetch Jira tickets, extract contributors, assignees, reporters, descriptions
         - **Key Fields Extracted**:
-
-              - **Contributors**: List of experts involved in the ticket (name, email, avatar, link)
+- **Contributors**: List of experts involved in the ticket (name, email, avatar, link)
             - **Assignee**: Primary expert assigned to the ticket
             - **Reporter**: Expert who created/reported the ticket
             - **Participants**: Additional participants in the ticket
@@ -1813,8 +1720,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
         - Format: PowerPoint presentations, documents
         - Processing: Extract text from slides, generate embeddings per slide
         - **Key Fields Extracted**:
-
-              - **Name**: Presale material name
+- **Name**: Presale material name
             - **Description**: Material description
             - **Owner**: Owner/creator of the material
             - **Contacts**: List of contact persons (experts)
@@ -1857,16 +1763,14 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
   }
   ```
 - **Processing**:
-
-      - Query source database with configurable SQL
+- Query source database with configurable SQL
     - Parse JSON columns (both flat fields and nested `value` JSON)
     - Extract entities: employees, projects, customers, technologies, roles
     - Generate embeddings for: participation, project_description, customer_description
     - Build graph relationships: employee → project, project → customer, employee → technologies
     - Track processed records via `message_offset` or `status` field
 - **Incremental Processing**:
-
-      - Filter by `status = 'new'` for new records
+- Filter by `status = 'new'` for new records
     - Track last processed `message_offset` for resumable ingestion
     - Update `status` after successful processing
 - **Batch Size**: Configurable batch size for efficient processing
@@ -1883,23 +1787,19 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
         - **Dimensions**: 1024
         - **Use Case**: Best for multilingual content including Russian
     - **Alternatives**:
-
-          - BAAI/bge-m3 (strong multilingual support)
+- BAAI/bge-m3 (strong multilingual support)
         - intfloat/multilingual-e5-large (good balance)
         - ai-forever/FRIDA (Russian-specific)
         - OpenAI text-embedding-3-large (production cloud option)
 - **Dimension Selection Strategy**:
-
-    - **1024 dimensions (Recommended)**:
-
-          - Optimal for most use cases (Qwen3-Embedding-8B standard)
+- **1024 dimensions (Recommended)**:
+- Optimal for most use cases (Qwen3-Embedding-8B standard)
         - Excellent quality (SOTA models use 1024)
         - Efficient storage and indexing
         - Fast similarity search
         - **Storage**: ~8GB for 2M documents (vs 24GB for 3072)
     - **1536 dimensions (OpenAI text-embedding-3-large reduced) - RECOMMENDED FOR CLOUD**:
-
-          - **Quality**: 95-98% of full 3072 quality (minimal loss < 2%)
+- **Quality**: 95-98% of full 3072 quality (minimal loss < 2%)
         - **Performance**: Faster similarity search (smaller vectors = faster computation)
         - **Storage**: 50% reduction vs 3072 (~12GB for 2M documents vs 24GB)
         - **Index Size**: ~18GB for 2M documents (vs ~36GB for 3072)
@@ -1907,8 +1807,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
         - **Cost**: Lower API costs (same model, but smaller response size)
         - **Use Case**: Production cloud deployments (recommended default)
     - **3072 dimensions (Full OpenAI text-embedding-3-large) - NOT RECOMMENDED**:
-
-          - **Quality**: Only 1-2% improvement over 1536 (diminishing returns)
+- **Quality**: Only 1-2% improvement over 1536 (diminishing returns)
         - **Performance**: Slower similarity search (2x dimensions = slower computation)
         - **Storage**: 2x overhead vs 1536 (~24GB for 2M documents)
         - **Index Size**: ~36GB for 2M documents (2x larger)
@@ -1917,8 +1816,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
         - **Use Case**: Only for very specialized tasks requiring absolute maximum precision
         - **Recommendation**: Avoid unless you have specific requirements that justify 2x cost
 - **Multi-Provider Support**:
-
-      - **Database Schema**: Uses `vector(1536)` to accommodate both local (1024) and cloud (1536) dimensions
+- **Database Schema**: Uses `vector(1536)` to accommodate both local (1024) and cloud (1536) dimensions
     - **Local Embeddings (1024)**: Stored in `vector(1536)` with padding (PgVector handles automatically)
     - **Cloud Embeddings (1536)**: Stored directly in `vector(1536)` (optimal fit)
     - **3072 Dimensions**: Not supported (not recommended - 2x cost for < 2% quality gain)
@@ -1928,25 +1826,23 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
     - **Query Compatibility**: PgVector automatically handles dimension differences in similarity search
     - **Provider Selection**: Configure via `spring.ai.embedding.provider` ('ollama' or 'openai')
 - **Research Findings**:
-
-      - 1024-1536 dimensions provide 95-98% of full quality with 50% less storage
+- 1024-1536 dimensions provide 95-98% of full quality with 50% less storage
     - Qwen3-Embedding-8B (1024 dims) is #1 in MTEB benchmarks, proving 1024 is sufficient
     - OpenAI text-embedding-3-large with 1536 dimensions achieves 95-98% of 3072 quality
     - Diminishing returns beyond 1024-1536 dimensions
     - **Quality vs Performance Trade-off**: 1536 provides optimal balance (minimal quality loss, significant
       performance/storage gains)
 - **Production Recommendation**:
-
-      - **Local Development**: Use 1024 (Ollama/Qwen3-Embedding-8B) - Best cost/performance
+- **Local Development**: Use 1024 (Ollama/Qwen3-Embedding-8B) - Best cost/performance
     - **Cloud Production**: Use 1536 (OpenAI text-embedding-3-large) - Optimal balance
     - **Avoid 3072**: Only use if you have specific requirements justifying 2x cost for < 2% quality gain
 - **Detailed Comparison Table (for 2M documents)**:
 
   | Dimension | Quality | Storage | Index Size | Query Speed | Cost | Recommendation |
     |-----------|---------|---------|------------|-------------|------|----------------|
-  | 1024 (Local) | 100% (SOTA) | ~8GB | ~12GB | Fastest | Lowest | ✅ Best for local |
-  | 1536 (Cloud) | 95-98% | ~12GB | ~18GB | Fast | Low | ✅ **Recommended for cloud** |
-  | 3072 (Cloud) | 100% | ~24GB | ~36GB | Slower | High | ❌ Avoid (2x cost, < 2% gain) |
+  | 1024 (Local) | 100% (SOTA) | ~8GB | ~12GB | Fastest | Lowest |  Best for local |
+  | 1536 (Cloud) | 95-98% | ~12GB | ~18GB | Fast | Low |  **Recommended for cloud** |
+  | 3072 (Cloud) | 100% | ~24GB | ~36GB | Slower | High |  Avoid (2x cost, < 2% gain) |
 - **Indexing**: HNSW index in PgVector for fast similarity search
 - **Priority**: P0 (Critical)
 
@@ -1956,43 +1852,36 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
   traversal
 - **Framework**: Apache AGE (PostgreSQL graph extension)
 - **Entity Types**:
-
-      - People (employees, experts)
+- People (employees, experts)
     - Projects
     - Technologies/Tools
     - Organizations/Customers
     - Domains/Skills
     - Roles (project roles, positions)
 - **Relationship Types**:
-
-    - **Work Experience Relationships**:
-
-          - WORKED_ON (person → project) - Primary relationship for expert discovery from work experience
+- **Work Experience Relationships**:
+- WORKED_ON (person → project) - Primary relationship for expert discovery from work experience
         - USED_TECHNOLOGY (person/project → technology) - Technology expertise mapping
         - HAS_ROLE (person → role) - Role and responsibility mapping
         - WORKED_FOR_CUSTOMER (person → customer) - Customer/industry experience
         - COLLABORATED_WITH (person → person) - Team collaboration patterns (inferred from same projects)
     - **Jira/Intakes Relationships**:
-
-          - CONTRIBUTED_TO (person → jira_ticket) - Expert contributed to Jira ticket
+- CONTRIBUTED_TO (person → jira_ticket) - Expert contributed to Jira ticket
         - ASSIGNED_TO (person → jira_ticket) - Expert assigned to Jira ticket (indicates ownership/responsibility)
         - REPORTED (person → jira_ticket) - Expert reported/created Jira ticket (indicates domain knowledge)
         - PARTICIPATED_IN (person → jira_ticket) - Expert participated in Jira ticket
         - BELONGS_TO (jira_ticket → jira_project) - Ticket belongs to Jira project
         - WORKED_ON_PROJECT (person → jira_project) - Expert worked on Jira project (aggregated from tickets)
     - **Presale Relationships**:
-
-          - OWNS (person → presale_material) - Expert owns/created presale material (indicates expertise)
+- OWNS (person → presale_material) - Expert owns/created presale material (indicates expertise)
         - CONTACT_FOR (person → presale_material) - Expert is contact for presale material
         - RELATED_TO_DOMAIN (presale_material → domain) - Material related to domain
     - **General Relationships**:
-
-          - SIMILAR_TO (entity → entity) - Similarity relationships
+- SIMILAR_TO (entity → entity) - Similarity relationships
         - RELATED_PROJECT (project → project) - Project relationships
         - HAS_EXPERTISE_IN (person → domain/skill) - Domain expertise
 - **Graph Queries for Expert Discovery**:
-
-      - **By Technology**: `(Person)-[:USED_TECHNOLOGY]->(Technology)`
+- **By Technology**: `(Person)-[:USED_TECHNOLOGY]->(Technology)`
     - **By Project Type**: `(Person)-[:WORKED_ON]->(Project {type: '...'})`
     - **By Customer**: `(Person)-[:WORKED_FOR_CUSTOMER]->(Customer)`
     - **By Jira Activity**: `(Person)-[:CONTRIBUTED_TO|ASSIGNED_TO|REPORTED]->(JiraTicket)`
@@ -2006,13 +1895,12 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 - **Query Language**: Cypher (via Apache AGE)
 - **Priority**: P0 (Critical)
 
-#### FR-9: Multi-Step Deep Research (SGR Pattern) ✅ **IMPLEMENTED**
+#### FR-9: Multi-Step Deep Research (SGR Pattern)  **IMPLEMENTED**
 
 - **Description**: Perform iterative, multi-step retrieval with progressive refinement
-- **Status**: ✅ **Implemented in MVP**
+- **Status**:  **Implemented in MVP**
 - **Implementation**:
-
-      - `DeepResearchService` - Orchestrates the deep research flow
+- `DeepResearchService` - Orchestrates the deep research flow
     - `GapAnalysis` - Data model for gap analysis results
     - Integrated into `QueryService.processQuery()`
     - LLM-based gap analysis and query refinement
@@ -2033,8 +1921,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 
 - **Description**: Format answers with proper citations and source attribution
 - **Elements**:
-
-      - Main answer text
+- Main answer text
     - Source citations (projects, experts, documents)
     - Confidence scores
     - Related entities
@@ -2049,8 +1936,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 - **Description**: Extract and normalize entities from ingested data
 - **Entity Types**: People, Organizations, Technologies, Projects, Domains
 - **Normalization**:
-
-      - Name normalization (aliases, variations)
+- Name normalization (aliases, variations)
     - Technology normalization (synonyms, versions)
     - Domain normalization (related domains)
 - **Priority**: P1 (High)
@@ -2059,8 +1945,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 
 - **Description**: Support incremental updates without full reindexing
 - **Methods**:
-
-      - Kafka offset tracking
+- Kafka offset tracking
     - Timestamp-based updates
     - Change data capture (future)
 - **Priority**: P1 (High)
@@ -2069,8 +1954,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 
 - **Description**: Validate and ensure data quality during ingestion
 - **Checks**:
-
-      - Required field validation
+- Required field validation
     - Data type validation
     - Relationship integrity
     - Embedding quality
@@ -2083,51 +1967,43 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 
 - **Description**: Provide REST API for query processing, chat management, and ingestion management
 - **OpenAPI Specification Requirement**:
-
-      - **All endpoints MUST be documented in OpenAPI 3.0 specification**
+- **All endpoints MUST be documented in OpenAPI 3.0 specification**
     - **OpenAPI spec MUST be accessible at**:
-
-          - `/api/v1/openapi.json` (JSON format, primary endpoint for client generation)
+- `/api/v1/openapi.json` (JSON format, primary endpoint for client generation)
         - `/v3/api-docs` (SpringDoc default endpoint)
         - `/swagger-ui.html` (Swagger UI for interactive documentation)
     - **OpenAPI spec MUST be complete and up-to-date**:
-
-          - All request/response schemas must be defined
+- All request/response schemas must be defined
         - All error responses must be documented
         - Authentication requirements must be specified
         - All path parameters, query parameters, and request bodies must be documented
     - **OpenAPI spec MUST be versioned** with API version
     - **OpenAPI spec MUST be maintained** - any API changes must be reflected in the spec immediately
 - **Query Endpoints**:
-
-      - `POST /api/v1/query`: Process natural language query (with optional chatId for context)
+- `POST /api/v1/query`: Process natural language query (with optional chatId for context)
     - `POST /api/v1/query-stream`: Stream response (Server-Sent Events)
   - `GET /api/v1/query/examples`: Get list of example queries organized by categories (public endpoint)
 - **Chat Management Endpoints**:
-
-      - `POST /api/v1/chats`: Create a new chat
+- `POST /api/v1/chats`: Create a new chat
     - `GET /api/v1/chats`: List all chats for the authenticated user
     - `GET /api/v1/chats/{chatId}`: Get chat details
     - `PATCH /api/v1/chats/{chatId}`: Update chat (e.g., rename)
     - `DELETE /api/v1/chats/{chatId}`: Delete a chat (cannot delete default chat)
     - `GET /api/v1/chats/{chatId}/history`: Get conversation history for a chat (paginated)
 - **Ingestion Endpoints**:
-
-      - `POST /api/v1/ingestion/trigger/{sourceName}`: Manually trigger ingestion from a source
+- `POST /api/v1/ingestion/trigger/{sourceName}`: Manually trigger ingestion from a source
     - `GET /api/v1/ingestion/status`: Get ingestion status for all sources
     - `GET /api/v1/ingestion/status/{sourceName}`: Get ingestion status for specific source
     - `POST /api/v1/ingestion/pause/{sourceName}`: Pause ingestion from a source
     - `POST /api/v1/ingestion/resume/{sourceName}`: Resume ingestion from a source
     - `POST /api/v1/ingestion/file`: Upload and ingest data from file
 - **System Endpoints**:
-
-      - `GET /api/v1/health`: Health check
+- `GET /api/v1/health`: Health check
     - `GET /api/v1/metrics`: Service metrics
 - **Authentication**: Header-based authentication (Spring Gateway handles JWT validation) - documented in OpenAPI
   parameters
 - **Client Generation Support**:
-
-      - OpenAPI spec must be compatible with openapi-generator for TypeScript/JavaScript client generation
+- OpenAPI spec must be compatible with openapi-generator for TypeScript/JavaScript client generation
     - All schemas must be properly typed and valid
     - Response examples should be provided where helpful
 - **Priority**: P0 (Critical)
@@ -2137,18 +2013,15 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 - **Description**: Expose ExpertMatch functionality as MCP (Model Context Protocol) server to enable AI assistants and
   other MCP clients to use ExpertMatch capabilities
 - **Purpose**:
-
-      - Enable AI assistants (Claude, ChatGPT, etc.) to query ExpertMatch through MCP protocol
+- Enable AI assistants (Claude, ChatGPT, etc.) to query ExpertMatch through MCP protocol
     - Allow other applications to integrate ExpertMatch as an MCP tool
     - Provide standardized interface for expert discovery and matching
 - **MCP Server Endpoint**:
-
-      - **Base URL**: `http://{host}:{port}/mcp` (configurable)
+- **Base URL**: `http://{host}:{port}/mcp` (configurable)
     - **Transport**: HTTP/SSE (Server-Sent Events) or stdio
     - **Protocol**: MCP 1.0+ (JSON-RPC 2.0)
 - **MCP Tools** (Exposed as callable functions):
-
-      - **`expertmatch_query`**: Process natural language query for expert discovery
+- **`expertmatch_query`**: Process natural language query for expert discovery
         - Parameters: `query` (string), `chatId` (optional string), `options` (optional object)
         - Returns: Expert recommendations with sources and context
     - **`expertmatch_find_experts`**: Find experts matching specific criteria
@@ -2165,23 +2038,19 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
         - Parameters: `project_id` (string) or `project_name` (string)
         - Returns: List of experts with their roles and contributions
 - **MCP Resources** (Exposed as readable data sources):
-
-      - **`expertmatch://experts/{expert_id}`**: Expert profile resource
+- **`expertmatch://experts/{expert_id}`**: Expert profile resource
     - **`expertmatch://projects/{project_id}`**: Project information resource
     - **`expertmatch://technologies/{technology_name}`**: Technology usage resource
     - **`expertmatch://domains/{domain_name}`**: Domain expertise resource
 - **Authentication**:
-
-      - Header-based authentication (X-User-Id, X-User-Roles, X-User-Email)
+- Header-based authentication (X-User-Id, X-User-Roles, X-User-Email)
     - Same authentication mechanism as REST API
     - Supports `EXPERT_MATCH_USER` role for query tools
 - **Error Handling**:
-
-      - Standard MCP error responses
+- Standard MCP error responses
     - Detailed error messages for debugging
 - **Configuration**:
-
-      - Enable/disable MCP server via configuration
+- Enable/disable MCP server via configuration
     - Configurable base URL and port
     - Support for multiple transport protocols
 - **Priority**: P1 (High) - Integration Support
@@ -2224,8 +2093,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 
 - **Description**: Optimize retrieval for sub-second response times
 - **Techniques**:
-
-      - HNSW vector indexing (PgVector)
+- HNSW vector indexing (PgVector)
     - Columnar indexing (Citus) for analytical queries
     - Query result caching
     - Parallel retrieval execution
@@ -2240,8 +2108,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 
 - **Description**: Support batch processing for ingestion and bulk queries
 - **Features**:
-
-      - Batch embedding generation
+- Batch embedding generation
     - Batch graph insertions
     - Batch query processing
 - **Priority**: P1 (High)
@@ -2253,36 +2120,30 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 - **Description**: Generate synthetic test data using Datafaker for testing and development purposes without requiring
   external data sources
 - **Purpose**:
-
-      - Enable testing without integration with external systems (Kafka, Jira, PostgreSQL sources)
+- Enable testing without integration with external systems (Kafka, Jira, PostgreSQL sources)
     - Create isolated test environments
     - Support development and demo scenarios
     - Performance testing with controlled data volumes
 - **Data Generation**:
-
-    - **Employees/Experts**: Generate synthetic employee profiles with:
-
-          - Names, emails, employee IDs
+- **Employees/Experts**: Generate synthetic employee profiles with:
+- Names, emails, employee IDs
         - Seniority levels (A3, A4, A5, etc.)
         - Language levels
         - Profile links
     - **Projects**: Generate synthetic projects with:
-
-          - Project names, IDs, types, descriptions
+- Project names, IDs, types, descriptions
         - Start/end dates
         - Customer information
         - Project types and domains
     - **Work Experience**: Generate work experience records with:
-
-          - Employee-project relationships
+- Employee-project relationships
         - Participation descriptions
         - Roles (Tech Lead, Developer, Architect, etc.)
         - Technologies and tools (realistic tech stacks)
         - Customer/industry assignments
         - Realistic date ranges
       - **CSV-Aligned Metadata**: All work experience records include comprehensive metadata JSONB with:
-
-            - Company information (company name, URL, is_company_internal flag)
+- Company information (company name, URL, is_company_internal flag)
           - Team assignments
           - Tools (both text and structured JSONB references)
           - Technology references (structured JSONB array)
@@ -2293,68 +2154,57 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
           - Project descriptions (original CSV field)
           - All metadata fields aligned with CSV work experience format for maximum compatibility
     - **Jira Tickets**: Generate synthetic Jira tickets with:
-
-          - Ticket keys, summaries, descriptions
+- Ticket keys, summaries, descriptions
         - Contributors, assignees, reporters
         - Associated projects
         - Realistic ticket content
     - **Presale Materials**: Generate synthetic presale materials with:
-
-          - Material names, descriptions
+- Material names, descriptions
         - Owners and contacts
         - Slide content
         - Domain associations
     - **Graph Relationships**: Generate realistic graph relationships:
-
-          - Employee → Project (WORKED_ON)
+- Employee → Project (WORKED_ON)
         - Employee → Technology (USED_TECHNOLOGY)
         - Employee → Customer (WORKED_FOR_CUSTOMER)
         - Employee → Role (HAS_ROLE)
         - Employee → JiraTicket (CONTRIBUTED_TO, ASSIGNED_TO, REPORTED)
         - Employee → PresaleMaterial (OWNS, CONTACT_FOR)
 - **Size Options**:
-
-    - **Small**:
-
-          - 100 employees
+- **Small**:
+- 100 employees
         - 200 projects
         - 500 work experience records
         - 300 Jira tickets
         - 50 presale materials
         - ~5,000 relationships
     - **Medium**:
-
-          - 1,000 employees
+- 1,000 employees
         - 2,000 projects
         - 5,000 work experience records
         - 3,000 Jira tickets
         - 200 presale materials
         - ~50,000 relationships
     - **Large**:
-
-          - 50,000 employees
+- 50,000 employees
         - 10,000 projects
         - 250,000 work experience records
         - 150,000 Jira tickets
         - 10,000 presale materials
         - ~2,500,000 relationships
     - **Custom**:
-
-          - User-specified counts for each entity type
+- User-specified counts for each entity type
         - Configurable via API request
 - **Realistic Data**:
-
-      - Use Datafaker for realistic names, addresses, company names
+- Use Datafaker for realistic names, addresses, company names
     - Realistic technology stacks (Java, Spring Boot, AWS, etc.)
     - Realistic project types and domains
     - Realistic date ranges and durations
     - Realistic role distributions
     - Realistic customer/industry assignments
 - **CSV Format Compatibility**: Generated work experience data is aligned with CSV work experience format:
-
-    - **Metadata JSONB**: All CSV-aligned fields stored in `metadata` JSONB column:
-
-          - `company`, `company_url`, `is_company_internal`
+- **Metadata JSONB**: All CSV-aligned fields stored in `metadata` JSONB column:
+- `company`, `company_url`, `is_company_internal`
         - `team` (team assignments)
         - `tools` (comma-separated text) and `tools_ref` (structured JSONB array)
         - `technologies_ref` (structured JSONB array with technology references)
@@ -2367,8 +2217,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
         - `participation` (original CSV participation field)
         - `project_description` (original CSV project description)
     - **Field Mappings**: Direct columns map to CSV fields:
-
-          - `participation` → `responsibilities` (direct column)
+- `participation` → `responsibilities` (direct column)
         - `project_description` → `project_summary` (direct column)
         - `project_role` / `primary_project_role.name` → `role` (direct column)
         - `technologies` (TEXT or JSONB) → `technologies` (TEXT[] array)
@@ -2386,8 +2235,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 
 - **Description**: Manage multiple chat conversations with persistent history and context
 - **Features**:
-
-      - **Default Chat**: Each user automatically gets a default chat with unique ID (MongoDB-compatible 24-character
+- **Default Chat**: Each user automatically gets a default chat with unique ID (MongoDB-compatible 24-character
       string)
     - **Chat Creation**: Users can create new chats with optional custom names
     - **Chat Deletion**: Users can delete existing chats (except default chat)
@@ -2401,8 +2249,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 
 - **Description**: Persist all conversation messages in the database for each chat
 - **Features**:
-
-      - **Message Storage**: Store user queries and system responses
+- **Message Storage**: Store user queries and system responses
     - **Message Ordering**: Maintain chronological order of messages
     - **Message Metadata**: Store timestamps, message types, tokens used
     - **History Retrieval**: Retrieve conversation history for a chat
@@ -2415,8 +2262,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 
 - **Description**: Each chat maintains its own conversation memory and context with intelligent token management
 - **Features**:
-
-      - **Conversation Context**: Build context from previous messages in the same chat
+- **Conversation Context**: Build context from previous messages in the same chat
     - **Token Counting**: Automatic token estimation for all messages (~4 characters per token)
     - **Memory Window**: Configurable context window with token limits (`max-tokens`: 2000, `max-messages`: 10)
     - **Automatic Summarization**: Older messages are automatically summarized when history exceeds token limits
@@ -2424,13 +2270,11 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
     - **Memory Isolation**: Each chat's memory is completely isolated from other chats
     - **Context Injection**: Automatically inject optimized conversation history into LLM prompts
     - **Memory Management**:
-
-          - Recent messages: Include full text (up to half of `max-messages`)
+- Recent messages: Include full text (up to half of `max-messages`)
         - Older messages: Automatically summarized using LLM when limits exceeded
         - Token-aware: Ensures total history fits within `max-tokens` limit
 - **Implementation**:
-
-      - `TokenCountingService`: Estimates tokens in messages and history
+- `TokenCountingService`: Estimates tokens in messages and history
     - `ConversationHistoryManager`: Manages history retrieval, token counting, and summarization
     - Retrieve messages from conversation_history table (up to 50)
     - Count tokens and optimize if exceeds limits
@@ -2438,7 +2282,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
     - Build optimized conversation context string
     - Include in RAG prompt construction
 - **Configuration**:
-    - `expertmatch.chat.history.max-tokens`: Maximum tokens for history (default: 2000)
+- `expertmatch.chat.history.max-tokens`: Maximum tokens for history (default: 2000)
     - `expertmatch.chat.history.max-messages`: Maximum messages to include (default: 10)
     - `expertmatch.chat.history.max-summary-tokens`: Maximum tokens for summaries (default: 500)
 
@@ -2446,9 +2290,9 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 
 - **Description**: Implement Tool Search Tool pattern for dynamic tool discovery, achieving 34-64% token savings across
   all LLM providers
-- **Status**: ✅ **Implemented** (2025-12-28)
+- **Status**:  **Implemented** (2025-12-28)
 - **Features**:
-    - **Dynamic Tool Discovery**: Only Tool Search Tool is sent initially to LLM, dramatically reducing prompt size
+- **Dynamic Tool Discovery**: Only Tool Search Tool is sent initially to LLM, dramatically reducing prompt size
     - **On-Demand Tool Loading**: When LLM needs specific capabilities, it calls Tool Search Tool which discovers and
       adds only relevant tools
     - **Semantic Tool Matching**: Uses PgVector-based semantic search to find the most relevant tools based on query
@@ -2458,23 +2302,23 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
       search
     - **Conditional Activation**: Can be enabled/disabled via configuration property
 - **Benefits**:
-    - **Token Savings**: 34-64% reduction in tokens per request (based on Spring AI benchmarks)
+- **Token Savings**: 34-64% reduction in tokens per request (based on Spring AI benchmarks)
     - **Cost Reduction**: Lower API costs for high-volume queries
     - **Faster Responses**: Reduced prompt size leads to faster LLM processing
     - **Improved Tool Selection**: Better accuracy when dealing with large tool libraries
     - **Scalability**: Ready to handle 100+ tools efficiently
 - **Configuration**:
-    - `expertmatch.tools.search.enabled`: Enable Tool Search Tool (default: `false`)
+- `expertmatch.tools.search.enabled`: Enable Tool Search Tool (default: `false`)
     - `expertmatch.tools.search.strategy`: Search strategy - `pgvector` (default), `lucene`, `regex`
     - `expertmatch.tools.search.max-results`: Maximum tools to return per search (default: 5)
 - **Implementation**:
-    - `PgVectorToolSearcher`: Implements `ToolSearcher` interface using PgVector for semantic search
+- `PgVectorToolSearcher`: Implements `ToolSearcher` interface using PgVector for semantic search
     - `ToolSearchConfiguration`: Creates `ToolSearchToolCallAdvisor` and `chatClientWithToolSearch` bean
     - `ToolMetadataService`: Indexes all tools with embeddings on application startup
     - Conditional primary ChatClient selection (Tool Search Tool when enabled, regular ChatClient when disabled)
 - **Priority**: P1 (High) - MVP Enhancement
 - **References**:
-    - [Spring AI Tool Search Tool Blog Post](https://spring.io/blog/2025/12/11/spring-ai-tool-search-tools-tzolov)
+- [Spring AI Tool Search Tool Blog Post](https://spring.io/blog/2025/12/11/spring-ai-tool-search-tools-tzolov)
     - [GitHub Repository](https://github.com/spring-ai-community/tool-search-tool)
     - [Smart Tool Selection Documentation](SMART_TOOL_SELECTION.md)
 - **Priority**: P0 (Critical)
@@ -2483,15 +2327,13 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 
 - **Description**: Use chat conversation history as context for query processing
 - **Features**:
-
-      - **Context Retrieval**: Retrieve conversation history for the specified chatId
+- **Context Retrieval**: Retrieve conversation history for the specified chatId
     - **Context Formatting**: Format conversation history for LLM consumption
     - **Prompt Enrichment**: Include conversation context in prompt construction
     - **Context-Aware Retrieval**: Use conversation context to improve query understanding
     - **Follow-up Query Handling**: Better handle follow-up questions using conversation context
 - **Integration**:
-
-      - Query endpoint accepts `chatId` parameter
+- Query endpoint accepts `chatId` parameter
     - Conversation history retrieved and included in prompt
     - LLM uses context to provide more relevant, contextual responses
 - **Priority**: P0 (Critical)
@@ -2504,10 +2346,8 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 - **Framework**: Spring AI 1.1.1 - Recursive Advisors now available in GA release
 - **Pattern**: LLM-as-a-Judge with Self-Refinement
 - **Features**:
-
-    - **Quality Evaluation**: Evaluate recommendations across multiple dimensions:
-
-          - Relevance to project requirements
+- **Quality Evaluation**: Evaluate recommendations across multiple dimensions:
+- Relevance to project requirements
         - Completeness of skill coverage
         - Accuracy of expert profiles
         - Actionability of recommendations
@@ -2525,25 +2365,21 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
     - **Evaluation Metrics**: Track evaluation ratings, retry counts, improvement rates
     - **Graceful Degradation**: Return best available response if max attempts reached
 - **Implementation**:
-
-      - Use Spring AI Recursive Advisors for self-refinement loop
+- Use Spring AI Recursive Advisors for self-refinement loop
     - Separate ChatClient for judge model (bias mitigation)
     - Structured output for evaluation results
     - Integration with existing SGR patterns
 - **Benefits**:
-
-      - Automated quality control without human intervention
+- Automated quality control without human intervention
     - Research shows LLM judges align with human judgment up to 85% (higher than human-to-human agreement at 81%)
     - Consistent evaluation criteria across all recommendations
     - Self-improving recommendations based on feedback
     - Scalable evaluation without human evaluators
 - **Priority**: P1 (High) - Post-MVP Enhancement
 - **References**:
-
-      - [Spring AI LLM-as-a-Judge Blog Post](https://spring.io/blog/2025/11/10/spring-ai-llm-as-judge-blog-post/)
-- **⚠️ Important Notes**:
-
-      - Recursive Advisors are available in Spring AI 1.1.1, non-streaming only
+- [Spring AI LLM-as-a-Judge Blog Post](https://spring.io/blog/2025/11/10/spring-ai-llm-as-judge-blog-post/)
+- ** Important Notes**:
+- Recursive Advisors are available in Spring AI 1.1.1, non-streaming only
     - Requires careful advisor ordering
     - Multiple LLM calls increase costs (generation + evaluation + retries)
     - Always set termination conditions and retry limits to prevent infinite loops
@@ -2556,14 +2392,12 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 - **Concept**: Memory Copilot acts as a "second pilot" - a sub-agent that operates between the language model and user
   interface, automatically managing long-term memory without requiring the main model to trigger memory operations
 - **Features**:
-
-      - **Automatic Memory Enrichment**: Enriches prompts before generation using relevant past experience (few-shot
+- **Automatic Memory Enrichment**: Enriches prompts before generation using relevant past experience (few-shot
       examples, facts, successful patterns)
     - **Intelligent Memory Storage**: Decides what from current step's result is worth storing using LLM-as-a-Judge
       evaluation
     - **Two Core Tools**:
-
-          - **recall (search)**: Runs before answer generation at prompt-building stage
+- **recall (search)**: Runs before answer generation at prompt-building stage
             - Matches current user request against long-term storage
             - Retrieves relevant snippets (few-shot examples, facts, patterns)
             - Feeds retrieved context into prompt together with system instructions and dialogue history
@@ -2576,8 +2410,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
     - **Self-Tuning Behavior**: Agent improves over time - longer it runs, more precisely it injects prior experience,
       fewer mistakes it makes
     - **Beyond Chat Memory**: Remember successful solutions at action level:
-
-          - Which tool with which parameters worked best for particular class of queries
+- Which tool with which parameters worked best for particular class of queries
         - Action templates and rules rather than concrete answers (tool responses become outdated)
         - Few-shot examples for tool-use planning (improves tool selection speed and accuracy)
     - **Automatic Operation**: Works automatically without main model having to "trigger memory as a tool"
@@ -2589,24 +2422,21 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
         5. If useful, distill and save
     - **Integration**: Lives between language model and user-facing interface, acts as generator of system prompt
 - **Benefits**:
-
-      - **Self-Improvement**: Agent learns from experience automatically
+- **Self-Improvement**: Agent learns from experience automatically
     - **Better Context**: Relevant past experience automatically injected into prompts
     - **Reduced Errors**: Fewer mistakes as agent accumulates experience
     - **Efficient Storage**: Only stores useful, non-duplicate information
     - **Improved Tool Use**: Few-shot examples improve tool selection and planning
     - **Personalization**: Memory accumulates user-specific patterns and preferences
 - **Implementation**:
-
-      - Long-term memory storage (separate from conversation history)
+- Long-term memory storage (separate from conversation history)
     - Vector search for memory retrieval (similarity matching)
     - LLM-as-a-Judge for memory evaluation (usefulness, originality, duplication check)
     - Automatic prompt enrichment pipeline
     - Memory distillation and summarization
 - **Priority**: P2 (Medium) - Post-MVP Enhancement
 - **References**:
-
-      - Automatic Engineering of Long Prompts (arXiv:2311.10117)
+- Automatic Engineering of Long Prompts (arXiv:2311.10117)
     - From Generation to Judgment: Opportunities and Challenges of LLM-as-a-judge (arXiv:2411.16594)
     - Reflexion: Language Agents with Verbal Reinforcement Learning (arXiv:2303.11366)
     - Language Models are Few-Shot Learners (arXiv:2005.14165)
@@ -2622,8 +2452,7 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 
 - **Target**: < 3 seconds end-to-end (P95) for typical queries
 - **Breakdown**:
-
-      - Query parsing: < 100ms
+- Query parsing: < 100ms
     - Retrieval: < 500ms
     - Reranking: < 300ms
     - LLM generation: < 2 seconds
@@ -2687,23 +2516,20 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
 The original project has the following authorization implementation:
 
 1. **Python FastAPI Service**:
-
-     - **Session Management**: Cookie-based session (session_id cookie)
+- **Session Management**: Cookie-based session (session_id cookie)
     - **Authentication**: No explicit authentication middleware
     - **Authorization**: No role-based access control
     - **CORS**: Enabled for all origins (`allow_origins=["*"]`)
     - **Status**: Basic session tracking only, no security enforcement
 
 2. **Java Spring Boot Service**:
-
-     - **Configuration**: Header-based authentication (no OAuth2 configuration)
+- **Configuration**: Header-based authentication (no OAuth2 configuration)
     - **Security Enforcement**: CORS configuration only (authentication handled by Spring Gateway)
     - **Controller Security**: No `@PreAuthorize` annotations (authorization handled by Gateway)
     - **Status**: Service trusts headers from Spring Gateway
 
 3. **External API Authentication**:
-
-     - **JIRA API**: Bearer token authentication (`JIRA_API_TOKEN`)
+- **JIRA API**: Bearer token authentication (`JIRA_API_TOKEN`)
     - **Kafka**: SASL_SSL with PLAIN mechanism (username/password)
     - **Schema Registry**: No explicit authentication
 
@@ -2717,19 +2543,16 @@ The original project has the following authorization implementation:
     - **ExpertMatch Service**: Extracts user information from headers (`X-User-Id`, `X-User-Roles`, `X-User-Email`)
     - **Authorization**: Handled by Spring Gateway (role-based access control at gateway level)
 - **Header Format**:
-
-      - `X-User-Id`: User identifier (required)
+- `X-User-Id`: User identifier (required)
     - `X-User-Roles`: Comma-separated list of roles (e.g., "ROLE_USER,ROLE_ADMIN")
     - `X-User-Email`: User email address (optional)
 - **Roles**:
-
-      - `ROLE_USER` or `ROLE_EXPERT_MATCH_USER`: Standard user, can query and manage chats
+- `ROLE_USER` or `ROLE_EXPERT_MATCH_USER`: Standard user, can query and manage chats
     - `ROLE_ADMIN` or `ROLE_EXPERT_MATCH_ADMIN`: Admin user, can access ingestion endpoints
     - `ROLE_EXPERT_MATCH_TESTER`: Tester role (for test data generation, disabled in production)
 - **Fallback Behavior**: Service uses "anonymous-user" if headers are missing (for local development)
 - **API Security**:
-
-      - HTTPS enforcement (production)
+- HTTPS enforcement (production)
     - Input validation (Bean Validation)
     - SQL injection prevention (parameterized queries via NamedParameterJdbcTemplate)
     - XSS prevention (response sanitization)
@@ -2739,8 +2562,7 @@ The original project has the following authorization implementation:
 **Future Phase (Post-MVP):**
 
 - **Full RBAC Implementation**:
-
-      - Dynamic role management (database-backed roles)
+- Dynamic role management (database-backed roles)
     - Role hierarchy and inheritance
     - Resource-level security (fine-grained access control)
     - Permission-based access control (beyond simple roles)
@@ -2762,13 +2584,11 @@ The original project has the following authorization implementation:
 
 - **Standards**: Clean code, SOLID principles
 - **Documentation**:
-
-      - Comprehensive JavaDoc
+- Comprehensive JavaDoc
     - OpenAPI specification (API documentation)
     - Cucumber feature files (executable specifications)
 - **Testing**:
-
-      - Unit tests (80%+ coverage)
+- Unit tests (80%+ coverage)
     - Integration tests (Cucumber BDD)
     - Contract tests (OpenAPI validation)
     - TDD approach (tests written before implementation)
@@ -2803,27 +2623,23 @@ The original project has the following authorization implementation:
 
 1. **Consistency**: Already using MongoDB-compatible IDs for `chats`, `conversation_history`, and
    `chat_memory_summaries`. Standardizing across all tables provides:
-
-     - Uniform ID format throughout the application
+- Uniform ID format throughout the application
     - Consistent API responses (all IDs are strings)
     - Easier client-side handling (no type conversion)
     - Simpler codebase (single ID generation utility)
 
 2. **Opaque Identifiers**: MongoDB-compatible IDs are opaque and don't reveal:
-
-     - Record count or growth rate
+- Record count or growth rate
     - Creation order (except approximate timestamp)
     - System internals
 
 3. **Distributed System Friendly**:
-
-     - Can generate IDs client-side without database round-trip
+- Can generate IDs client-side without database round-trip
     - Globally unique (includes timestamp, machine ID, process ID)
     - Better for microservices and distributed architectures
 
 4. **Future-Proof**:
-
-     - Easier integration with other systems (MongoDB, external APIs)
+- Easier integration with other systems (MongoDB, external APIs)
     - Better for data migration and replication
     - Supports eventual multi-database scenarios
 
@@ -2857,32 +2673,27 @@ The original project has the following authorization implementation:
 **Index Size Impact:**
 
 - **Primary Key Indexes**:
-
-      - entities: 200k × 24 bytes = 4.8 MB (vs 1.6 MB with BIGINT) = +3.2 MB
+- entities: 200k × 24 bytes = 4.8 MB (vs 1.6 MB with BIGINT) = +3.2 MB
     - entity_relationships: 5M × 24 bytes = 120 MB (vs 40 MB with BIGINT) = +80 MB
     - documents: 2M × 24 bytes = 48 MB (vs 16 MB with BIGINT) = +32 MB
 - **Foreign Key Indexes**:
-
-      - entity_relationships (source): 5M × 24 bytes = 120 MB (vs 40 MB) = +80 MB
+- entity_relationships (source): 5M × 24 bytes = 120 MB (vs 40 MB) = +80 MB
     - entity_relationships (target): 5M × 24 bytes = 120 MB (vs 40 MB) = +80 MB
 - **Total Index Overhead**: ~275 MB (acceptable for modern PostgreSQL)
 
 **Join Performance Analysis:**
 
 - **String vs Integer Comparison**:
-
-      - String comparison: ~2-3 CPU cycles per character (24 chars = 48-72 cycles)
+- String comparison: ~2-3 CPU cycles per character (24 chars = 48-72 cycles)
     - Integer comparison: ~1 CPU cycle
     - **Overhead**: ~50-70 CPU cycles per comparison (negligible on modern CPUs)
 - **Index Lookup Performance**:
-
-      - B-tree index lookup: O(log n) for both
+- B-tree index lookup: O(log n) for both
     - For 5M records: ~23 comparisons (log₂(5M))
     - String overhead: ~1,150-1,610 CPU cycles per lookup
     - **Impact**: < 1 microsecond additional latency per lookup (negligible)
 - **Real-World Query Performance**:
-
-      - Simple joins (1-2 tables): < 1ms difference
+- Simple joins (1-2 tables): < 1ms difference
     - Complex joins (3-5 tables): < 5ms difference
     - For sub-second response time targets (500ms), this is acceptable
 
@@ -2896,27 +2707,24 @@ The original project has the following authorization implementation:
 **Benchmarking Results (Estimated):**
 
 - **100k employees, 5M relationships**:
-
-      - Query: Find all relationships for an employee
+- Query: Find all relationships for an employee
     - BIGINT: ~2-5ms
     - CHAR(24): ~3-7ms
     - **Difference**: 1-2ms (acceptable)
 - **Complex graph traversal** (5-10 joins):
-
-      - BIGINT: ~20-50ms
+- BIGINT: ~20-50ms
     - CHAR(24): ~25-60ms
     - **Difference**: 5-10ms (acceptable for sub-second targets)
 
 **Recommendation for 100k+ Employees:**
-✅ **CHAR(24) MongoDB-compatible IDs are SUITABLE** for 100k employees because:
+ **CHAR(24) MongoDB-compatible IDs are SUITABLE** for 100k employees because:
 
 1. **Storage overhead is minimal**: ~275 MB index overhead is negligible for modern systems
 2. **Performance impact is acceptable**: 1-10ms additional latency is within sub-second response targets
 3. **PostgreSQL handles scale well**: Modern PostgreSQL efficiently handles millions of string-indexed records
 4. **Benefits outweigh costs**: Consistency, opacity, and distributed-friendly design are valuable
 5. **Optimization options available**: If needed, can add:
-
-     - Integer-based secondary indexes for performance-critical queries
+- Integer-based secondary indexes for performance-critical queries
     - Partial indexes for frequently queried subsets
     - Materialized views for complex aggregations
 
@@ -2979,8 +2787,7 @@ CREATE INDEX documents_content_type_idx ON documents(content_type);
 CREATE INDEX documents_created_at_idx ON documents(created_at);
 
 -- Note: When querying with different dimensions:
-
--- - 1024-dim embeddings can be compared with 1536-dim embeddings (PgVector handles padding)
+- - - 1024-dim embeddings can be compared with 1536-dim embeddings (PgVector handles padding)
 -- - For optimal performance, use same dimension embeddings for query and index
 -- - The embedding_dimensions column allows filtering by dimension for compatibility checks
 -- - 3072 dimensions are not supported (not recommended - use 1536 instead)
@@ -3492,8 +3299,7 @@ end note
 **Versioning Policy**:
 
 1. **Breaking Changes** (require new major version):
-
-     - Removing endpoints
+- Removing endpoints
     - Removing required fields from request/response
     - Changing field types (e.g., string → integer)
     - Changing HTTP methods for endpoints
@@ -3501,8 +3307,7 @@ end note
     - Removing enum values that clients might depend on
 
 2. **Non-Breaking Changes** (same major version):
-
-     - Adding new endpoints
+- Adding new endpoints
     - Adding optional fields to request/response
     - Adding new enum values
     - Adding new query parameters
@@ -3510,8 +3315,7 @@ end note
     - Improving error messages (same error codes)
 
 3. **Backward Compatibility Requirements**:
-
-     - **Minimum Support**: Previous major version must be supported for at least 6 months after new version release
+- **Minimum Support**: Previous major version must be supported for at least 6 months after new version release
     - **Deprecation Notice**: Deprecated endpoints must be marked in OpenAPI spec with `deprecated: true`
     - **Deprecation Period**: At least 3 months notice before removing deprecated endpoints
     - **Migration Guide**: Provide migration guide when introducing new major version
@@ -3543,7 +3347,6 @@ public class QueryControllerV2 {
 - OpenAPI `info.version` field reflects semantic version (e.g., "1.0.0", "2.0.0")
 
 **Version Negotiation** (Future Enhancement):
-
 - **Accept Header**: `Accept: application/vnd.expertmatch.v1+json`
 - **Default Version**: If no version specified, default to latest stable version
 - **Version Discovery**: `/api/versions` endpoint lists available versions
@@ -3588,33 +3391,28 @@ contract and enables automatic client generation for client applications and oth
 
 - **Format**: OpenAPI 3.0.3 (JSON or YAML)
 - **Accessibility**:
-
-      - MUST be accessible at `/api/v1/openapi.json` (JSON format, recommended for client generation)
+- MUST be accessible at `/api/v1/openapi.json` (JSON format, recommended for client generation)
     - MUST be accessible at `/v3/api-docs` (SpringDoc default endpoint)
     - SHOULD be accessible via Swagger UI at `/swagger-ui.html` for interactive documentation
 - **Completeness**:
-
-      - ALL endpoints MUST be documented
+- ALL endpoints MUST be documented
     - ALL request/response schemas MUST be defined
     - ALL error responses MUST be documented (400, 401, 403, 404, 500, etc.)
     - Authentication requirements MUST be specified using security schemes
     - Path parameters, query parameters, and request bodies MUST be fully documented
 - **Maintenance**:
-
-      - OpenAPI spec MUST be updated immediately when API changes
+- OpenAPI spec MUST be updated immediately when API changes
     - OpenAPI spec MUST be validated as part of CI/CD pipeline
     - Breaking changes MUST be versioned appropriately (new major version)
     - Non-breaking changes MUST be reflected in same major version (minor/patch update)
     - Deprecated endpoints MUST be marked with `deprecated: true` in OpenAPI spec
     - Deprecation notices MUST include removal date and migration path
 - **Client Generation Compatibility**:
-
-      - OpenAPI spec MUST be compatible with openapi-generator for TypeScript/JavaScript
+- OpenAPI spec MUST be compatible with openapi-generator for TypeScript/JavaScript
     - All schemas MUST be valid and properly typed
     - Response examples SHOULD be provided for better client generation
 - **Source Location**:
-
-      - Primary: Static file at `src/main/resources/api/openapi.yaml` (API-first approach)
+- Primary: Static file at `src/main/resources/api/openapi.yaml` (API-first approach)
     - OpenAPI spec is the single source of truth
     - Controllers implement generated interfaces to ensure contract compliance
     - SpringDoc OpenAPI serves the spec and generates interactive documentation
@@ -3634,7 +3432,7 @@ info:
     email: api-support@example.com
 servers:
 
-  - url: https://api.example.com/api/v1
+- url: https://api.example.com/api/v1
     description: Production server
   - url: http://localhost:8093/api/v1
     description: Development server
@@ -3644,8 +3442,7 @@ paths:
       summary: Process natural language query
       operationId: processQuery
       tags:
-
-        - Query
+- Query
       requestBody:
         required: true
         content:
@@ -3670,8 +3467,7 @@ paths:
       summary: Create a new chat
       operationId: createChat
       tags:
-
-        - Chat Management
+- Chat Management
       requestBody:
         required: false
         content:
@@ -3689,8 +3485,7 @@ paths:
       summary: List all chats for the authenticated user
       operationId: listChats
       tags:
-
-        - Chat Management
+- Chat Management
       responses:
         '200':
           description: List of chats
@@ -3703,11 +3498,9 @@ paths:
       summary: Get chat details
       operationId: getChat
       tags:
-
-        - Chat Management
+- Chat Management
       parameters:
-
-        - name: chatId
+- name: chatId
           in: path
           required: true
           schema:
@@ -3725,11 +3518,9 @@ paths:
       summary: Update chat (e.g., rename)
       operationId: updateChat
       tags:
-
-        - Chat Management
+- Chat Management
       parameters:
-
-        - name: chatId
+- name: chatId
           in: path
           required: true
           schema:
@@ -3752,11 +3543,9 @@ paths:
       summary: Delete a chat
       operationId: deleteChat
       tags:
-
-        - Chat Management
+- Chat Management
       parameters:
-
-        - name: chatId
+- name: chatId
           in: path
           required: true
           schema:
@@ -3772,11 +3561,9 @@ paths:
       summary: Get conversation history for a chat
       operationId: getConversationHistory
       tags:
-
-        - Chat Management
+- Chat Management
       parameters:
-
-        - name: chatId
+- name: chatId
           in: path
           required: true
           schema:
@@ -3809,8 +3596,7 @@ components:
     QueryRequest:
       type: object
       required:
-
-        - query
+- query
       properties:
         query:
           type: string
@@ -3826,8 +3612,7 @@ components:
     Chat:
       type: object
       required:
-
-        - id
+- id
         - isDefault
         - createdAt
       properties:
@@ -3880,8 +3665,7 @@ components:
     ConversationMessage:
       type: object
       required:
-
-        - id
+- id
         - messageType
         - role
         - content
@@ -3911,8 +3695,7 @@ components:
     ConversationHistoryResponse:
       type: object
       required:
-
-        - chatId
+- chatId
         - messages
       properties:
         chatId:
@@ -3967,8 +3750,7 @@ components:
     QueryResponse:
       type: object
       required:
-
-        - answer
+- answer
         - confidence
         - queryId
       properties:
@@ -4002,11 +3784,9 @@ components:
         summary: Generate test data (Development/Test only)
         operationId: generateTestData
         tags:
-
-          - Test Data
+- Test Data
         security:
-
-          - bearerAuth: []
+- bearerAuth: []
         requestBody:
           required: true
           content:
@@ -4027,14 +3807,11 @@ components:
         summary: Clear test data (Development/Test only)
         operationId: clearTestData
         tags:
-
-          - Test Data
+- Test Data
         security:
-
-          - bearerAuth: []
+- bearerAuth: []
         parameters:
-
-          - name: confirm
+- name: confirm
             in: query
             required: true
             schema:
@@ -4048,8 +3825,7 @@ components:
     TestDataGenerationRequest:
       type: object
       required:
-
-        - size
+- size
       properties:
         size:
           type: string
@@ -4098,7 +3874,7 @@ components:
           type: integer
 security:
 
-  - bearerAuth: []
+- bearerAuth: []
 ```
 
 **Code Generation (Maven):**
@@ -4180,7 +3956,7 @@ Authorization: Bearer <jwt-token>
 
 ```json
 {
-  "answer": "Based on the project requirements, I found the following experts:\n\n1. **John Doe** (A4, English B2+)\n   - Must-have skills: ✅ Java 21+, Spring Boot, AWS, MongoDB, Gradle\n   - Nice-to-have: ✅ Kubernetes, Terraform, Datadog\n   - Relevant experience: Built ETL pipelines handling 10M+ records/day, Spring WebFlux microservices\n   - Projects: [Project X - AWS, MongoDB], [Project Y - Kubernetes, Terraform]\n   - Contact: john.doe@example.com\n\n2. **Jane Smith** (A3, English B2+)\n   - Must-have skills: ✅ Java 21+, Spring Boot, AWS, MongoDB\n   - Nice-to-have: ✅ Helm, Datadog\n   - Relevant experience: On-call rotation, monitoring with Datadog, Spring Boot services\n   - Projects: [Project Z - Production systems, 24/7 support]\n   - Contact: jane.smith@example.com",
+  "answer": "Based on the project requirements, I found the following experts:\n\n1. **John Doe** (A4, English B2+)\n   - Must-have skills:  Java 21+, Spring Boot, AWS, MongoDB, Gradle\n   - Nice-to-have:  Kubernetes, Terraform, Datadog\n   - Relevant experience: Built ETL pipelines handling 10M+ records/day, Spring WebFlux microservices\n   - Projects: [Project X - AWS, MongoDB], [Project Y - Kubernetes, Terraform]\n   - Contact: john.doe@example.com\n\n2. **Jane Smith** (A3, English B2+)\n   - Must-have skills:  Java 21+, Spring Boot, AWS, MongoDB\n   - Nice-to-have:  Helm, Datadog\n   - Relevant experience: On-call rotation, monitoring with Datadog, Spring Boot services\n   - Projects: [Project Z - Production systems, 24/7 support]\n   - Contact: jane.smith@example.com",
   "experts": [
     {
       "id": "12345",
@@ -5048,13 +4824,13 @@ roles and uses them for access control. No database lookup or dynamic role manag
 
 **Key Improvements over Original Project**:
 
-1. ✅ **Explicit SecurityConfig**: Security rules are explicitly defined and enforced
-2. ✅ **Method-level Security**: `@PreAuthorize` annotations on controllers
-3. ✅ **Role-based Access Control (Simulated)**: Different roles for different endpoints (MVP)
-4. ✅ **CORS Configuration**: Proper CORS setup (not open to all origins)
-5. ✅ **JWT Authority Mapping**: Proper mapping of JWT claims to Spring Security authorities
-6. ✅ **Stateless Sessions**: STATELESS session policy for JWT-based authentication
-7. ✅ **MVP-Ready**: Simplified RBAC simulation suitable for initial release
+1.  **Explicit SecurityConfig**: Security rules are explicitly defined and enforced
+2.  **Method-level Security**: `@PreAuthorize` annotations on controllers
+3.  **Role-based Access Control (Simulated)**: Different roles for different endpoints (MVP)
+4.  **CORS Configuration**: Proper CORS setup (not open to all origins)
+5.  **JWT Authority Mapping**: Proper mapping of JWT claims to Spring Security authorities
+6.  **Stateless Sessions**: STATELESS session policy for JWT-based authentication
+7.  **MVP-Ready**: Simplified RBAC simulation suitable for initial release
 
 #### 6.3.4 OpenAPI Configuration
 
@@ -5325,8 +5101,7 @@ expertmatch:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     topics:
-
-      - work-experience
+- work-experience
       - internal-communications
       - project-updates
     consumer:
@@ -5339,14 +5114,12 @@ expertmatch:
   ingestion:
     # Jira/Intakes Integration
     jira-sources:
-
-      - name: jira-intakes
+- name: jira-intakes
         api-url: ${JIRA_API_URL}
         api-token: ${JIRA_API_TOKEN}
         jql-query: "project = INTAKE AND updated >= {lastUpdateDate}"
         fields:
-
-          - summary
+- summary
           - description
           - assignee
           - reporter
@@ -5361,8 +5134,7 @@ expertmatch:
     
     # PostgreSQL Source Integration
     postgresql-sources:
-
-      - name: work-experience-source
+- name: work-experience-source
         jdbc-url: ${SOURCE_DB_JDBC_URL}
         username: ${SOURCE_DB_USERNAME}
         password: ${SOURCE_DB_PASSWORD}
@@ -5382,8 +5154,7 @@ expertmatch:
     
     # Presale Materials Integration
     presale-sources:
-
-      - name: presale-materials
+- name: presale-materials
         source-type: file-system # or api, database
         path: ${PRESALE_MATERIALS_PATH}
         schedule: "0 0 * * *" # Daily at midnight
@@ -5391,8 +5162,7 @@ expertmatch:
         generate-per-slide-embeddings: true
     
     enabled-sources:
-
-      - kafka
+- kafka
       - postgresql
       - jira
       - presale
@@ -5465,26 +5235,24 @@ This format provides:
 
 | Aspect                       | Java-Side Generation                                | PostgreSQL Function                                  |
 |------------------------------|-----------------------------------------------------|------------------------------------------------------|
-| **Performance**              | ✅ No database round-trip                            | ❌ Requires database call per ID                      |
-| **Batch Operations**         | ✅ Generate IDs in memory, batch insert              | ❌ Multiple function calls or complex SQL             |
-| **Pre-insert Relationships** | ✅ Can generate IDs before insert, set relationships | ❌ Need to insert first, then update relationships    |
-| **Distributed Systems**      | ✅ Works offline, no DB dependency                   | ❌ Requires database connection                       |
-| **Transaction Overhead**     | ✅ Minimal (just string generation)                  | ❌ Function call overhead per ID                      |
-| **Bulk Insert Performance**  | ✅ Fast (generate 1000s IDs in memory)               | ❌ Slower (function call per row)                     |
-| **Complexity**               | ✅ Simple utility class                              | ⚠️ Requires PostgreSQL function creation/maintenance |
+| **Performance**              |  No database round-trip                            |  Requires database call per ID                      |
+| **Batch Operations**         |  Generate IDs in memory, batch insert              |  Multiple function calls or complex SQL             |
+| **Pre-insert Relationships** |  Can generate IDs before insert, set relationships |  Need to insert first, then update relationships    |
+| **Distributed Systems**      |  Works offline, no DB dependency                   |  Requires database connection                       |
+| **Transaction Overhead**     |  Minimal (just string generation)                  |  Function call overhead per ID                      |
+| **Bulk Insert Performance**  |  Fast (generate 1000s IDs in memory)               |  Slower (function call per row)                     |
+| **Complexity**               |  Simple utility class                              |  Requires PostgreSQL function creation/maintenance |
 
 **Performance Analysis for 100k Employees:**
 
 **Scenario 1: Bulk Insert (1M work experience records)**
 
 - **Java-side**:
-
-      - Generate 1M IDs: ~100ms (in-memory)
+- Generate 1M IDs: ~100ms (in-memory)
     - Batch insert: ~5-10 seconds
     - **Total**: ~5-10 seconds
 - **PostgreSQL function**:
-
-      - Generate + insert per row: Function call overhead × 1M
+- Generate + insert per row: Function call overhead × 1M
     - Estimated: ~15-30 seconds (3-6x slower)
     - **Total**: ~15-30 seconds
 
@@ -5497,14 +5265,12 @@ This format provides:
 **Scenario 3: Batch Insert with Relationships**
 
 - **Java-side**:
-
-      - Generate entity IDs first
+- Generate entity IDs first
     - Generate relationship IDs with FK references
     - Single batch insert
     - **Efficient**: All IDs known before insert
 - **PostgreSQL function**:
-
-      - Insert entities, get IDs from RETURNING
+- Insert entities, get IDs from RETURNING
     - Generate relationship IDs with function
     - Insert relationships
     - **Less efficient**: Multiple round-trips
@@ -5581,7 +5347,7 @@ However, this is still slower than Java-side generation.
 
 **Recommendation: Java-Side Generation**
 
-✅ **Use Java-side generation** because:
+ **Use Java-side generation** because:
 
 1. **Better Performance**: Especially for bulk operations (3-6x faster)
 2. **Flexibility**: Generate IDs before insert, set relationships easily
@@ -6260,26 +6026,22 @@ Example record from `workexperiencejson` table:
    LIMIT :batchSize
    ```
 3. **Parse**:
-
-     - Parse flat columns directly
+- Parse flat columns directly
     - Parse nested JSON from `value` column (if present)
     - Merge flat and nested data with priority to nested data
 4. **Extract Entities**:
-
-     - **Person**: From `employee_id`, `employee_name`, `employee_type` or `value.employee`
+- **Person**: From `employee_id`, `employee_name`, `employee_type` or `value.employee`
     - **Project**: From `project_id`, `project_name`, `project_type` or `value.project`
     - **Customer**: From `customer_id`, `customer_name`, `customer_type` or `value.customer`
     - **Technologies**: From `value.technologies_ref` or extracted from `participation` text
     - **Tools**: From `value.tools_ref` or extracted from `participation` text
     - **Roles**: From `project_role`, `primary_project_role_*` or `value.all_project_roles`
 5. **Generate Embeddings**:
-
-     - `participation` → `participation_embedding`
+- `participation` → `participation_embedding`
     - `project_description` → `description_embedding`
     - `customer_description` → `customer_embedding` (optional)
 6. **Build Graph Relationships**:
-
-     - `(Person)-[:WORKED_ON]->(Project)`
+- `(Person)-[:WORKED_ON]->(Project)`
     - `(Person)-[:USED_TECHNOLOGY]->(Technology)` (from tools/technologies)
     - `(Person)-[:HAS_ROLE]->(Role)` (from project roles)
     - `(Project)-[:FOR_CUSTOMER]->(Customer)`
@@ -6295,8 +6057,7 @@ Example record from `workexperiencejson` table:
 expertmatch:
   ingestion:
     postgresql-sources:
-
-      - name: work-experience-source
+- name: work-experience-source
         jdbc-url: jdbc:postgresql://source-host:5432/source_db
         username: ${SOURCE_DB_USERNAME}
         password: ${SOURCE_DB_PASSWORD}
@@ -6329,8 +6090,7 @@ expertmatch:
 - **Offset-based**: Track last processed `message_offset` for resumable ingestion
 - **Timestamp-based**: Use `entity_created_when` or `entity_updated_when` for time-based filtering
 - **Update Strategy**:
-
-      - Update `status` column after successful processing
+- Update `status` column after successful processing
     - Track last processed offset in `ingestion_state` table
     - Support for manual status reset for reprocessing
 
@@ -6358,8 +6118,7 @@ Ingest data from REST APIs, useful for:
 expertmatch:
   ingestion:
     rest-sources:
-
-      - name: external-api-source
+- name: external-api-source
         url: https://api.example.com/data
         method: GET
         headers:
@@ -6630,10 +6389,10 @@ Instructions:
 1. **Retrieve Recent Messages**: Fetch messages from `conversation_history` table for the chat (up to 50 messages)
 2. **Token Counting**: Estimate tokens for all messages using `TokenCountingService` (~4 characters per token)
 3. **Check Memory Window**:
-    - If within token limit (`max-tokens`) and message limit (`max-messages`): Include all messages
+- If within token limit (`max-tokens`) and message limit (`max-messages`): Include all messages
     - If exceeds limits: Optimize history using `ConversationHistoryManager`
 4. **History Optimization**:
-    - **Strategy 1**: Keep recent messages (half of `max-messages`), summarize older messages using LLM
+- **Strategy 1**: Keep recent messages (half of `max-messages`), summarize older messages using LLM
     - **Strategy 2**: If still exceeds token limit, recursively summarize oldest messages until within limits
     - Summaries are limited to `max-summary-tokens` to prevent them from being too large
 5. **Format Context**: Format messages as "User: ..." and "Assistant: ..." pairs, with summaries prefixed
@@ -6660,11 +6419,11 @@ system.
 
 #### 9.2.1 Implementation Status
 
-- ✅ **Status**: Implemented in MVP
-- ✅ **Service**: `ExecutionTracer` in `com.berdachuk.expertmatch.query`
-- ✅ **Integration**: Integrated into all major processing services
-- ✅ **API**: Enabled via `QueryOptions.includeExecutionTrace` flag (default: `false`)
-- ✅ **Configuration**: API-only via `QueryOptions.includeExecutionTrace` parameter (defaults to `false`)
+- **Status**: Implemented in MVP
+- **Service**: `ExecutionTracer` in `com.berdachuk.expertmatch.query`
+- **Integration**: Integrated into all major processing services
+- **API**: Enabled via `QueryOptions.includeExecutionTrace` flag (default: `false`)
+- **Configuration**: API-only via `QueryOptions.includeExecutionTrace` parameter (defaults to `false`)
 
 #### 9.2.2 Features
 
@@ -6749,15 +6508,13 @@ The execution trace tracks the following processing steps:
 1. **Query Parsing**: Natural language query analysis and intent classification
 2. **Entity Extraction**: Extraction of persons, organizations, technologies, projects, and domains
 3. **Retrieval Steps**:
-
-     - Vector Search
+- Vector Search
     - Graph Search
     - Keyword Search
     - Fusion
     - Semantic Reranking
 4. **Deep Research** (if enabled):
-
-     - Initial Retrieval
+- Initial Retrieval
     - Gap Analysis
     - Query Refinement
     - Expanded Retrieval
@@ -6779,11 +6536,11 @@ retrieval for complex queries that require multiple passes to gather comprehensi
 
 #### 9.2.1 Implementation Status
 
-- ✅ **Status**: Implemented in MVP
-- ✅ **Service**: `DeepResearchService` in `com.berdachuk.expertmatch.retrieval`
-- ✅ **Integration**: Integrated into `QueryService.processQuery()`
-- ✅ **API**: Enabled via `QueryOptions.deepResearch` flag (default: `false`)
-- ✅ **Configuration**: API-only via `QueryOptions.deepResearch` parameter (defaults to `false`)
+- **Status**: Implemented in MVP
+- **Service**: `DeepResearchService` in `com.berdachuk.expertmatch.retrieval`
+- **Integration**: Integrated into `QueryService.processQuery()`
+- **API**: Enabled via `QueryOptions.deepResearch` flag (default: `false`)
+- **Configuration**: API-only via `QueryOptions.deepResearch` parameter (defaults to `false`)
 
 #### 9.2.2 Multi-Step Process
 
@@ -6834,16 +6591,14 @@ stop
 1. **Initial Query**: Process user query
 2. **Initial Retrieval**: Perform standard hybrid GraphRAG retrieval
 3. **Gap Analysis**: Use LLM to analyze initial results and identify:
-
-     - Information gaps
+- Information gaps
     - Ambiguities in requirements
     - Missing context
     - Areas needing deeper research
 4. **Query Refinement**: Generate 2-3 refined queries using LLM based on gap analysis
 5. **Expanded Retrieval**: Perform additional hybrid retrieval for each refined query
 6. **Result Synthesis**: Combine initial and expanded results with weighted scoring:
-
-     - Initial results: 0.6 weight
+- Initial results: 0.6 weight
     - Expanded results: 0.4 weight
     - Deduplicate expert IDs (keep highest score)
 7. **Answer Generation**: Generate comprehensive answer with synthesized context
@@ -6861,7 +6616,6 @@ stop
 **Configuration**: API-only via `QueryOptions.deepResearch` parameter (defaults to `false`).
 
 **Internal Constants** (hardcoded in `DeepResearchService`):
-
 - `MAX_REFINED_QUERIES = 3` - Maximum number of refined queries to generate
 - `SYNTHESIS_WEIGHT_INITIAL = 0.6` - Weight for initial results in synthesis
 - `SYNTHESIS_WEIGHT_EXPANDED = 0.4` - Weight for expanded results in synthesis
@@ -6907,7 +6661,7 @@ stop
 ```
 
 For more details, see [SGR Usage Documentation](ExpertMatch-SGR-Usage.md)
-and [Expert Search Flow](ExpertMatch-Expert-Search-Flow.md#deep-research-flow-sgr-pattern).
+and [Expert Search Flow - Deep Research Flow](ExpertMatch-Expert-Search-Flow.md#deep-research-flow-sgr-pattern).
 
 ### 9.3 Schema-Guided Reasoning (SGR) Patterns
 
@@ -6927,13 +6681,15 @@ SGR patterns provide three foundational building blocks:
 
 The **Cascade Pattern** ensures structured, step-by-step expert evaluation by enforcing a predefined reasoning sequence.
 
-**Status**: ✅ **Implemented** (MVP)
+**Status**:
+
+**Implemented** (MVP)
 
 **Implementation Location**:
 
 - **Service**: `ExpertEvaluationService` in `com.berdachuk.expertmatch.llm.sgr`
 - **Integration**: `AnswerGenerationService.generateAnswer()` when `useCascadePattern` is enabled
-- **API Option**: `QueryOptions.useCascadePattern` (default: `false`) - ✅ Available in OpenAPI spec (added 2025-12-21)
+- **API Option**: `QueryOptions.useCascadePattern` (default: `false`) -  Available in OpenAPI spec (added 2025-12-21)
 - **Note**: Requires exactly 1 expert result to activate (falls back to RAG pattern otherwise)
 
 **Use Case**: Expert matching and recommendation generation
@@ -7103,18 +6859,20 @@ public class ExpertEvaluationService {
 - **Auditability**: Full reasoning chain is captured and reviewable
 - **Consistency**: Same reasoning structure across all evaluations
 
-#### 9.3.3 Routing Pattern for Query Classification ✅ **IMPLEMENTED**
+#### 9.3.3 Routing Pattern for Query Classification  **IMPLEMENTED**
 
 The **Routing Pattern** forces LLM to explicitly choose one reasoning path, enabling precise query classification and
 tool selection.
 
-**Status**: ✅ **Implemented** (MVP)
+**Status**:
+
+**Implemented** (MVP)
 
 **Implementation Location**:
 
 - **Service**: `QueryClassificationService` in `com.berdachuk.expertmatch.query.sgr`
 - **Integration**: `QueryParser.parse()` when `useRoutingPattern` is enabled
-- **API Option**: `QueryOptions.useRoutingPattern` (default: `false`) - ✅ Available in OpenAPI spec (added 2025-12-21)
+- **API Option**: `QueryOptions.useRoutingPattern` (default: `false`) -  Available in OpenAPI spec (added 2025-12-21)
 - **Purpose**: Enables LLM-based query classification during parsing
 
 **Use Case**: Query type classification and retrieval strategy selection
@@ -7285,18 +7043,20 @@ public class QueryRouter {
 - **Strategy Selection**: Automatic retrieval strategy selection based on classification
 - **Extensibility**: Easy to add new query types and strategies
 
-#### 9.3.4 Cycle Pattern for Multiple Expert Recommendations ✅ **IMPLEMENTED**
+#### 9.3.4 Cycle Pattern for Multiple Expert Recommendations  **IMPLEMENTED**
 
 The **Cycle Pattern** forces LLM to generate multiple items in a structured format, ensuring comprehensive expert
 recommendations.
 
-**Status**: ✅ **Implemented** (MVP)
+**Status**:
+
+**Implemented** (MVP)
 
 **Implementation Location**:
 
 - **Service**: `CyclePatternService` in `com.berdachuk.expertmatch.llm.sgr`
 - **Integration**: `AnswerGenerationService.generateAnswer()` when `useCyclePattern` is enabled
-- **API Option**: `QueryOptions.useCyclePattern` (default: `false`) - ✅ Available in OpenAPI spec (added 2025-12-21)
+- **API Option**: `QueryOptions.useCyclePattern` (default: `false`) -  Available in OpenAPI spec (added 2025-12-21)
 - **Note**: Requires multiple expert results (>1) to activate (falls back to RAG pattern otherwise)
 
 **Use Case**: Generate multiple expert recommendations with structured details
@@ -7446,7 +7206,9 @@ public class ExpertRecommendationService {
 
 #### 9.3.5 Combined Pattern: Cascade + Cycle for Team Formation
 
-Combining patterns for complex use cases: **Cascade** for step-by-step reasoning, **Cycle** for multiple team member
+Combining patterns for complex use cases:
+
+**Cascade** for step-by-step reasoning, **Cycle** for multiple team member
 recommendations.
 
 **Use Case**: Team formation with structured evaluation
@@ -7565,10 +7327,10 @@ spring:
 
 **All SGR Patterns Implemented (MVP)**:
 
-- ✅ **Cascade Pattern**: Implemented - `ExpertEvaluationService` in `com.berdachuk.expertmatch.llm.sgr`
-- ✅ **Routing Pattern**: Implemented - `QueryClassificationService` in `com.berdachuk.expertmatch.query.sgr`
-- ✅ **Cycle Pattern**: Implemented - `CyclePatternService` in `com.berdachuk.expertmatch.llm.sgr`
-- ✅ **Deep Research Pattern**: Implemented - `DeepResearchService` in `com.berdachuk.expertmatch.retrieval`
+- **Cascade Pattern**: Implemented - `ExpertEvaluationService` in `com.berdachuk.expertmatch.llm.sgr`
+- **Routing Pattern**: Implemented - `QueryClassificationService` in `com.berdachuk.expertmatch.query.sgr`
+- **Cycle Pattern**: Implemented - `CyclePatternService` in `com.berdachuk.expertmatch.llm.sgr`
+- **Deep Research Pattern**: Implemented - `DeepResearchService` in `com.berdachuk.expertmatch.retrieval`
 
 **Configuration**:
 
@@ -7615,7 +7377,7 @@ For detailed usage information and examples, see [SGR Usage Documentation](Exper
 
 ### 9.4 LLM-as-a-Judge Pattern for Quality Control (Post-MVP)
 
-> **⚠️ Post-MVP Enhancement**: This section describes functionality that is **not included in the MVP scope**. It will
+> ** Post-MVP Enhancement**: This section describes functionality that is **not included in the MVP scope**. It will
 > be implemented post-MVP as a high-priority enhancement.
 
 ExpertMatch will implement the **LLM-as-a-Judge** pattern to automatically evaluate and refine the quality of expert
@@ -7825,29 +7587,25 @@ spring:
 **Rating Scale**:
 
 - **1 (Terrible)**:
-
-      - Recommendations completely irrelevant to requirements
+- Recommendations completely irrelevant to requirements
     - Missing all or most key requirements (skills, seniority, experience)
     - Contains factual errors or hallucinations
     - No actionable information provided
 
 - **2 (Mostly Not Helpful)**:
-
-      - Recommendations partially relevant but miss key aspects
+- Recommendations partially relevant but miss key aspects
     - Missing some must-have skills or seniority requirements
     - Incomplete project experience details
     - Limited actionable information
 
 - **3 (Mostly Helpful)**:
-
-      - Recommendations address most requirements
+- Recommendations address most requirements
     - Covers must-have skills but may miss some nice-to-have
     - Adequate project experience details
     - Generally actionable but could be more complete
 
 - **4 (Excellent)**:
-
-      - Recommendations highly relevant and complete
+- Recommendations highly relevant and complete
     - All must-have and most nice-to-have skills addressed
     - Comprehensive project experience with details
     - Fully actionable with contact info, experience, and rationale
@@ -7865,7 +7623,7 @@ spring:
 
 #### 9.4.6 Implementation Considerations
 
-**⚠️ Important Notes**:
+** Important Notes**:
 
 - **Recursive Advisors**: Available in Spring AI 1.1.1, non-streaming only
 - **GA Release**: Spring AI 1.1.0 GA was released on November 12, 2025, making Recursive Advisors production-ready (now in 1.1.1)
@@ -7920,7 +7678,7 @@ ChatClient chatClient = ChatClient.builder(anthropicModel)
 
 ### 9.5 Memory Copilot Pattern for Self-Tuning Agent (Post-MVP)
 
-> **⚠️ Post-MVP Enhancement**: This section describes functionality that is **not included in the MVP scope**. It will
+> ** Post-MVP Enhancement**: This section describes functionality that is **not included in the MVP scope**. It will
 > be implemented post-MVP as a medium-priority enhancement.
 
 ExpertMatch will implement the **Memory Copilot** pattern - an autonomous sub-agent responsible for memory management
@@ -7951,21 +7709,17 @@ pilot" - a sub-agent responsible entirely for memory. This sub-agent:
 The sub-agent has only two tools:
 
 **1. recall (search)** - Runs before answer generation, at prompt-building stage:
-
 - Matches current user request against long-term storage
 - Retrieves relevant snippets (few-shot examples, facts, patterns, successful solutions)
 - Feeds retrieved context into prompt together with:
-
-      - System instructions
+- System instructions
     - Dialogue history
     - Current user query
 
 **2. remember (save)** - Runs after generation as optional step:
-
 - Evaluates usefulness of generated answer using mini LLM-as-a-Judge evaluation
 - Checks multiple criteria:
-
-      - Is there already such a memory?
+- Is there already such a memory?
     - Will this be useful in the future?
     - Is it original?
     - Does it duplicate something already stored?
@@ -7978,19 +7732,16 @@ The sub-agent has only two tools:
 
 1. **User Request Arrives**: User submits query
 2. **Memory Recall**:
-
-     - Match against long-term memory
+- Match against long-term memory
     - Retrieve relevant fragments
     - Turn retrieved fragments into few-shots/facts
     - Assemble enriched prompt
 3. **Answer Generation**: Generate answer using enriched prompt
 4. **Memory Evaluation**:
-
-     - Quickly check usefulness of result (LLM-as-a-Judge)
+- Quickly check usefulness of result (LLM-as-a-Judge)
     - Evaluate: useful? original? non-duplicate?
 5. **Memory Storage** (if passes evaluation):
-
-     - Distill answer into short summary
+- Distill answer into short summary
     - Save to long-term memory
 
 **On Subsequent Turns**: This "experience" automatically resurfaces during prompt construction, making the agent
@@ -8229,13 +7980,11 @@ spring:
 
 - **P2 (Medium)**: Post-MVP Enhancement
 - **Dependencies**:
-
-      - LLM-as-a-Judge pattern (for memory evaluation)
+- LLM-as-a-Judge pattern (for memory evaluation)
     - Vector storage for memory retrieval
     - Long-term storage infrastructure
 - **Prerequisites**:
-
-      - Memory storage design and implementation
+- Memory storage design and implementation
     - Memory evaluation criteria and prompts
     - Integration with existing chat and retrieval systems
 
@@ -8627,28 +8376,24 @@ podman ps
 **Important Notes for Windows Alternatives:**
 
 1. **WSL2 with Ubuntu (Recommended Alternative)**:
-
-     - Full Linux environment, best compatibility
+- Full Linux environment, best compatibility
     - All Docker commands work as in Linux
     - Can use Windows file system from WSL2 (`/mnt/c/`)
     - Can use WSL2 from Windows PowerShell
 
 2. **Podman**:
-
-     - Docker-compatible, rootless by default
+- Docker-compatible, rootless by default
     - Requires `podman machine` on Windows
     - Replace `docker` with `podman` in all commands
     - Some Docker Desktop features may not be available
 
 3. **File Path Considerations**:
-
-     - WSL2: Use Linux paths (`/home/user/project`)
+- WSL2: Use Linux paths (`/home/user/project`)
     - Windows: Use Windows paths (`C:\Users\user\project`)
     - Docker volumes: Use WSL2 paths when running from WSL2
 
 4. **Performance**:
-
-     - WSL2: Near-native Linux performance
+- WSL2: Near-native Linux performance
     - Podman: Good performance, may be slightly slower than Docker Desktop
     - Both are suitable for development
 
@@ -8699,8 +8444,7 @@ podman ps
     - **Why**: Superior semantic understanding, best for multilingual (including Russian)
     - **Performance**: Outperforms OpenAI text-embedding-3-small in multilingual tasks
 - **Alternatives**:
-
-      - `BAAI/bge-m3` - Strong multilingual support (already in PRD)
+- `BAAI/bge-m3` - Strong multilingual support (already in PRD)
     - `intfloat/multilingual-e5-large` - Good balance
     - `ai-forever/FRIDA` - Russian-specific
 
@@ -8718,8 +8462,7 @@ podman ps
     - **Key Feature**: Redesigned tokenizer for Cyrillic, better context compression
     - **Performance**: 60% faster generation compared to original Qwen
 - **Alternatives**:
-
-      - `T-lite-it-1.0` or `T-pro-it-2.0` (T-Bank models) - Optimized for business tasks, high Arena-Hard-Ru leaderboard
+- `T-lite-it-1.0` or `T-pro-it-2.0` (T-Bank models) - Optimized for business tasks, high Arena-Hard-Ru leaderboard
       rankings
     - `Qwen2.5:72b` - Original Qwen (slower but high quality)
 
@@ -9025,11 +8768,9 @@ services:
   app:
     build: .
     ports:
-
-      - "8080:8080"
+- "8080:8080"
     environment:
-
-      - SPRING_PROFILES_ACTIVE=local
+- SPRING_PROFILES_ACTIVE=local
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_NAME=expertmatch_db
@@ -9043,33 +8784,26 @@ services:
       - EMBEDDING_MODEL=qwen3-embedding-8b
       - RERANKER_MODEL=qwen3-reranker-8b
     depends_on:
-
-      - postgres
+- postgres
       - ollama
     networks:
-
-      - expertmatch-network
+- expertmatch-network
     volumes:
-
-      - ./logs:/app/logs
+- ./logs:/app/logs
 
   postgres:
     image: pgvector/pgvector:pg17
     environment:
-
-      - POSTGRES_DB=expertmatch_db
+- POSTGRES_DB=expertmatch_db
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
-
-      - postgres_data:/var/lib/postgresql/data
+- postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-
-      - "5432:5432"
+- "5432:5432"
     networks:
-
-      - expertmatch-network
+- expertmatch-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -9079,14 +8813,11 @@ services:
   ollama:
     image: ollama/ollama:latest
     ports:
-
-      - "11434:11434"
+- "11434:11434"
     volumes:
-
-      - ollama_data:/root/.ollama
+- ollama_data:/root/.ollama
     networks:
-
-      - expertmatch-network
+- expertmatch-network
     # Note: Models must be pulled manually after container starts
     # Run: docker exec -it expertmatch-ollama-1 ollama pull qwen3-embedding:8b
     healthcheck:
@@ -9101,56 +8832,44 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     networks:
-
-      - expertmatch-network
+- expertmatch-network
 
   kafka:
     image: confluentinc/cp-kafka:latest
     depends_on:
-
-      - zookeeper
+- zookeeper
     ports:
-
-      - "9092:9092"
+- "9092:9092"
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
-
-      - expertmatch-network
+- expertmatch-network
 
   prometheus:
     image: prom/prometheus:latest
     ports:
-
-      - "9090:9090"
+- "9090:9090"
     volumes:
-
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+- ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     networks:
-
-      - expertmatch-network
+- expertmatch-network
     command:
-
-      - '--config.file=/etc/prometheus/prometheus.yml'
+- '--config.file=/etc/prometheus/prometheus.yml'
 
   grafana:
     image: grafana/grafana:latest
     ports:
-
-      - "3000:3000"
+- "3000:3000"
     volumes:
-
-      - grafana_data:/var/lib/grafana
+- grafana_data:/var/lib/grafana
     networks:
-
-      - expertmatch-network
+- expertmatch-network
     environment:
-
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+- GF_SECURITY_ADMIN_PASSWORD=admin
 
 networks:
   expertmatch-network:
@@ -9386,8 +9105,7 @@ src/test/
 - **Framework**: JUnit 5, Mockito
 - **Coverage Target**: 80%+
 - **Focus Areas**:
-
-      - Repository layer
+- Repository layer
     - Service layer
     - Retrieval algorithms
     - LLM orchestration
@@ -9504,14 +9222,12 @@ infrastructure components rather than mocks.
 
 - **Purpose**: Run integration tests against real services in Docker containers
 - **Benefits**:
-
-      - Tests run against actual database, message queues, etc.
+- Tests run against actual database, message queues, etc.
     - No need for external test infrastructure
     - Consistent test environment across developers
     - Tests are portable and reproducible
 - **Containers Used**:
-
-      - PostgreSQL 17 with PgVector and Apache AGE extensions
+- PostgreSQL 17 with PgVector and Apache AGE extensions
     - Kafka with Schema Registry
     - Zookeeper (for Kafka)
 
@@ -9896,16 +9612,14 @@ services:
       POSTGRES_USER: test
       POSTGRES_PASSWORD: test
     ports:
-
-      - "5432:5432"
+- "5432:5432"
   
   kafka:
     image: confluentinc/cp-kafka:latest
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     ports:
-
-      - "9092:9092"
+- "9092:9092"
 ```
 
 **Using Docker Compose in Tests:**
@@ -10016,8 +9730,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-
-      - uses: actions/checkout@v3
+- uses: actions/checkout@v3
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
@@ -10056,16 +9769,14 @@ pipeline {
 - **Cucumber Contract Tests**: Feature scenarios that validate API contracts
 - **Schema Validation**: Validate request/response against OpenAPI schemas
 - **Tools**:
-
-      - SpringDoc OpenAPI for contract validation
+- SpringDoc OpenAPI for contract validation
     - Cucumber for contract scenarios
 
 ### 12.5 Performance Testing
 
 - **Tools**: JMeter, Gatling
 - **Scenarios**:
-
-      - Load testing
+- Load testing
     - Stress testing
     - Endurance testing
 - **Metrics**: Response time, throughput, error rate
@@ -10083,14 +9794,12 @@ pipeline {
 - **Status**: Post-MVP Enhancement (not included in MVP scope) - **NOT IMPLEMENTED in MVP**
 - **LLM-as-a-Judge Evaluation**: Automated quality evaluation of generated recommendations
 - **Metrics**:
-
-      - Average quality rating (1-4 scale)
+- Average quality rating (1-4 scale)
     - Quality distribution (percentage at each rating level)
     - Self-refinement success rate (improvement after feedback)
     - Retry count distribution
 - **Test Scenarios**:
-
-      - Recommendations with missing skills
+- Recommendations with missing skills
     - Recommendations with incorrect seniority
     - Recommendations with hallucinations
     - Recommendations with incomplete information
@@ -10134,8 +9843,7 @@ pipeline {
 - **Database Metrics**: Query time, connection pool usage
 - **Kafka Metrics**: Consumer lag, message processing rate
 - **Quality Evaluation Metrics (Post-MVP)**:
-
-      - Average quality rating per recommendation
+- Average quality rating per recommendation
     - Quality rating distribution
     - Self-refinement retry counts
     - Quality improvement rate (rating improvement after feedback)
@@ -10167,19 +9875,16 @@ pipeline {
 
 - **Database-Backed Roles**: Store roles and permissions in database
 - **Dynamic Role Management**:
-
-      - Role assignment/revocation APIs
+- Role assignment/revocation APIs
     - Role creation and modification
     - Role-to-user mapping management
 - **Role Hierarchy**: Support for role inheritance and hierarchies
 - **Permission-Based Access Control**: Fine-grained permissions beyond simple roles
 - **Resource-Level Security**:
-
-      - Access control based on resource ownership
+- Access control based on resource ownership
     - Data-level permissions (e.g., can only access own data)
 - **Audit Logging**:
-
-      - Log all access control decisions
+- Log all access control decisions
     - Track role changes and assignments
     - Security event monitoring
 - **Role Templates**: Predefined role templates for common use cases
@@ -10294,8 +9999,7 @@ package with clear boundaries.
 **LLM Models:**
 
 - **RuadaptQwen2.5-14B-Instruct**:
-
-      - https://www.toolify.ai/ai-model/refalmachine-ruadaptqwen2-5-14b-instruct-1m-gguf
+- https://www.toolify.ai/ai-model/refalmachine-ruadaptqwen2-5-14b-instruct-1m-gguf
     - https://huggingface.co/RefalMachine/RuadaptQwen2.5-14B-instruct-GGUF/blob/main/Q8_0.gguf
 - **T-lite-it-1.0**: https://huggingface.co/t-tech/T-lite-it-1.0-Q8_0-GGUF
 - **Performance Analysis**: https://abdullin.com/ilya/how-to-build-best-rag/
@@ -10327,8 +10031,7 @@ package with clear boundaries.
   patterns
 - **Language Models are Few-Shot Learners** (arXiv:2005.14165): Few-shot learning and examples
 - **Microsoft 365 Copilot Memory**:
-
-      - [Introducing Copilot Memory](https://techcommunity.microsoft.com/blog/microsoft365copilotblog/introducing-copilot-memory-a-more-productive-and-personalized-ai-for-the-way-you/4432059)
+- [Introducing Copilot Memory](https://techcommunity.microsoft.com/blog/microsoft365copilotblog/introducing-copilot-memory-a-more-productive-and-personalized-ai-for-the-way-you/4432059)
     - [Microsoft 365 Copilot Architecture](https://learn.microsoft.com/en-us/copilot/microsoft-365/microsoft-365-copilot-architecture)
     - [Microsoft 365 Copilot Memory Enterprise Guide](https://collabsummit.eu/blog/microsoft-365-copilot-memory-enterprise-guide-european-organizations)
 
@@ -10356,6 +10059,6 @@ package with clear boundaries.
 ---
 
 **Document Status**: Active  
-**Last Updated**: 2025-12-21  
-**Next Review**: 2025-04-27
+**Last Updated**: 2026-01-07  
+**Next Review**: 2026-04-07
 

@@ -7,11 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.core.env.Environment;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -32,7 +33,7 @@ public class ComprehensiveHealthIndicator implements HealthIndicator {
     // Cache expensive LLM checks for 5 minutes to avoid costs
     private static final Duration LLM_CHECK_CACHE_DURATION = Duration.ofMinutes(5);
 
-    private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate namedJdbcTemplate;
     private final ChatModel chatModel;
     private final EmbeddingModel embeddingModel;
     private final Environment environment;
@@ -43,11 +44,11 @@ public class ComprehensiveHealthIndicator implements HealthIndicator {
 
     @Autowired(required = false)
     public ComprehensiveHealthIndicator(
-            JdbcTemplate jdbcTemplate,
+            NamedParameterJdbcTemplate namedJdbcTemplate,
             ChatModel chatModel,
             EmbeddingModel embeddingModel,
             Environment environment) {
-        this.jdbcTemplate = jdbcTemplate;
+        this.namedJdbcTemplate = namedJdbcTemplate;
         this.chatModel = chatModel;
         this.embeddingModel = embeddingModel;
         this.environment = environment;
@@ -141,11 +142,12 @@ public class ComprehensiveHealthIndicator implements HealthIndicator {
     private Health checkDatabase() {
         try {
             // Simple query to verify database connectivity
-            Integer result = jdbcTemplate.queryForObject("SELECT 1", Integer.class);
+            Integer result = namedJdbcTemplate.queryForObject("SELECT 1", Collections.emptyMap(), Integer.class);
             if (result != null && result == 1) {
                 // Check if expertmatch schema exists
-                Integer schemaCount = jdbcTemplate.queryForObject(
+                Integer schemaCount = namedJdbcTemplate.queryForObject(
                         "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name = 'expertmatch'",
+                        Collections.emptyMap(),
                         Integer.class);
 
                 Map<String, Object> details = new HashMap<>();
@@ -173,16 +175,18 @@ public class ComprehensiveHealthIndicator implements HealthIndicator {
     private Health checkVectorStore() {
         try {
             // Check if vector extension is available
-            Integer extensionCount = jdbcTemplate.queryForObject(
+            Integer extensionCount = namedJdbcTemplate.queryForObject(
                     "SELECT COUNT(*) FROM pg_extension WHERE extname = 'vector'",
+                    Collections.emptyMap(),
                     Integer.class);
 
             // Check if work_experience table with embedding column exists
-            Integer tableCount = jdbcTemplate.queryForObject(
+            Integer tableCount = namedJdbcTemplate.queryForObject(
                     "SELECT COUNT(*) FROM information_schema.columns " +
                             "WHERE table_schema = 'expertmatch' " +
                             "AND table_name = 'work_experience' " +
                             "AND column_name = 'embedding'",
+                    Collections.emptyMap(),
                     Integer.class);
 
             Map<String, Object> details = new HashMap<>();

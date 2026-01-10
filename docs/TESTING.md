@@ -81,7 +81,6 @@ Tests use the `test` profile with:
 ### Mock AI Provider Configuration
 
 **CRITICAL**: All integration tests use **mock AI providers** instead of real LLM services. This ensures:
-
 - Tests run fast without network dependencies
 - No API costs or rate limits
 - Tests are deterministic and reproducible
@@ -90,29 +89,24 @@ Tests use the `test` profile with:
 #### How It Works
 
 1. **TestAIConfig** (`src/test/java/com/berdachuk/expertmatch/config/TestAIConfig.java`):
-
-     - Provides `@Primary` mock beans for `ChatModel`, `EmbeddingModel`, and `rerankingChatModel`
+- Provides `@Primary` mock beans for `ChatModel`, `EmbeddingModel`, and `rerankingChatModel`
     - Mocks return valid JSON responses without making real API calls
     - Only active in `test` profile
 
 2. **SpringAIConfig Exclusion**:
-
-     - `SpringAIConfig` is excluded from test profile via `@Profile("!test")`
+- `SpringAIConfig` is excluded from test profile via `@Profile("!test")`
     - Prevents real LLM models from being created during tests
 
 3. **Auto-Configuration Exclusions**:
-
-    - Spring AI auto-configuration classes are excluded in `application-test.yml`:
-
-          - `OllamaChatAutoConfiguration`
+- Spring AI auto-configuration classes are excluded in `application-test.yml`:
+- `OllamaChatAutoConfiguration`
         - `OllamaEmbeddingAutoConfiguration`
         - `OllamaApiAutoConfiguration`
         - `OpenAiChatAutoConfiguration`
         - `OpenAiEmbeddingAutoConfiguration`
 
 4. **BaseIntegrationTest**:
-
-     - All integration tests extend `BaseIntegrationTest`
+- All integration tests extend `BaseIntegrationTest`
     - Ensures test profile is active and mocks are used
 
 #### Verifying Mock Usage
@@ -146,7 +140,7 @@ To verify tests are using mocks:
 
 ```bash
 # Run tests and check for mock usage
-mvn clean test 2>&1 | grep -E "(MOCK|REAL|⚠️|✗)"
+mvn clean test 2>&1 | grep -E "(MOCK|REAL||✗)"
 
 # Check for SpringAIConfig instantiation (should NOT happen in tests)
 mvn clean test 2>&1 | grep "SpringAIConfig"
@@ -176,8 +170,7 @@ If you see real LLM usage during tests:
    ```
 
 3. **Check Auto-Configuration Exclusions**:
-
-     - Verify `application-test.yml` has exclusions configured
+- Verify `application-test.yml` has exclusions configured
     - Verify `BaseIntegrationTest` has exclusions in properties
 
 4. **Verify TestAIConfig is Loaded**:
@@ -187,8 +180,7 @@ If you see real LLM usage during tests:
    ```
 
 5. **Check for SpringAIConfig Bean**:
-
-     - If `SpringAIConfig` is instantiated in test profile, it will throw an exception
+- If `SpringAIConfig` is instantiated in test profile, it will throw an exception
     - Check logs for "SpringAIConfig should NOT be active in test profile"
 
 #### Mock Behavior
@@ -337,20 +329,17 @@ class GraphBuilderServiceIT extends BaseIntegrationTest {
 1. **Unit Tests**: Test individual components in isolation
 2. **Integration Tests**: Test component interactions
 3. **Test Data**:
-
-    - Use constants for test data values instead of hardcoded strings
+- Use constants for test data values instead of hardcoded strings
    - Create helper methods for common test data creation patterns
    - Use unique identifiers to avoid conflicts between tests
    - Extract cleanup logic into separate methods
 4. **Cleanup**:
-
-    - Use `@Transactional` or manual cleanup in `@BeforeEach`/`@AfterEach`
+- Use `@Transactional` or manual cleanup in `@BeforeEach`/`@AfterEach`
    - Clear database tables and graph state before each test
    - Extract cleanup logic into helper methods (e.g., `clearDatabaseTables()`, `clearGraph()`)
 5. **Assertions**: Use descriptive assertion messages
 6. **Code Organization**:
-
-    - Keep `setUp()` methods simple and focused
+- Keep `setUp()` methods simple and focused
    - Extract complex logic into helper methods
    - Use constants for magic strings and repeated values
    - Group related test data constants together
@@ -467,7 +456,6 @@ The `WebControllerIT` class tests the web UI endpoints that make HTTP calls to t
 ### Important: Avoiding Duplicate Headers
 
 **CRITICAL**: When making API calls from `WebController`, the `X-User-Id` header must be set **only once**:
-
 - The generated API client automatically sets the `X-User-Id` header from the `userId` parameter
 - **Do NOT** call `setApiHeaders(userId)` before API methods that accept `userId` as a parameter
 - Calling `setApiHeaders()` creates duplicate headers (e.g., `test-user-web-123,test-user-web-123`), which causes chat
@@ -476,7 +464,7 @@ The `WebControllerIT` class tests the web UI endpoints that make HTTP calls to t
 **Correct Pattern**:
 
 ```java
-// ✅ CORRECT: Pass userId as parameter, generated client sets header
+//  CORRECT: Pass userId as parameter, generated client sets header
 QueryResponse response = queryApi.processQuery(
                 queryRequest,
                 userId,  // Generated client sets X-User-Id header from this parameter
@@ -488,7 +476,7 @@ QueryResponse response = queryApi.processQuery(
 **Incorrect Pattern**:
 
 ```java
-// ❌ WRONG: This creates duplicate headers
+//  WRONG: This creates duplicate headers
 setApiHeaders(userId);  // Sets default header
 
 QueryResponse response = queryApi.processQuery(
@@ -525,13 +513,11 @@ If you see "Access denied to chat" errors in tests:
    ```
 
 2. **Verify Header is Set Once**:
-
-    - Check that `setApiHeaders()` is NOT called before API methods that accept `userId` parameter
+- Check that `setApiHeaders()` is NOT called before API methods that accept `userId` parameter
    - The generated client automatically sets the header from the parameter
 
 3. **Check User ID Consistency**:
-
-    - Ensure the test creates the chat with the same user ID used in the request
+- Ensure the test creates the chat with the same user ID used in the request
    - Verify the `X-User-Id` header matches the chat owner's user ID
 
 ---
@@ -550,8 +536,7 @@ technologies, tools, project types, etc.) using LLM.
    to ensure thread safety
 3. **LLM Calls**: Service uses prompt templates to call LLM and request additional values for each constant type
 4. **Caching**: Results are cached in two layers:
-
-     - `ConstantExpansionService` caches results by input hash to avoid repeated LLM calls
+- `ConstantExpansionService` caches results by input hash to avoid repeated LLM calls
     - `TestDataGenerator` caches expanded constants in instance fields after first expansion
 5. **Fallback**: If LLM is unavailable or fails, the service falls back to base constants
 6. **Usage**: `TestDataGenerator` uses expanded constants when available, otherwise uses base constants

@@ -21,6 +21,9 @@ public class KeywordSearchServiceImpl implements KeywordSearchService {
     @InjectSql("/sql/retrieval/keywordSearch.sql")
     private String keywordSearchSql;
 
+    @InjectSql("/sql/retrieval/searchByTechnologies.sql")
+    private String searchByTechnologiesSql;
+
     public KeywordSearchServiceImpl(NamedParameterJdbcTemplate namedJdbcTemplate) {
         this.namedJdbcTemplate = namedJdbcTemplate;
     }
@@ -86,19 +89,12 @@ public class KeywordSearchServiceImpl implements KeywordSearchService {
             throw new IllegalArgumentException("Max results must be at least 1, got: " + maxResults);
         }
 
-        String sql = """
-                SELECT DISTINCT we.employee_id
-                FROM expertmatch.work_experience we
-                WHERE we.technologies && ARRAY[:technologies]::text[]
-                LIMIT :maxResults
-                """;
-
         Map<String, Object> params = new HashMap<>();
         params.put("technologies", technologies.toArray(new String[0]));
         params.put("maxResults", maxResults);
 
         try {
-            return namedJdbcTemplate.query(sql, params, (rs, rowNum) -> rs.getString("employee_id"));
+            return namedJdbcTemplate.query(searchByTechnologiesSql, params, (rs, rowNum) -> rs.getString("employee_id"));
         } catch (org.springframework.jdbc.UncategorizedSQLException e) {
             // Handle transaction aborted errors (25P02) and other SQL errors gracefully
             java.sql.SQLException sqlException = e.getSQLException();

@@ -2,20 +2,29 @@ package com.berdachuk.expertmatch.ingestion.service;
 
 import com.berdachuk.expertmatch.core.util.IdGenerator;
 import com.berdachuk.expertmatch.embedding.service.EmbeddingService;
+import com.berdachuk.expertmatch.employee.domain.Employee;
+import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
 import com.berdachuk.expertmatch.ingestion.model.EmployeeProfile;
 import com.berdachuk.expertmatch.ingestion.model.ProjectData;
+import com.berdachuk.expertmatch.project.domain.Project;
+import com.berdachuk.expertmatch.project.repository.ProjectRepository;
+import com.berdachuk.expertmatch.technology.domain.Technology;
+import com.berdachuk.expertmatch.technology.repository.TechnologyRepository;
+import com.berdachuk.expertmatch.workexperience.domain.WorkExperience;
+import com.berdachuk.expertmatch.workexperience.repository.WorkExperienceRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import net.datafaker.Faker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Array;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 
 /**
@@ -115,8 +124,11 @@ public class TestDataGenerator {
             "Healthcare Group", "Health System", "Medical Group"
     };
     private static final String HEALTHCARE_INDUSTRY = "Healthcare and Medical Services";
-    private final NamedParameterJdbcTemplate namedJdbcTemplate;
     private final EmbeddingService embeddingService;
+    private final EmployeeRepository employeeRepository;
+    private final ProjectRepository projectRepository;
+    private final TechnologyRepository technologyRepository;
+    private final WorkExperienceRepository workExperienceRepository;
     private final Random random = new Random();
     /**
      * Datafaker instance for generating realistic synthetic test data.
@@ -146,11 +158,17 @@ public class TestDataGenerator {
     private volatile boolean expansionInitialized = false;
 
     public TestDataGenerator(
-            NamedParameterJdbcTemplate namedJdbcTemplate,
             EmbeddingService embeddingService,
+            EmployeeRepository employeeRepository,
+            ProjectRepository projectRepository,
+            TechnologyRepository technologyRepository,
+            WorkExperienceRepository workExperienceRepository,
             ObjectMapper objectMapper) {
-        this.namedJdbcTemplate = namedJdbcTemplate;
         this.embeddingService = embeddingService;
+        this.employeeRepository = employeeRepository;
+        this.projectRepository = projectRepository;
+        this.technologyRepository = technologyRepository;
+        this.workExperienceRepository = workExperienceRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -329,7 +347,6 @@ public class TestDataGenerator {
      * Generates employee records.
      */
     private void generateEmployees(int count) {
-        List<Map<String, Object>> employees = new ArrayList<>();
         Set<String> usedEmails = new HashSet<>();
 
         for (int i = 0; i < count; i++) {
@@ -339,32 +356,21 @@ public class TestDataGenerator {
             String seniority = SENIORITY_LEVELS[random.nextInt(SENIORITY_LEVELS.length)];
             String englishLevel = ENGLISH_LEVELS[random.nextInt(ENGLISH_LEVELS.length)];
 
-            Map<String, Object> employee = new HashMap<>();
-            employee.put("id", id);
-            employee.put("name", name);
-            employee.put("email", email);
-            employee.put("seniority", seniority);
-            employee.put("language_english", englishLevel);
+            Employee employee = new Employee(
+                    id,
+                    name,
+                    email,
+                    seniority,
+                    englishLevel,
+                    null // availabilityStatus
+            );
 
-            employees.add(employee);
-            usedEmails.add(email);
-        }
-
-        // Batch insert employees with conflict handling for both id and email
-        // Use ON CONFLICT on email constraint since that's the most common conflict
-        // (emails can be duplicated across test runs, while IDs are always unique)
-        String sql = """
-                    INSERT INTO expertmatch.employee (id, name, email, seniority, language_english)
-                VALUES (:id, :name, :email, :seniority, :language_english)
-                    ON CONFLICT (email) DO NOTHING
-                """;
-
-        for (Map<String, Object> employee : employees) {
             try {
-                namedJdbcTemplate.update(sql, employee);
+                employeeRepository.createOrUpdate(employee);
+                usedEmails.add(email);
             } catch (Exception e) {
                 // If id conflict or other error, skip this employee
-                log.warn("Failed to insert employee with email {}: {}", employee.get("email"), e.getMessage());
+                log.warn("Failed to insert employee with email {}: {}", email, e.getMessage());
             }
         }
     }
@@ -456,19 +462,19 @@ public class TestDataGenerator {
 
         try {
             // Delete work experience first (due to foreign key constraints)
-            int workExpDeleted = namedJdbcTemplate.update("DELETE FROM expertmatch.work_experience", Map.of());
+            int workExpDeleted = workExperienceRepository.deleteAll();
             log.info("Deleted {} work experience records", workExpDeleted);
 
             // Delete employees
-            int employeesDeleted = namedJdbcTemplate.update("DELETE FROM expertmatch.employee", Map.of());
+            int employeesDeleted = employeeRepository.deleteAll();
             log.info("Deleted {} employee records", employeesDeleted);
 
             // Delete projects
-            int projectsDeleted = namedJdbcTemplate.update("DELETE FROM expertmatch.project", Map.of());
+            int projectsDeleted = projectRepository.deleteAll();
             log.info("Deleted {} project records", projectsDeleted);
 
             // Delete technologies
-            int techDeleted = namedJdbcTemplate.update("DELETE FROM expertmatch.technology", Map.of());
+            int techDeleted = technologyRepository.deleteAll();
             log.info("Deleted {} technology records", techDeleted);
 
             log.info("Test data cleared successfully");
@@ -482,8 +488,6 @@ public class TestDataGenerator {
      * Generates technology catalog in the technology table.
      */
     private void generateTechnologies() {
-        List<Map<String, Object>> techRecords = new ArrayList<>();
-
         List<String> techList = getTechnologies();
         Map<String, String> categories = getTechnologyCategories();
         Map<String, String[]> synonymsMap = getTechnologySynonyms();
@@ -492,30 +496,20 @@ public class TestDataGenerator {
             String id = IdGenerator.generateId();
             String normalizedName = normalizeTechnologyName(technology);
             String category = categories.getOrDefault(technology, "Other");
-            String[] synonyms = synonymsMap.getOrDefault(technology, new String[0]);
+            List<String> synonyms = List.of(synonymsMap.getOrDefault(technology, new String[0]));
 
-            Map<String, Object> tech = new HashMap<>();
-            tech.put("id", id);
-            tech.put("name", technology);
-            tech.put("normalizedName", normalizedName);
-            tech.put("category", category);
-            tech.put("synonyms", synonyms);
+            Technology tech = new Technology(
+                    id,
+                    technology,
+                    normalizedName,
+                    category,
+                    synonyms
+            );
 
-            techRecords.add(tech);
-        }
-
-        // Batch insert technologies with conflict handling
-        String sql = """
-                INSERT INTO expertmatch.technology (id, name, normalized_name, category, synonyms)
-                VALUES (:id, :name, :normalizedName, :category, :synonyms)
-                ON CONFLICT (name) DO NOTHING
-                """;
-
-        for (Map<String, Object> tech : techRecords) {
             try {
-                namedJdbcTemplate.update(sql, tech);
+                technologyRepository.createOrUpdate(tech);
             } catch (Exception e) {
-                log.warn("Failed to insert technology {}: {}", tech.get("name"), e.getMessage());
+                log.warn("Failed to insert technology {}: {}", technology, e.getMessage());
             }
         }
     }
@@ -532,7 +526,6 @@ public class TestDataGenerator {
      */
     private Map<String, String> generateProjects(int count) {
         Map<String, String> projectMap = new HashMap<>(); // project_id -> project_name
-        List<Map<String, Object>> projects = new ArrayList<>();
 
         for (int i = 0; i < count; i++) {
             String id = IdGenerator.generateProjectId();
@@ -551,29 +544,23 @@ public class TestDataGenerator {
             }
             technologies.addAll(selectedTechs);
 
-            Map<String, Object> project = new HashMap<>();
-            project.put("id", id);
-            project.put("name", name);
-            project.put("summary", summary);
-            project.put("projectType", projectType);
-            project.put("technologies", technologies.toArray(new String[0]));
+            Project project = new Project(
+                    id,
+                    name,
+                    summary,
+                    null, // link
+                    projectType,
+                    technologies,
+                    null, // customerId
+                    null, // customerName
+                    null  // industry
+            );
 
-            projects.add(project);
-            projectMap.put(id, name);
-        }
-
-        // Batch insert projects
-        String sql = """
-                INSERT INTO expertmatch.project 
-                (id, name, summary, project_type, technologies)
-                VALUES (:id, :name, :summary, :projectType, :technologies)
-                """;
-
-        for (Map<String, Object> project : projects) {
             try {
-                namedJdbcTemplate.update(sql, project);
+                projectRepository.createOrUpdate(project);
+                projectMap.put(id, name);
             } catch (Exception e) {
-                log.warn("Failed to insert project with name {}: {}", project.get("name"), e.getMessage());
+                log.warn("Failed to insert project with name {}: {}", name, e.getMessage());
             }
         }
 
@@ -584,26 +571,7 @@ public class TestDataGenerator {
      * Generates embeddings for all work experience records.
      */
     public void generateEmbeddings() {
-        String sql = """
-                SELECT id, project_summary, responsibilities, technologies
-                FROM expertmatch.work_experience
-                WHERE embedding IS NULL
-                """;
-
-        List<Map<String, Object>> records = namedJdbcTemplate.query(sql, (rs, rowNum) -> {
-            Map<String, Object> record = new HashMap<>();
-            record.put("id", rs.getString("id"));
-            record.put("projectSummary", rs.getString("project_summary"));
-            record.put("responsibilities", rs.getString("responsibilities"));
-
-            Array techArray = rs.getArray("technologies");
-            List<String> technologies = techArray != null
-                    ? List.of((String[]) techArray.getArray())
-                    : List.of();
-            record.put("technologies", technologies);
-
-            return record;
-        });
+        List<WorkExperience> records = workExperienceRepository.findWithoutEmbeddings();
 
         int totalRecords = records.size();
         long startTime = System.currentTimeMillis();
@@ -614,16 +582,17 @@ public class TestDataGenerator {
         log.info("Starting embedding generation for {} work experience records", totalRecords);
 
         // Generate embeddings in batches
-        for (Map<String, Object> record : records) {
+        for (WorkExperience workExperience : records) {
             processedCount++;
             try {
-                String text = buildEmbeddingText(record);
+                String text = buildEmbeddingText(workExperience);
                 long embeddingStartTime = System.currentTimeMillis();
                 List<Double> embedding = embeddingService.generateEmbedding(text);
                 long embeddingEndTime = System.currentTimeMillis();
 
                 if (!embedding.isEmpty()) {
-                    updateEmbedding(record.get("id").toString(), embedding);
+                    int originalDimension = embedding.size();
+                    workExperienceRepository.updateEmbedding(workExperience.id(), embedding, originalDimension);
                     successCount++;
                 }
 
@@ -644,7 +613,7 @@ public class TestDataGenerator {
             } catch (Exception e) {
                 failedCount++;
                 log.warn("Failed to generate embedding for work experience record: {}",
-                        record.get("id"), e);
+                        workExperience.id(), e);
             }
         }
 
@@ -662,96 +631,24 @@ public class TestDataGenerator {
     /**
      * Builds text for embedding generation.
      */
-    private String buildEmbeddingText(Map<String, Object> record) {
+    private String buildEmbeddingText(WorkExperience workExperience) {
         StringBuilder text = new StringBuilder();
 
-        if (record.get("projectSummary") != null) {
-            text.append(record.get("projectSummary")).append(" ");
+        if (workExperience.projectSummary() != null) {
+            text.append(workExperience.projectSummary()).append(" ");
         }
 
-        if (record.get("responsibilities") != null) {
-            text.append(record.get("responsibilities")).append(" ");
+        if (workExperience.responsibilities() != null) {
+            text.append(workExperience.responsibilities()).append(" ");
         }
 
-        @SuppressWarnings("unchecked")
-        List<String> technologies = (List<String>) record.get("technologies");
-        if (technologies != null && !technologies.isEmpty()) {
-            text.append("Technologies: ").append(String.join(", ", technologies));
+        if (workExperience.technologies() != null && !workExperience.technologies().isEmpty()) {
+            text.append("Technologies: ").append(String.join(", ", workExperience.technologies()));
         }
 
         return text.toString().trim();
     }
 
-    /**
-     * Updates embedding in database.
-     * Supports both 1024 (Ollama) and 1536 (OpenAI/DIAL) dimensions.
-     * Pads 1024-dim embeddings to 1536 with zeros to match database schema.
-     */
-    private void updateEmbedding(String workExpId, List<Double> embedding) {
-        int originalDimension = embedding.size();
-
-        // Convert to float array
-        float[] embeddingArray = new float[embedding.size()];
-        for (int i = 0; i < embedding.size(); i++) {
-            embeddingArray[i] = embedding.get(i).floatValue();
-        }
-
-        // Normalize to 1536 dimensions (database schema supports max 1536)
-        // If 1024, pad with zeros; if 1536, use as-is; if other, pad or truncate
-        float[] normalizedEmbedding = normalizeEmbeddingDimension(embeddingArray, 1536);
-
-        String vectorString = formatVector(normalizedEmbedding);
-
-        String sql = """
-                UPDATE expertmatch.work_experience
-                    SET embedding = :embedding::vector,
-                        embedding_dimension = :dimension
-                WHERE id = :id
-                """;
-
-        Map<String, Object> params = new HashMap<>();
-        params.put("id", workExpId);
-        params.put("embedding", vectorString);
-        params.put("dimension", originalDimension);
-
-        namedJdbcTemplate.update(sql, params);
-    }
-
-    /**
-     * Normalizes embedding to target dimension.
-     * - If source dimension < target: pads with zeros
-     * - If source dimension > target: truncates
-     * - If source dimension == target: returns as-is
-     *
-     * @param embedding       Original embedding vector
-     * @param targetDimension Target dimension (1536 for database schema)
-     * @return Normalized embedding vector
-     */
-    private float[] normalizeEmbeddingDimension(float[] embedding, int targetDimension) {
-        if (embedding.length == targetDimension) {
-            return embedding;
-        }
-
-        float[] normalized = new float[targetDimension];
-        int copyLength = Math.min(embedding.length, targetDimension);
-        System.arraycopy(embedding, 0, normalized, 0, copyLength);
-        // Remaining elements are already zero (default float value)
-
-        return normalized;
-    }
-
-    /**
-     * Formats float array as PostgreSQL vector string.
-     */
-    private String formatVector(float[] vector) {
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < vector.length; i++) {
-            if (i > 0) sb.append(",");
-            sb.append(String.format("%.6f", vector[i]));
-        }
-        sb.append("]");
-        return sb.toString();
-    }
 
     // Helper methods for generating random data
 
@@ -1053,12 +950,7 @@ public class TestDataGenerator {
     private void generateWorkExperience(int employeeCount, int workExpPerEmployee,
                                         Map<String, String> projects) {
         // Get all employee IDs
-        String getEmployeesSql = "SELECT id FROM expertmatch.employee LIMIT :limit";
-        List<String> employeeIds = namedJdbcTemplate.query(
-                getEmployeesSql,
-                Map.of("limit", employeeCount),
-                (rs, rowNum) -> rs.getString("id")
-        );
+        List<String> employeeIds = employeeRepository.findAllIds(employeeCount);
 
         // Get all project IDs
         List<String> projectIds = new ArrayList<>(projects.keySet());
@@ -1156,31 +1048,31 @@ public class TestDataGenerator {
             metadataJson = "{}";
         }
 
-        String sql = """
-                INSERT INTO expertmatch.work_experience 
-                    (id, employee_id, project_id, project_name, project_summary, role, start_date, end_date,
-                     technologies, responsibilities, customer_name, industry, metadata)
-                    VALUES (:id, :employeeId, :projectId, :projectName, :projectSummary, :role, :startDate, :endDate,
-                            :technologies, :responsibilities, :customerName, :industry, :metadata::jsonb)
-                    ON CONFLICT (id) DO NOTHING
-                """;
+        // Convert LocalDate to Instant for WorkExperience domain entity
+        Instant startInstant = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant endInstant = endDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("id", id);
-        params.put("employeeId", employeeId);
-        params.put("projectId", projectId);
-        params.put("projectName", projectName);
-        params.put("projectSummary", projectSummary);
-        params.put("role", role);
-        params.put("startDate", startDate);
-        params.put("endDate", endDate);
-        params.put("technologies", technologies.toArray(new String[0]));
-        params.put("responsibilities", responsibilities);
-        params.put("customerName", customerName);
-        params.put("industry", industry);
-        params.put("metadata", metadataJson);
+        WorkExperience workExperience = new WorkExperience(
+                id,
+                employeeId,
+                projectId,
+                null, // customerId
+                projectName,
+                customerName,
+                industry,
+                role,
+                startInstant,
+                endInstant,
+                projectSummary,
+                responsibilities,
+                technologies
+        );
 
-        namedJdbcTemplate.update(sql, params);
+        try {
+            workExperienceRepository.createOrUpdate(workExperience, metadataJson);
+        } catch (Exception e) {
+            log.warn("Failed to insert work experience for {}: {}", projectName, e.getMessage());
+        }
     }
 
     /**
@@ -1194,36 +1086,26 @@ public class TestDataGenerator {
             EmployeeProfile profile = loadSiarheiBerdachukProfile();
 
             // Apply defaults to handle optional fields
-            var employee = profile.employee().withDefaults();
-            String employeeId = employee.id();
-            String name = employee.name();
-            String email = employee.email();
-            String seniority = employee.seniority();
-            String englishLevel = employee.languageEnglish();
-            String availabilityStatus = employee.availabilityStatus();
+            var employeeProfile = profile.employee().withDefaults();
+            String employeeId = employeeProfile.id();
+            String name = employeeProfile.name();
+            String email = employeeProfile.email();
+            String seniority = employeeProfile.seniority();
+            String englishLevel = employeeProfile.languageEnglish();
+            String availabilityStatus = employeeProfile.availabilityStatus();
 
             // Insert or update employee
-            String employeeSql = """
-                    INSERT INTO expertmatch.employee (id, name, email, seniority, language_english, availability_status)
-                    VALUES (:id, :name, :email, :seniority, :languageEnglish, :availabilityStatus)
-                    ON CONFLICT (id) DO UPDATE SET
-                        name = EXCLUDED.name,
-                        email = EXCLUDED.email,
-                        seniority = EXCLUDED.seniority,
-                        language_english = EXCLUDED.language_english,
-                        availability_status = EXCLUDED.availability_status
-                    """;
-
-            Map<String, Object> employeeParams = new HashMap<>();
-            employeeParams.put("id", employeeId);
-            employeeParams.put("name", name);
-            employeeParams.put("email", email);
-            employeeParams.put("seniority", seniority);
-            employeeParams.put("languageEnglish", englishLevel);
-            employeeParams.put("availabilityStatus", availabilityStatus);
+            Employee employee = new Employee(
+                    employeeId,
+                    name,
+                    email,
+                    seniority,
+                    englishLevel,
+                    availabilityStatus
+            );
 
             try {
-                namedJdbcTemplate.update(employeeSql, employeeParams);
+                employeeRepository.createOrUpdate(employee);
                 log.info("Created/updated employee: {} ({})", name, employeeId);
             } catch (Exception e) {
                 log.warn("Failed to insert employee {}: {}", name, e.getMessage());
@@ -1287,22 +1169,7 @@ public class TestDataGenerator {
                                             String role, LocalDate startDate, LocalDate endDate,
                                             String[] technologies, String responsibilities, String industry, String projectSummary) {
         // Check if work experience already exists for this employee, project, and start date
-        String checkSql = """
-                SELECT id FROM expertmatch.work_experience
-                WHERE employee_id = :employeeId 
-                  AND project_name = :projectName 
-                  AND start_date = :startDate
-                LIMIT 1
-                """;
-
-        Map<String, Object> checkParams = Map.of(
-                "employeeId", employeeId,
-                "projectName", projectName,
-                "startDate", startDate
-        );
-
-        List<String> existingIds = namedJdbcTemplate.query(checkSql, checkParams, (rs, rowNum) -> rs.getString("id"));
-        if (!existingIds.isEmpty()) {
+        if (workExperienceRepository.exists(employeeId, projectName, startDate)) {
             log.debug("Work experience already exists for {} at {} starting {}, skipping", employeeId, projectName, startDate);
             return; // Skip if already exists
         }
@@ -1318,19 +1185,19 @@ public class TestDataGenerator {
 
         // If project doesn't exist, create it
         if (!projects.containsKey(projectId)) {
-            String insertProjectSql = """
-                    INSERT INTO expertmatch.project (id, name, customer_id, customer_name, industry)
-                    VALUES (:id, :name, :customerId, :customerName, :industry)
-                    ON CONFLICT (id) DO NOTHING
-                    """;
-            Map<String, Object> projectParams = new HashMap<>();
-            projectParams.put("id", projectId);
-            projectParams.put("name", projectName);
-            projectParams.put("customerId", IdGenerator.generateCustomerId());
-            projectParams.put("customerName", customerName);
-            projectParams.put("industry", industry);
+            Project project = new Project(
+                    projectId,
+                    projectName,
+                    null, // summary
+                    null, // link
+                    null, // projectType
+                    null, // technologies
+                    IdGenerator.generateCustomerId(),
+                    customerName,
+                    industry
+            );
             try {
-                namedJdbcTemplate.update(insertProjectSql, projectParams);
+                projectRepository.createOrUpdate(project);
                 projects.put(projectId, projectName);
             } catch (Exception e) {
                 log.warn("Failed to create project {}: {}", projectName, e.getMessage());
@@ -1373,32 +1240,28 @@ public class TestDataGenerator {
             metadataJson = "{}";
         }
 
-        String sql = """
-                INSERT INTO expertmatch.work_experience 
-                    (id, employee_id, project_id, project_name, project_summary, role, start_date, end_date,
-                     technologies, responsibilities, customer_name, industry, metadata)
-                    VALUES (:id, :employeeId, :projectId, :projectName, :projectSummary, :role, :startDate, :endDate,
-                            :technologies, :responsibilities, :customerName, :industry, :metadata::jsonb)
-                ON CONFLICT (id) DO NOTHING
-                """;
+        // Convert LocalDate to Instant for WorkExperience domain entity
+        Instant startInstant = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant endInstant = endDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("id", id);
-        params.put("employeeId", employeeId);
-        params.put("projectId", projectId);
-        params.put("projectName", projectName);
-        params.put("projectSummary", projectSummary);
-        params.put("role", role);
-        params.put("startDate", startDate);
-        params.put("endDate", endDate);
-        params.put("technologies", technologies);
-        params.put("responsibilities", responsibilities);
-        params.put("customerName", customerName);
-        params.put("industry", industry);
-        params.put("metadata", metadataJson);
+        WorkExperience workExperience = new WorkExperience(
+                id,
+                employeeId,
+                projectId,
+                null, // customerId
+                projectName,
+                customerName,
+                industry,
+                role,
+                startInstant,
+                endInstant,
+                projectSummary,
+                responsibilities,
+                Arrays.asList(technologies)
+        );
 
         try {
-            namedJdbcTemplate.update(sql, params);
+            workExperienceRepository.createOrUpdate(workExperience, metadataJson);
         } catch (Exception e) {
             log.warn("Failed to insert work experience for {}: {}", projectName, e.getMessage());
         }
@@ -1464,18 +1327,20 @@ public class TestDataGenerator {
             employeeIds.add(id);
         }
 
-        // Use same SQL pattern as generateEmployees method
-        String sql = """
-                INSERT INTO expertmatch.employee (id, name, email, seniority, language_english)
-                VALUES (:id, :name, :email, :seniority, :language_english)
-                ON CONFLICT (email) DO NOTHING
-                """;
-
-        for (Map<String, Object> employee : employees) {
+        // Use repository to create employees
+        for (Map<String, Object> employeeMap : employees) {
+            Employee employeeEntity = new Employee(
+                    (String) employeeMap.get("id"),
+                    (String) employeeMap.get("name"),
+                    (String) employeeMap.get("email"),
+                    (String) employeeMap.get("seniority"),
+                    (String) employeeMap.get("language_english"),
+                    null // availabilityStatus
+            );
             try {
-                namedJdbcTemplate.update(sql, employee);
+                employeeRepository.createOrUpdate(employeeEntity);
             } catch (Exception e) {
-                log.warn("Failed to insert employee {}: {}", employee.get("name"), e.getMessage());
+                log.warn("Failed to insert employee {}: {}", employeeMap.get("name"), e.getMessage());
             }
         }
 
@@ -1515,18 +1380,23 @@ public class TestDataGenerator {
             projectMap.put(id, name);
         }
 
-        // Use same SQL pattern as generateProjects method
-        String sql = """
-                INSERT INTO expertmatch.project 
-                (id, name, summary, project_type, technologies)
-                VALUES (:id, :name, :summary, :projectType, :technologies)
-                """;
-
-        for (Map<String, Object> project : projects) {
+        // Use repository to create projects
+        for (Map<String, Object> projectMapItem : projects) {
+            Project projectEntity = new Project(
+                    (String) projectMapItem.get("id"),
+                    (String) projectMapItem.get("name"),
+                    (String) projectMapItem.get("summary"),
+                    null, // link
+                    (String) projectMapItem.get("projectType"),
+                    Arrays.asList((String[]) projectMapItem.get("technologies")),
+                    null, // customerId
+                    null, // customerName
+                    null  // industry
+            );
             try {
-                namedJdbcTemplate.update(sql, project);
+                projectRepository.createOrUpdate(projectEntity);
             } catch (Exception e) {
-                log.warn("Failed to insert project {}: {}", project.get("name"), e.getMessage());
+                log.warn("Failed to insert project {}: {}", projectMapItem.get("name"), e.getMessage());
             }
         }
 
@@ -1599,32 +1469,28 @@ public class TestDataGenerator {
             metadataJson = "{}";
         }
 
-        String sql = """
-                INSERT INTO expertmatch.work_experience 
-                    (id, employee_id, project_id, project_name, project_summary, role, start_date, end_date,
-                     technologies, responsibilities, customer_name, industry, metadata)
-                    VALUES (:id, :employeeId, :projectId, :projectName, :projectSummary, :role, :startDate, :endDate,
-                            :technologies, :responsibilities, :customerName, :industry, :metadata::jsonb)
-                    ON CONFLICT (id) DO NOTHING
-                """;
+        // Convert LocalDate to Instant for WorkExperience domain entity
+        Instant startInstant = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant endInstant = endDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("id", id);
-        params.put("employeeId", employeeId);
-        params.put("projectId", projectId);
-        params.put("projectName", projectName);
-        params.put("projectSummary", projectSummary);
-        params.put("role", role);
-        params.put("startDate", startDate);
-        params.put("endDate", endDate);
-        params.put("technologies", technologies.toArray(new String[0]));
-        params.put("responsibilities", responsibilities);
-        params.put("customerName", customerName);
-        params.put("industry", BANKING_INDUSTRY);
-        params.put("metadata", metadataJson);
+        WorkExperience workExperience = new WorkExperience(
+                id,
+                employeeId,
+                projectId,
+                null, // customerId
+                projectName,
+                customerName,
+                BANKING_INDUSTRY,
+                role,
+                startInstant,
+                endInstant,
+                projectSummary,
+                responsibilities,
+                technologies
+        );
 
         try {
-            namedJdbcTemplate.update(sql, params);
+            workExperienceRepository.createOrUpdate(workExperience, metadataJson);
         } catch (Exception e) {
             log.warn("Failed to insert banking work experience for {}: {}", projectName, e.getMessage());
         }
@@ -1735,18 +1601,20 @@ public class TestDataGenerator {
             employeeIds.add(id);
         }
 
-        // Use same SQL pattern as generateEmployees method
-        String sql = """
-                INSERT INTO expertmatch.employee (id, name, email, seniority, language_english)
-                VALUES (:id, :name, :email, :seniority, :language_english)
-                ON CONFLICT (email) DO NOTHING
-                """;
-
-        for (Map<String, Object> employee : employees) {
+        // Use repository to create employees
+        for (Map<String, Object> employeeMap : employees) {
+            Employee employeeEntity = new Employee(
+                    (String) employeeMap.get("id"),
+                    (String) employeeMap.get("name"),
+                    (String) employeeMap.get("email"),
+                    (String) employeeMap.get("seniority"),
+                    (String) employeeMap.get("language_english"),
+                    null // availabilityStatus
+            );
             try {
-                namedJdbcTemplate.update(sql, employee);
+                employeeRepository.createOrUpdate(employeeEntity);
             } catch (Exception e) {
-                log.warn("Failed to insert employee {}: {}", employee.get("name"), e.getMessage());
+                log.warn("Failed to insert employee {}: {}", employeeMap.get("name"), e.getMessage());
             }
         }
 
@@ -1786,18 +1654,23 @@ public class TestDataGenerator {
             projectMap.put(id, name);
         }
 
-        // Use same SQL pattern as generateProjects method
-        String sql = """
-                INSERT INTO expertmatch.project 
-                (id, name, summary, project_type, technologies)
-                VALUES (:id, :name, :summary, :projectType, :technologies)
-                """;
-
-        for (Map<String, Object> project : projects) {
+        // Use repository to create projects
+        for (Map<String, Object> projectMapItem : projects) {
+            Project projectEntity = new Project(
+                    (String) projectMapItem.get("id"),
+                    (String) projectMapItem.get("name"),
+                    (String) projectMapItem.get("summary"),
+                    null, // link
+                    (String) projectMapItem.get("projectType"),
+                    Arrays.asList((String[]) projectMapItem.get("technologies")),
+                    null, // customerId
+                    null, // customerName
+                    null  // industry
+            );
             try {
-                namedJdbcTemplate.update(sql, project);
+                projectRepository.createOrUpdate(projectEntity);
             } catch (Exception e) {
-                log.warn("Failed to insert project {}: {}", project.get("name"), e.getMessage());
+                log.warn("Failed to insert project {}: {}", projectMapItem.get("name"), e.getMessage());
             }
         }
 
@@ -1870,32 +1743,28 @@ public class TestDataGenerator {
             metadataJson = "{}";
         }
 
-        String sql = """
-                INSERT INTO expertmatch.work_experience 
-                    (id, employee_id, project_id, project_name, project_summary, role, start_date, end_date,
-                     technologies, responsibilities, customer_name, industry, metadata)
-                    VALUES (:id, :employeeId, :projectId, :projectName, :projectSummary, :role, :startDate, :endDate,
-                            :technologies, :responsibilities, :customerName, :industry, :metadata::jsonb)
-                    ON CONFLICT (id) DO NOTHING
-                """;
+        // Convert LocalDate to Instant for WorkExperience domain entity
+        Instant startInstant = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant endInstant = endDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("id", id);
-        params.put("employeeId", employeeId);
-        params.put("projectId", projectId);
-        params.put("projectName", projectName);
-        params.put("projectSummary", projectSummary);
-        params.put("role", role);
-        params.put("startDate", startDate);
-        params.put("endDate", endDate);
-        params.put("technologies", technologies.toArray(new String[0]));
-        params.put("responsibilities", responsibilities);
-        params.put("customerName", customerName);
-        params.put("industry", HEALTHCARE_INDUSTRY);
-        params.put("metadata", metadataJson);
+        WorkExperience workExperience = new WorkExperience(
+                id,
+                employeeId,
+                projectId,
+                null, // customerId
+                projectName,
+                customerName,
+                HEALTHCARE_INDUSTRY,
+                role,
+                startInstant,
+                endInstant,
+                projectSummary,
+                responsibilities,
+                technologies
+        );
 
         try {
-            namedJdbcTemplate.update(sql, params);
+            workExperienceRepository.createOrUpdate(workExperience, metadataJson);
         } catch (Exception e) {
             log.warn("Failed to insert healthcare work experience for {}: {}", projectName, e.getMessage());
         }

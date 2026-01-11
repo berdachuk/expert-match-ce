@@ -54,4 +54,28 @@ public interface EmployeeRepository {
      */
     List<String> findEmployeeIdsByNameSimilarity(String name, double similarityThreshold, int maxResults);
 
+    /**
+     * Creates or updates an employee.
+     * Uses ON CONFLICT to handle duplicate IDs/emails gracefully.
+     *
+     * @param employee Employee entity to create/update
+     * @return The employee ID
+     */
+    String createOrUpdate(Employee employee);
+
+    /**
+     * Finds all employee IDs, optionally limited by count.
+     *
+     * @param limit Maximum number of IDs to return (0 or negative for no limit)
+     * @return List of employee IDs
+     */
+    List<String> findAllIds(int limit);
+
+    /**
+     * Deletes all employee records.
+     * Warning: This is a destructive operation.
+     *
+     * @return Number of records deleted
+     */
+    int deleteAll();
 }

@@ -1,15 +1,22 @@
 package com.berdachuk.expertmatch.ingestion.service;
 
 import com.berdachuk.expertmatch.core.util.IdGenerator;
+import com.berdachuk.expertmatch.employee.domain.Employee;
+import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
 import com.berdachuk.expertmatch.ingestion.model.EmployeeProfile;
 import com.berdachuk.expertmatch.ingestion.model.ProcessingResult;
 import com.berdachuk.expertmatch.ingestion.model.ProjectData;
+import com.berdachuk.expertmatch.project.domain.Project;
+import com.berdachuk.expertmatch.project.repository.ProjectRepository;
+import com.berdachuk.expertmatch.workexperience.domain.WorkExperience;
+import com.berdachuk.expertmatch.workexperience.repository.WorkExperienceRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 
 /**
@@ -20,11 +27,19 @@ import java.util.*;
 @Component
 public class ProfileProcessor {
 
-    private final NamedParameterJdbcTemplate namedJdbcTemplate;
+    private final EmployeeRepository employeeRepository;
+    private final ProjectRepository projectRepository;
+    private final WorkExperienceRepository workExperienceRepository;
     private final ObjectMapper objectMapper;
 
-    public ProfileProcessor(NamedParameterJdbcTemplate namedJdbcTemplate, ObjectMapper objectMapper) {
-        this.namedJdbcTemplate = namedJdbcTemplate;
+    public ProfileProcessor(
+            EmployeeRepository employeeRepository,
+            ProjectRepository projectRepository,
+            WorkExperienceRepository workExperienceRepository,
+            ObjectMapper objectMapper) {
+        this.employeeRepository = employeeRepository;
+        this.projectRepository = projectRepository;
+        this.workExperienceRepository = workExperienceRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -56,26 +71,16 @@ public class ProfileProcessor {
 
         try {
             // Insert or update employee
-            String employeeSql = """
-                    INSERT INTO expertmatch.employee (id, name, email, seniority, language_english, availability_status)
-                    VALUES (:id, :name, :email, :seniority, :languageEnglish, :availabilityStatus)
-                    ON CONFLICT (id) DO UPDATE SET
-                        name = EXCLUDED.name,
-                        email = EXCLUDED.email,
-                        seniority = EXCLUDED.seniority,
-                        language_english = EXCLUDED.language_english,
-                        availability_status = EXCLUDED.availability_status
-                    """;
+            Employee employeeEntity = new Employee(
+                    employeeId,
+                    employeeName,
+                    employee.email(),
+                    employee.seniority(),
+                    employee.languageEnglish(),
+                    employee.availabilityStatus()
+            );
 
-            Map<String, Object> employeeParams = new HashMap<>();
-            employeeParams.put("id", employeeId);
-            employeeParams.put("name", employeeName);
-            employeeParams.put("email", employee.email());
-            employeeParams.put("seniority", employee.seniority());
-            employeeParams.put("languageEnglish", employee.languageEnglish());
-            employeeParams.put("availabilityStatus", employee.availabilityStatus());
-
-            namedJdbcTemplate.update(employeeSql, employeeParams);
+            employeeRepository.createOrUpdate(employeeEntity);
             log.debug("Created/updated employee: {} ({})", employeeName, employeeId);
 
             // Process projects
@@ -125,24 +130,8 @@ public class ProfileProcessor {
      */
     private void processProject(String employeeId, ProjectData project, Map<String, String> existingProjects) {
         // Check if work experience already exists
-        String checkSql = """
-                SELECT id FROM expertmatch.work_experience
-                WHERE employee_id = :employeeId 
-                  AND project_name = :projectName 
-                  AND start_date = :startDate
-                LIMIT 1
-                """;
-
         LocalDate startDate = LocalDate.parse(project.startDate());
-        Map<String, Object> checkParams = Map.of(
-                "employeeId", employeeId,
-                "projectName", project.projectName(),
-                "startDate", startDate
-        );
-
-        List<String> existingIds = namedJdbcTemplate.query(checkSql, checkParams,
-                (rs, rowNum) -> rs.getString("id"));
-        if (!existingIds.isEmpty()) {
+        if (workExperienceRepository.exists(employeeId, project.projectName(), startDate)) {
             log.debug("Work experience already exists for {} at {} starting {}, skipping",
                     employeeId, project.projectName(), startDate);
             return;
@@ -156,35 +145,28 @@ public class ProfileProcessor {
         // Build metadata
         String metadataJson = buildMetadataJson(project);
 
-        // Insert work experience
+        // Convert LocalDate to Instant for WorkExperience domain entity
         LocalDate endDate = LocalDate.parse(project.endDate());
-        String[] technologies = project.technologies().toArray(new String[0]);
+        Instant startInstant = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant endInstant = endDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
 
-        String sql = """
-                INSERT INTO expertmatch.work_experience 
-                    (id, employee_id, project_id, project_name, project_summary, role, start_date, end_date,
-                     technologies, responsibilities, customer_name, industry, metadata)
-                    VALUES (:id, :employeeId, :projectId, :projectName, :projectSummary, :role, :startDate, :endDate,
-                            :technologies, :responsibilities, :customerName, :industry, :metadata::jsonb)
-                ON CONFLICT (id) DO NOTHING
-                """;
+        WorkExperience workExperience = new WorkExperience(
+                workExpId,
+                employeeId,
+                projectId,
+                null, // customerId
+                project.projectName(),
+                project.customerName(),
+                project.industry(),
+                project.role(),
+                startInstant,
+                endInstant,
+                project.projectSummary(),
+                project.responsibilities(),
+                project.technologies()
+        );
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("id", workExpId);
-        params.put("employeeId", employeeId);
-        params.put("projectId", projectId);
-        params.put("projectName", project.projectName());
-        params.put("projectSummary", project.projectSummary());
-        params.put("role", project.role());
-        params.put("startDate", startDate);
-        params.put("endDate", endDate);
-        params.put("technologies", technologies);
-        params.put("responsibilities", project.responsibilities());
-        params.put("customerName", project.customerName());
-        params.put("industry", project.industry());
-        params.put("metadata", metadataJson);
-
-        namedJdbcTemplate.update(sql, params);
+        workExperienceRepository.createOrUpdate(workExperience, metadataJson);
         log.debug("Created work experience for employee {} at project {}", employeeId, project.projectName());
     }
 
@@ -192,7 +174,7 @@ public class ProfileProcessor {
      * Finds existing project or creates a new one.
      */
     private String findOrCreateProject(ProjectData project, Map<String, String> existingProjects) {
-        // Try to find existing project by name
+        // Try to find existing project by name in the map first
         String projectId = existingProjects.entrySet().stream()
                 .filter(e -> e.getValue().toLowerCase().contains(
                         project.projectName().toLowerCase().substring(0, Math.min(10, project.projectName().length()))))
@@ -204,23 +186,30 @@ public class ProfileProcessor {
             return projectId;
         }
 
+        // Try to find in database using repository
+        Optional<String> existingProjectId = projectRepository.findIdByName(project.projectName());
+        if (existingProjectId.isPresent()) {
+            projectId = existingProjectId.get();
+            existingProjects.put(projectId, project.projectName());
+            return projectId;
+        }
+
         // Create new project
         projectId = IdGenerator.generateProjectId();
-        String insertProjectSql = """
-                INSERT INTO expertmatch.project (id, name, customer_id, customer_name, industry)
-                VALUES (:id, :name, :customerId, :customerName, :industry)
-                ON CONFLICT (id) DO NOTHING
-                """;
-
-        Map<String, Object> projectParams = new HashMap<>();
-        projectParams.put("id", projectId);
-        projectParams.put("name", project.projectName());
-        projectParams.put("customerId", IdGenerator.generateCustomerId());
-        projectParams.put("customerName", project.customerName());
-        projectParams.put("industry", project.industry());
+        Project projectEntity = new Project(
+                projectId,
+                project.projectName(),
+                project.projectSummary(),
+                null, // link
+                null, // projectType
+                null, // technologies
+                IdGenerator.generateCustomerId(),
+                project.customerName(),
+                project.industry()
+        );
 
         try {
-            namedJdbcTemplate.update(insertProjectSql, projectParams);
+            projectRepository.createOrUpdate(projectEntity);
             existingProjects.put(projectId, project.projectName());
         } catch (Exception e) {
             log.warn("Failed to create project {}: {}", project.projectName(), e.getMessage());

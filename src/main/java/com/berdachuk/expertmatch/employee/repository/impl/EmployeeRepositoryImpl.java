@@ -50,6 +50,18 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
     @InjectSql("/sql/employee/findEmployeeIdsByNameSimilarityCandidates.sql")
     private String findEmployeeIdsByNameSimilarityCandidatesSql;
 
+    @InjectSql("/sql/employee/createOrUpdate.sql")
+    private String createOrUpdateSql;
+
+    @InjectSql("/sql/employee/findAllIds.sql")
+    private String findAllIdsSql;
+
+    @InjectSql("/sql/employee/findAllIdsUnlimited.sql")
+    private String findAllIdsUnlimitedSql;
+
+    @InjectSql("/sql/employee/deleteAll.sql")
+    private String deleteAllSql;
+
     public EmployeeRepositoryImpl(
             NamedParameterJdbcTemplate namedJdbcTemplate,
             EmployeeMapper employeeMapper,
@@ -277,6 +289,57 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
             log.error("Failed to parse LLM name matching response: {}", responseText, e);
             return List.of();
         }
+    }
+
+    /**
+     * Creates or updates an employee.
+     * Uses ON CONFLICT to handle duplicate IDs gracefully.
+     * If email conflict occurs (different ID, same email), it will throw an exception.
+     */
+    @Override
+    public String createOrUpdate(Employee employee) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", employee.id());
+        params.put("name", employee.name());
+        params.put("email", employee.email());
+        params.put("seniority", employee.seniority());
+        params.put("languageEnglish", employee.languageEnglish());
+        params.put("availabilityStatus", employee.availabilityStatus());
+
+        try {
+            namedJdbcTemplate.update(createOrUpdateSql, params);
+            return employee.id();
+        } catch (Exception e) {
+            log.warn("Failed to create/update employee {}: {}", employee.id(), e.getMessage());
+            throw new RuntimeException("Failed to create/update employee", e);
+        }
+    }
+
+    /**
+     * Finds all employee IDs, optionally limited by count.
+     */
+    @Override
+    public List<String> findAllIds(int limit) {
+        Map<String, Object> params;
+        String sql;
+
+        if (limit > 0) {
+            sql = findAllIdsSql;
+            params = Map.of("limit", limit);
+        } else {
+            sql = findAllIdsUnlimitedSql;
+            params = Map.of();
+        }
+
+        return namedJdbcTemplate.query(sql, params, (rs, rowNum) -> rs.getString("id"));
+    }
+
+    /**
+     * Deletes all employee records.
+     */
+    @Override
+    public int deleteAll() {
+        return namedJdbcTemplate.update(deleteAllSql, Map.of());
     }
 
 }

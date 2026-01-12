@@ -748,10 +748,10 @@ package "ExpertMatch Service\n(Spring Boot 3.5.9, Java 21)" {
   }
 }
 
-database "PostgreSQL 17\n(Unified Data Store)" {
-  database "Relational\nTables" as RelationalDB
-  database "PgVector\n(HNSW Index)" as PgVector
-  database "Apache AGE\n(Graph DB)" as ApacheAGE
+package "PostgreSQL 17\n(Unified Data Store)" {
+  component "Relational\nTables" as RelationalDB
+  component "PgVector\n(HNSW Index)" as PgVector
+  component "Apache AGE\n(Graph DB)" as ApacheAGE
   [Citus (Shard)\nColumnar Index] as Citus
 }
 
@@ -1012,10 +1012,10 @@ component "Deduplication" as Deduplication
 component "Validation" as Validation
 component "Batch Insert" as BatchInsert
 
-database "PostgreSQL\n(Unified Data Store)" {
-  database "Vector Store\n(PgVector)" as VectorStore
-  database "Graph DB\n(Apache AGE)" as GraphDB
-  database "Relational\nTables" as RelationalDB
+package "PostgreSQL\n(Unified Data Store)" {
+  component "Vector Store\n(PgVector)" as VectorStore
+  component "Graph DB\n(Apache AGE)" as GraphDB
+  component "Relational\nTables" as RelationalDB
 }
 
 KafkaSource --> SourceAdapter
@@ -1137,10 +1137,10 @@ component "LLM Orchestration" as LLMOrchestration
 component "Answer Generation" as AnswerGen
 component "Response Formatter" as ResponseFormatter
 
-database "PostgreSQL\n(Unified Data Store)" {
-  database "Vector Store\n(PgVector)" as VectorStore
-  database "Graph DB\n(Apache AGE)" as GraphDB
-  database "Relational\nTables" as RelationalDB
+package "PostgreSQL\n(Unified Data Store)" {
+  component "Vector Store\n(PgVector)" as VectorStore
+  component "Graph DB\n(Apache AGE)" as GraphDB
+  component "Relational\nTables" as RelationalDB
 }
 
 cloud "LLM" as LLM
@@ -1518,6 +1518,10 @@ The service follows **Test-Driven Development** with Cucumber for BDD:
         - Match nice-to-have skills (lower priority) for bonus scoring
         - Extract skills from project requirements text (e.g., "Java", "Spring Boot", "AWS")
         - Match against technologies used in past projects
+  - **Technology Normalization**: Uses `Technology` table to normalize skill names and handle synonyms
+  - Normalizes both query skills and expert technologies for accurate matching
+  - Supports synonym matching (e.g., "React" matches "ReactJS", "React.js", "react")
+  - Falls back to case-insensitive matching if Technology table is empty
     - **Role Matching**:
 - Match required roles (e.g., "Tech Lead", "Developer", "Architect") with:
 - Project roles from work experience

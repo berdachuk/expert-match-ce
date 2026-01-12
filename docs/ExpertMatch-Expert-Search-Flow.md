@@ -608,6 +608,9 @@ stop
 
 ### Skill Matching Details
 
+Skill matching uses **Technology normalization and synonyms** for improved accuracy. The system leverages the
+`technology` table to normalize skill names and match variations.
+
 ```uml
 @startuml
 !theme plain
@@ -625,13 +628,31 @@ note right: skills + technologies
 
 :Extract expert technologies from work experience;
 
-:Match skills using case-insensitive contains matching;
+partition "Technology Normalization" {
+    :Load Technology cache;
+    note right: Lazy-loaded cache with:\n- Technology names\n- Normalized names\n- Synonyms mapping
+    :Normalize skill names using Technology table;
+    note right
+      Normalization process:
+      
+      1. Check exact name match
+      2. Check normalized name match
+      3. Check synonym match
+      4. Return normalized name or lowercase fallback
+    end note
+    
+    :Normalize expert technologies;
+    note right: Same normalization process
+}
+
+:Match normalized skills against normalized technologies;
 note right
   Matching logic:
-
-- skill.toLowerCase().contains(tech.toLowerCase())
-  OR
-  - tech.toLowerCase().contains(skill.toLowerCase())
+  
+  1. Exact match on normalized names
+  2. Partial match (contains check)
+  3. Synonym matching
+  4. Case-insensitive comparison
 end note
 
 :Count must-have matches;
@@ -646,6 +667,14 @@ stop
 
 @enduml
 ```
+
+**Key Features:**
+
+- **Technology Normalization**: Skills and technologies are normalized using the `technology` table's `normalized_name`
+  field
+- **Synonym Support**: Handles technology variations (e.g., "React" matches "ReactJS", "React.js", "react")
+- **Performance**: Technology cache loaded once per service instance for efficient lookup
+- **Fallback**: If Technology table is empty, falls back to simple case-insensitive matching
 
 ### Relevant Projects Selection
 
@@ -976,7 +1005,10 @@ showing all components, services, and data flows involved in the process.
 
    **b. For Each Expert**:
 - **Skill Matching**: Calculates match score for must-have and nice-to-have skills
-    - **Matched Skills**: Identifies which specific skills match
+    - **Technology Normalization**: Uses `TechnologyRepository` to normalize skill names and match synonyms
+    - **Normalized Matching**: Matches skills using normalized names from Technology table
+    - **Synonym Support**: Handles technology variations (e.g., "React" matches "ReactJS", "React.js")
+    - **Matched Skills**: Identifies which specific skills match (using normalized names)
     - **Relevant Projects**: Filters and sorts projects by relevance and recency
     - **Experience Indicators**: Extracts indicators (ETL, architecture, monitoring, etc.)
     - **Language Proficiency**: Extracts language skills
@@ -1082,20 +1114,20 @@ component "Data Ingestion" as Ingestion
 component "Embedding Generator" as Embedding
 component "Graph Builder" as GraphBuilder
 
-database "PostgreSQL 17\n(Unified Store)" {
-    database "Relational Tables" as Relational {
+package "PostgreSQL 17\n(Unified Store)" as PostgreSQL {
+    package "Relational Tables" as Relational {
         rectangle "employee" as Emp
         rectangle "work_experience" as WorkExp
         rectangle "project" as Project
         rectangle "technology" as Tech
     }
     
-    database "PgVector" as Vector {
+    package "PgVector Extensions" as Vector {
         rectangle "work_experience_embeddings" as Embeddings
         note right: HNSW index\nfor fast similarity search
     }
     
-    database "Apache AGE" as AGE {
+    package "Apache AGE Graph" as AGE {
         rectangle "Expert nodes" as ExpertNodes
         rectangle "Project nodes" as ProjectNodes
         rectangle "Technology nodes" as TechNodes

@@ -503,7 +503,7 @@ Deep research involves:
 Deep research provides detailed progress logs at each step:
 
 ```
-🔬 Starting deep research for query: '...'
+Starting deep research for query: '...'
 Deep Research Step 1/6: Performing initial retrieval...
 Initial retrieval completed: X experts found
 Deep Research Step 2/6: Enriching experts for gap analysis...
@@ -517,7 +517,7 @@ Deep Research Step 5/6: Performing expanded retrieval for X refined queries...
   Expanded retrieval 2/X: '...' completed: X experts found
   Expanded retrieval 3/X: '...' completed: X experts found
 Deep Research Step 6/6: Synthesizing results (initial: X, expanded: X)...
-🔬 Deep research completed: X experts in final synthesized result
+Deep research completed: X experts in final synthesized result
 ```
 
 ### Monitoring Deep Research
@@ -525,7 +525,7 @@ Deep Research Step 6/6: Synthesizing results (initial: X, expanded: X)...
 Watch deep research logs in real-time:
 
 ```bash
-tail -f logs/expert-match-debug.log | grep -E '🔬|Deep Research Step|deep research|Expanded retrieval'
+tail -f logs/expert-match-debug.log | grep -E 'Deep Research Step|deep research|Expanded retrieval'
 ```
 
 ### Execution Tracing

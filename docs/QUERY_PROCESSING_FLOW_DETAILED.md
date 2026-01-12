@@ -619,9 +619,16 @@ Enrichment --> QueryService: List<ExpertMatch>\n{id, name, email, seniority, ski
 - Fetch work experience from `work_experience` table
 
 * **Step 5.2**: For each expert, calculate skill matches:
-- **Must-have skills**: Java, Spring Boot, AWS
+
+- **Technology Normalization**: Normalize skill names using `TechnologyRepository` and Technology table
+    - Check exact name match in Technology table
+    - Check normalized name match
+    - Check synonym match
+    - Normalize expert technologies from work experience
+- **Must-have skills**: Java, Spring Boot, AWS (matched using normalized names)
 - **Nice-to-have skills**: Any additional matching skills
 - **Match score**: (matched skills) / (total required skills)
+- **Matching Algorithm**: Uses normalized names, synonyms, and partial matching for improved accuracy
 
 * **Step 5.3**: Build relevant projects:
 - Filter projects containing Java, Spring Boot, or AWS

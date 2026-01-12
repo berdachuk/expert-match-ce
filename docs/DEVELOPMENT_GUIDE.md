@@ -694,11 +694,12 @@ src/main/resources/sql/
 ```
 
 **Benefits**:
-- ✅ Full SQL syntax highlighting in IDE
-- ✅ SQL changes reviewed independently
-- ✅ Easier to maintain complex queries
-- ✅ Separation of concerns
-- ✅ No runtime performance overhead (loaded at startup)
+
+- Full SQL syntax highlighting in IDE
+- SQL changes reviewed independently
+- Easier to maintain complex queries
+- Separation of concerns
+- No runtime performance overhead (loaded at startup)
 
 **Error Handling**: `SqlInjectBeanPostProcessor` throws `BeanCreationException` at startup if SQL file is not found (fail-fast).
 
@@ -774,11 +775,12 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 ```
 
 **Benefits**:
-- ✅ Reusable across multiple repository methods
-- ✅ Testable independently (unit test mapping logic)
-- ✅ Centralized mapping logic (easier to maintain)
-- ✅ Consistent pattern across all repositories
-- ✅ Handles complex entities and nested objects well
+
+- Reusable across multiple repository methods
+- Testable independently (unit test mapping logic)
+- Centralized mapping logic (easier to maintain)
+- Consistent pattern across all repositories
+- Handles complex entities and nested objects well
 
 **Null Handling Example** (ChatMapper):
 
@@ -834,11 +836,12 @@ public Optional<Employee> findById(String id) {
 - **Multiple Results**: Throws `IncorrectResultSizeDataAccessException` (data integrity check)
 
 **Benefits**:
-- ✅ Concise and readable code
-- ✅ Validates exactly one result (fails fast on unexpected duplicates)
-- ✅ Standard Spring Framework pattern
-- ✅ Better data integrity (detects constraint violations or query errors)
-- ✅ Consistent with WCA-Backend approach
+
+- Concise and readable code
+- Validates exactly one result (fails fast on unexpected duplicates)
+- Standard Spring Framework pattern
+- Better data integrity (detects constraint violations or query errors)
+- Consistent with WCA-Backend approach
 
 **Before (Manual Check)**:
 ```java
@@ -1241,6 +1244,89 @@ public class EmployeeServiceImpl implements EmployeeService {
 - **Clear Contracts**: Interfaces clearly document the contract
 - **Reduced Duplication**: No need to maintain duplicate documentation
 - **SOLID Principles**: Supports Dependency Inversion Principle
+
+## Technology Normalization and Skill Matching
+
+ExpertMatch uses **Technology normalization** to improve skill matching accuracy. The system leverages the `technology`
+table to normalize skill names and handle synonyms.
+
+### Overview
+
+When matching skills from queries against expert technologies, the system:
+
+1. **Normalizes skill names** using the Technology table
+2. **Handles synonyms** (e.g., "React" matches "ReactJS", "React.js", "react")
+3. **Uses normalized matching** for improved accuracy
+4. **Falls back** to simple case-insensitive matching if Technology table is empty
+
+### Technology Table Structure
+
+The `technology` table contains:
+
+- `name`: Original technology name (e.g., "React")
+- `normalized_name`: Normalized version (e.g., "react")
+- `category`: Technology category (e.g., "Frontend Framework")
+- `synonyms`: JSON array of synonyms (e.g., `["ReactJS", "React.js", "reactjs"]`)
+
+### Usage in ExpertEnrichmentService
+
+The `ExpertEnrichmentService` uses `TechnologyRepository` to normalize skills:
+
+```java
+@Service
+public class ExpertEnrichmentServiceImpl implements ExpertEnrichmentService {
+    private final TechnologyRepository technologyRepository;
+    
+    // Technology cache loaded once per service instance
+    private Map<String, String> technologyCache;
+    
+    private String normalizeTechnology(String technology) {
+        // 1. Check exact name match
+        // 2. Check normalized name match
+        // 3. Check synonym match
+        // 4. Return normalized name or lowercase fallback
+    }
+    
+    private boolean matchesSkill(String skill, String technology) {
+        String normalizedSkill = normalizeTechnology(skill);
+        String normalizedTech = normalizeTechnology(technology);
+        
+        // Match using normalized names
+        return normalizedSkill.equals(normalizedTech) 
+            || normalizedSkill.contains(normalizedTech)
+            || normalizedTech.contains(normalizedSkill);
+    }
+}
+```
+
+### TechnologyRepository Methods
+
+The `TechnologyRepository` provides methods for normalization:
+
+- `findByName(String name)`: Find technology by exact name
+- `findByNormalizedName(String normalizedName)`: Find by normalized name
+- `findBySynonym(String synonym)`: Find by synonym
+- `findAll()`: Get all technologies (for cache loading)
+
+### Benefits
+
+- **Improved Accuracy**: Handles technology name variations
+- **Synonym Support**: Matches "React" with "ReactJS", "React.js", etc.
+- **Performance**: Technology cache loaded once per service instance
+- **Fallback**: Works even if Technology table is empty
+
+### Adding New Technologies
+
+To add new technologies with synonyms:
+
+1. Insert into `technology` table:
+   ```sql
+   INSERT INTO technology (id, name, normalized_name, category, synonyms)
+   VALUES ('...', 'React', 'react', 'Frontend Framework', 
+           '["ReactJS", "React.js", "reactjs"]'::jsonb);
+   ```
+
+2. The cache will be reloaded on next service initialization or cache refresh
 
 ## Additional Resources
 

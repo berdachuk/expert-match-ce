@@ -6,31 +6,40 @@ import com.berdachuk.expertmatch.employee.service.ExpertEnrichmentService;
 import com.berdachuk.expertmatch.query.domain.QueryParser;
 import com.berdachuk.expertmatch.query.domain.QueryResponse;
 import com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService;
+import com.berdachuk.expertmatch.technology.domain.Technology;
+import com.berdachuk.expertmatch.technology.repository.TechnologyRepository;
 import com.berdachuk.expertmatch.workexperience.domain.WorkExperience;
 import com.berdachuk.expertmatch.workexperience.repository.WorkExperienceRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * Service for enriching expert recommendations with detailed data.
  */
+@Slf4j
 @Service
 public class ExpertEnrichmentServiceImpl implements ExpertEnrichmentService {
 
     private final EmployeeRepository employeeRepository;
     private final WorkExperienceRepository workExperienceRepository;
+    private final TechnologyRepository technologyRepository;
+
+    // Cache for technology normalization (loaded once per service instance)
+    private volatile Map<String, Technology> technologyCache;
+    private volatile Map<String, Set<String>> synonymToTechnologyMap;
 
     public ExpertEnrichmentServiceImpl(
             EmployeeRepository employeeRepository,
-            WorkExperienceRepository workExperienceRepository) {
+            WorkExperienceRepository workExperienceRepository,
+            TechnologyRepository technologyRepository) {
         this.employeeRepository = employeeRepository;
         this.workExperienceRepository = workExperienceRepository;
+        this.technologyRepository = technologyRepository;
     }
 
     /**
@@ -108,7 +117,7 @@ public class ExpertEnrichmentServiceImpl implements ExpertEnrichmentService {
     }
 
     /**
-     * Calculates skill match score.
+     * Calculates skill match score using Technology normalization and synonyms.
      */
     private QueryResponse.SkillMatch calculateSkillMatch(
             QueryParser.ParsedQuery parsedQuery,
@@ -117,18 +126,17 @@ public class ExpertEnrichmentServiceImpl implements ExpertEnrichmentService {
         List<String> requiredSkills = new ArrayList<>(parsedQuery.skills());
         requiredSkills.addAll(parsedQuery.technologies());
 
-        // Extract all technologies from work experience
-        List<String> expertTechnologies = workExperiences.stream()
+        // Extract all technologies from work experience and normalize them
+        Set<String> expertTechnologies = workExperiences.stream()
                 .flatMap(workExperience -> workExperience.technologies().stream())
-                .distinct()
-                .toList();
+                .map(this::normalizeTechnologyName)
+                .collect(Collectors.toSet());
 
-        // Count must-have matches
+        // Normalize required skills and match against expert technologies
         long mustHaveMatched = requiredSkills.stream()
-                .map(String::toLowerCase)
-                .filter(skill -> expertTechnologies.stream()
-                        .anyMatch(technology -> technology.toLowerCase().contains(skill.toLowerCase()) ||
-                                skill.toLowerCase().contains(technology.toLowerCase())))
+                .map(this::normalizeSkillName)
+                .filter(normalizedSkill -> expertTechnologies.stream()
+                        .anyMatch(expertTech -> matchesTechnology(normalizedSkill, expertTech)))
                 .count();
 
         int mustHaveTotal = requiredSkills.size();
@@ -154,7 +162,7 @@ public class ExpertEnrichmentServiceImpl implements ExpertEnrichmentService {
     }
 
     /**
-     * Builds matched skills breakdown.
+     * Builds matched skills breakdown using Technology normalization and synonyms.
      */
     private QueryResponse.MatchedSkills buildMatchedSkills(
             QueryParser.ParsedQuery parsedQuery,
@@ -163,16 +171,20 @@ public class ExpertEnrichmentServiceImpl implements ExpertEnrichmentService {
         List<String> requiredSkills = new ArrayList<>(parsedQuery.skills());
         requiredSkills.addAll(parsedQuery.technologies());
 
-        List<String> expertTechnologies = workExperiences.stream()
+        // Extract and normalize expert technologies
+        Set<String> expertTechnologies = workExperiences.stream()
                 .flatMap(workExperience -> workExperience.technologies().stream())
-                .distinct()
-                .toList();
+                .map(this::normalizeTechnologyName)
+                .collect(Collectors.toSet());
 
+        // Match required skills against expert technologies using normalization
         List<String> mustHave = requiredSkills.stream()
-                .filter(skill -> expertTechnologies.stream()
-                        .anyMatch(technology -> technology.toLowerCase().contains(skill.toLowerCase()) ||
-                                skill.toLowerCase().contains(technology.toLowerCase())))
-                .toList();
+                .filter(skill -> {
+                    String normalizedSkill = normalizeSkillName(skill);
+                    return expertTechnologies.stream()
+                            .anyMatch(expertTech -> matchesTechnology(normalizedSkill, expertTech));
+                })
+                .collect(Collectors.toList());
 
         return new QueryResponse.MatchedSkills(mustHave, List.of());
     }
@@ -207,7 +219,7 @@ public class ExpertEnrichmentServiceImpl implements ExpertEnrichmentService {
     }
 
     /**
-     * Checks if work experience is relevant to query.
+     * Checks if work experience is relevant to query using Technology normalization.
      */
     private boolean isRelevant(
             WorkExperience workExperience,
@@ -220,11 +232,18 @@ public class ExpertEnrichmentServiceImpl implements ExpertEnrichmentService {
             return true; // If no specific tech requirements, all are relevant
         }
 
-        // Check if any query technology matches work experience technologies
+        // Normalize work experience technologies
+        Set<String> normalizedWorkTechs = workExperience.technologies().stream()
+                .map(this::normalizeTechnologyName)
+                .collect(Collectors.toSet());
+
+        // Check if any query technology matches work experience technologies using normalization
         return queryTechnologies.stream()
-                .anyMatch(queryTechnology -> workExperience.technologies().stream()
-                        .anyMatch(technology -> technology.toLowerCase().contains(queryTechnology.toLowerCase()) ||
-                                queryTechnology.toLowerCase().contains(technology.toLowerCase())));
+                .anyMatch(queryTechnology -> {
+                    String normalizedQuery = normalizeSkillName(queryTechnology);
+                    return normalizedWorkTechs.stream()
+                            .anyMatch(workTech -> matchesTechnology(normalizedQuery, workTech));
+                });
     }
 
     /**
@@ -291,6 +310,179 @@ public class ExpertEnrichmentServiceImpl implements ExpertEnrichmentService {
                 monitoring,
                 onCall
         );
+    }
+
+    /**
+     * Normalizes a skill name using Technology table normalization and synonyms.
+     * Returns the normalized name if found in Technology table, otherwise returns lowercase version.
+     */
+    private String normalizeSkillName(String skillName) {
+        if (skillName == null || skillName.isBlank()) {
+            return "";
+        }
+
+        // Load technology cache if not already loaded
+        ensureTechnologyCacheLoaded();
+
+        String lowerSkill = skillName.toLowerCase().trim();
+
+        // Try to find by exact name match
+        Technology technology = technologyCache.get(lowerSkill);
+        if (technology != null) {
+            return technology.normalizedName().toLowerCase();
+        }
+
+        // Try to find by normalized name match
+        for (Technology tech : technologyCache.values()) {
+            if (tech.normalizedName().toLowerCase().equals(lowerSkill)) {
+                return tech.normalizedName().toLowerCase();
+            }
+        }
+
+        // Try to find by synonym match
+        Set<String> matchingTechs = synonymToTechnologyMap.get(lowerSkill);
+        if (matchingTechs != null && !matchingTechs.isEmpty()) {
+            // Return the normalized name of the first matching technology
+            String firstMatch = matchingTechs.iterator().next();
+            Technology matchedTech = technologyCache.get(firstMatch);
+            if (matchedTech != null) {
+                return matchedTech.normalizedName().toLowerCase();
+            }
+        }
+
+        // Fallback: return lowercase version if no match found
+        return lowerSkill;
+    }
+
+    /**
+     * Normalizes a technology name using Technology table.
+     * Returns the normalized name if found, otherwise returns lowercase version.
+     */
+    private String normalizeTechnologyName(String technologyName) {
+        if (technologyName == null || technologyName.isBlank()) {
+            return "";
+        }
+
+        // Load technology cache if not already loaded
+        ensureTechnologyCacheLoaded();
+
+        String lowerTech = technologyName.toLowerCase().trim();
+
+        // Try to find by exact name match
+        Technology technology = technologyCache.get(lowerTech);
+        if (technology != null) {
+            return technology.normalizedName().toLowerCase();
+        }
+
+        // Try to find by normalized name match
+        for (Technology tech : technologyCache.values()) {
+            if (tech.normalizedName().toLowerCase().equals(lowerTech)) {
+                return tech.normalizedName().toLowerCase();
+            }
+        }
+
+        // Try to find by synonym match
+        Set<String> matchingTechs = synonymToTechnologyMap.get(lowerTech);
+        if (matchingTechs != null && !matchingTechs.isEmpty()) {
+            // Return the normalized name of the first matching technology
+            String firstMatch = matchingTechs.iterator().next();
+            Technology matchedTech = technologyCache.get(firstMatch);
+            if (matchedTech != null) {
+                return matchedTech.normalizedName().toLowerCase();
+            }
+        }
+
+        // Fallback: return lowercase version if no match found
+        return lowerTech;
+    }
+
+    /**
+     * Checks if a normalized skill name matches a normalized technology name.
+     * Uses exact match on normalized names, or checks if skill is a synonym of technology.
+     */
+    private boolean matchesTechnology(String normalizedSkill, String normalizedTechnology) {
+        if (normalizedSkill == null || normalizedTechnology == null) {
+            return false;
+        }
+
+        // Exact match on normalized names
+        if (normalizedSkill.equals(normalizedTechnology)) {
+            return true;
+        }
+
+        // Check if skill contains technology or vice versa (for partial matches)
+        if (normalizedSkill.contains(normalizedTechnology) || normalizedTechnology.contains(normalizedSkill)) {
+            return true;
+        }
+
+        // Check if skill matches any synonym of the technology
+        ensureTechnologyCacheLoaded();
+        for (Technology tech : technologyCache.values()) {
+            if (tech.normalizedName().toLowerCase().equals(normalizedTechnology)) {
+                // Check if normalized skill matches any synonym
+                if (tech.synonyms() != null) {
+                    for (String synonym : tech.synonyms()) {
+                        if (synonym.toLowerCase().equals(normalizedSkill)) {
+                            return true;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Ensures technology cache is loaded (lazy initialization).
+     */
+    private void ensureTechnologyCacheLoaded() {
+        if (technologyCache == null) {
+            synchronized (this) {
+                if (technologyCache == null) {
+                    loadTechnologyCache();
+                }
+            }
+        }
+    }
+
+    /**
+     * Loads all technologies into cache for efficient lookup.
+     */
+    private void loadTechnologyCache() {
+        try {
+            List<Technology> technologies = technologyRepository.findAll();
+            Map<String, Technology> cache = new HashMap<>();
+            Map<String, Set<String>> synonymMap = new HashMap<>();
+
+            for (Technology tech : technologies) {
+                // Index by lowercase name
+                cache.put(tech.name().toLowerCase(), tech);
+
+                // Index by normalized name
+                cache.put(tech.normalizedName().toLowerCase(), tech);
+
+                // Index synonyms
+                if (tech.synonyms() != null) {
+                    for (String synonym : tech.synonyms()) {
+                        String lowerSynonym = synonym.toLowerCase();
+                        synonymMap.computeIfAbsent(lowerSynonym, k -> new HashSet<>()).add(tech.name().toLowerCase());
+                    }
+                }
+            }
+
+            this.technologyCache = cache;
+            this.synonymToTechnologyMap = synonymMap;
+
+            log.debug("Loaded {} technologies into cache with {} synonym mappings",
+                    technologies.size(), synonymMap.size());
+        } catch (Exception e) {
+            log.warn("Failed to load technology cache, falling back to simple matching: {}", e.getMessage());
+            // Initialize empty caches to prevent repeated failures
+            this.technologyCache = new HashMap<>();
+            this.synonymToTechnologyMap = new HashMap<>();
+        }
     }
 }
 

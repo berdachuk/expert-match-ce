@@ -41,7 +41,7 @@
   - Database columns: CHAR(24)
 
 ### Technology Stack
-- Backend: Spring Boot 3.5.9, Java 21, PostgreSQL 16, PgVector, Apache AGE, Spring AI
+- Backend: Spring Boot 3.5.9, Java 21, PostgreSQL 17, PgVector, Apache AGE, Spring AI
 - Testing: JUnit 5, Testcontainers, Mockito
 
 ### Naming Conventions
@@ -598,4 +598,8 @@
 - **Project Files**: All project files (README.md, CHANGELOG.md, etc.) must be in English
 - **Documentation**: All technical documentation must be in English
 - **Exception**: User-facing messages in the application can be localized, but code and technical content must remain in English
+- **No Emojis**: Never use emojis in code, comments, documentation, commit messages, or any project files
+  - **Invalid**: Using emojis like ✅, ❌, 🔍, 💡, etc. in documentation or code comments
+  - **Valid**: Using plain text alternatives like "✓", "✗", or descriptive text
+  - **Benefits**: Professional appearance, better compatibility, easier text processing, consistent formatting
 - **Benefits**: International collaboration, standard practice, better code readability, easier maintenance

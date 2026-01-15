@@ -1,7 +1,8 @@
 package com.berdachuk.expertmatch.retrieval;
 
-import com.berdachuk.expertmatch.data.EmployeeRepository;
-import com.berdachuk.expertmatch.data.WorkExperienceRepository;
+import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
+import com.berdachuk.expertmatch.retrieval.service.SemanticReranker;
+import com.berdachuk.expertmatch.workexperience.repository.WorkExperienceRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -358,15 +359,15 @@ class SemanticRerankerTest {
         return new ChatResponse(List.of(generation));
     }
 
-    private List<EmployeeRepository.Employee> createTestEmployees() {
+    private List<com.berdachuk.expertmatch.employee.domain.Employee> createTestEmployees() {
         return List.of(
-                new EmployeeRepository.Employee("expert1", "Expert One", "expert1@test.com", "A4", "Fluent", "Available"),
-                new EmployeeRepository.Employee("expert2", "Expert Two", "expert2@test.com", "A5", "Fluent", "Available"),
-                new EmployeeRepository.Employee("expert3", "Expert Three", "expert3@test.com", "A3", "Fluent", "Available")
+                new com.berdachuk.expertmatch.employee.domain.Employee("expert1", "Expert One", "expert1@test.com", "A4", "Fluent", "Available"),
+                new com.berdachuk.expertmatch.employee.domain.Employee("expert2", "Expert Two", "expert2@test.com", "A5", "Fluent", "Available"),
+                new com.berdachuk.expertmatch.employee.domain.Employee("expert3", "Expert Three", "expert3@test.com", "A3", "Fluent", "Available")
         );
     }
 
-    private Map<String, List<WorkExperienceRepository.WorkExperience>> createTestWorkExperiences() {
+    private Map<String, List<com.berdachuk.expertmatch.workexperience.domain.WorkExperience>> createTestWorkExperiences() {
         return Map.of(
                 "expert1", List.of(createWorkExperience("expert1", "Java Project", "Java", "Spring Boot")),
                 "expert2", List.of(createWorkExperience("expert2", "Spring Boot Project", "Java", "Spring Boot", "Microservices")),
@@ -374,7 +375,7 @@ class SemanticRerankerTest {
         );
     }
 
-    private WorkExperienceRepository.WorkExperience createWorkExperience(
+    private com.berdachuk.expertmatch.workexperience.domain.WorkExperience createWorkExperience(
             String employeeId, String projectName, String... technologies) {
         String weId = "we-" + employeeId;
         String projectId = "project-" + employeeId;
@@ -388,7 +389,7 @@ class SemanticRerankerTest {
         String responsibilities = "Responsibilities for " + projectName;
         List<String> techList = List.of(technologies);
 
-        return new WorkExperienceRepository.WorkExperience(
+        return new com.berdachuk.expertmatch.workexperience.domain.WorkExperience(
                 weId,
                 employeeId,
                 projectId,

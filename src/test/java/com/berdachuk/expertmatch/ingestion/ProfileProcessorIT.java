@@ -1,10 +1,14 @@
 package com.berdachuk.expertmatch.ingestion;
 
+import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
 import com.berdachuk.expertmatch.ingestion.model.EmployeeData;
 import com.berdachuk.expertmatch.ingestion.model.EmployeeProfile;
 import com.berdachuk.expertmatch.ingestion.model.ProcessingResult;
 import com.berdachuk.expertmatch.ingestion.model.ProjectData;
+import com.berdachuk.expertmatch.ingestion.service.ProfileProcessor;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
+import com.berdachuk.expertmatch.project.repository.ProjectRepository;
+import com.berdachuk.expertmatch.workexperience.repository.WorkExperienceRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,11 +29,25 @@ class ProfileProcessorIT extends BaseIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private ProjectRepository projectRepository;
+
+    @Autowired
+    private WorkExperienceRepository workExperienceRepository;
+
     private ProfileProcessor processor;
 
     @BeforeEach
     void setUp() {
-        processor = new ProfileProcessor(namedJdbcTemplate, objectMapper);
+        // Clear existing data to ensure test independence
+        namedJdbcTemplate.getJdbcTemplate().execute("DELETE FROM expertmatch.work_experience");
+        namedJdbcTemplate.getJdbcTemplate().execute("DELETE FROM expertmatch.employee");
+
+        // Create processor instance
+        processor = new ProfileProcessor(employeeRepository, projectRepository, workExperienceRepository, objectMapper);
     }
 
     @Test

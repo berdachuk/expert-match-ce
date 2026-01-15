@@ -147,13 +147,13 @@ function toggleSourcesSection() {
 function initializeSGRPatternValidation() {
     const cascadeCheckbox = document.getElementById('useCascadePattern');
     const cycleCheckbox = document.getElementById('useCyclePattern');
-    
+
     if (!cascadeCheckbox || !cycleCheckbox) {
         return; // Checkboxes not found (might be on different page)
     }
-    
+
     // When Cascade is checked, uncheck and disable Cycle
-    cascadeCheckbox.addEventListener('change', function() {
+    cascadeCheckbox.addEventListener('change', function () {
         if (this.checked) {
             cycleCheckbox.checked = false;
             cycleCheckbox.disabled = true;
@@ -173,9 +173,9 @@ function initializeSGRPatternValidation() {
             }
         }
     });
-    
+
     // When Cycle is checked, uncheck and disable Cascade
-    cycleCheckbox.addEventListener('change', function() {
+    cycleCheckbox.addEventListener('change', function () {
         if (this.checked) {
             cascadeCheckbox.checked = false;
             cascadeCheckbox.disabled = true;
@@ -195,7 +195,7 @@ function initializeSGRPatternValidation() {
             }
         }
     });
-    
+
     // Initialize state on page load
     if (cascadeCheckbox.checked) {
         cycleCheckbox.checked = false;
@@ -215,24 +215,24 @@ function initializeSGRPatternValidation() {
 function validateSGRPatterns() {
     const cascadeCheckbox = document.getElementById('useCascadePattern');
     const cycleCheckbox = document.getElementById('useCyclePattern');
-    
+
     if (!cascadeCheckbox || !cycleCheckbox) {
         return true; // Checkboxes not found, skip validation
     }
-    
+
     const cascadeChecked = cascadeCheckbox.checked;
     const cycleChecked = cycleCheckbox.checked;
-    
+
     // Both cannot be enabled simultaneously
     if (cascadeChecked && cycleChecked) {
         alert('Invalid SGR pattern combination:\n\n' +
-              'Cascade and Cycle patterns cannot be enabled simultaneously.\n\n' +
-              '• Cascade pattern requires exactly 1 expert result\n' +
-              '• Cycle pattern requires multiple expert results (>1)\n\n' +
-              'Please enable only one of them.');
+            'Cascade and Cycle patterns cannot be enabled simultaneously.\n\n' +
+            '• Cascade pattern requires exactly 1 expert result\n' +
+            '• Cycle pattern requires multiple expert results (>1)\n\n' +
+            'Please enable only one of them.');
         return false;
     }
-    
+
     return true;
 }
 
@@ -246,10 +246,10 @@ function initializeSGRPatternTooltips() {
     }
 
     const Bootstrap = typeof bootstrap !== 'undefined' ? bootstrap : window.bootstrap;
-    
+
     // Initialize tooltips for all checkboxes with data-bs-toggle="tooltip"
     const tooltipElements = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    tooltipElements.forEach(function(element) {
+    tooltipElements.forEach(function (element) {
         try {
             new Bootstrap.Tooltip(element);
         } catch (e) {
@@ -389,12 +389,12 @@ function updateProgressMessage(startTime, progressTextElement) {
 
 function submitQuery() {
     const form = document.getElementById('queryForm');
-    
+
     // Validate SGR pattern combinations before submission
     if (!validateSGRPatterns()) {
         return; // Validation failed, error message already shown
     }
-    
+
     const formData = new FormData(form);
     const submitBtn = document.getElementById('submitBtn');
     const queryTextarea = document.getElementById('query');

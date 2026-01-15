@@ -78,7 +78,8 @@
                                                         <input class="form-check-input" id="includeSources"
                                                                name="includeSources"
                                                                type="checkbox" value="true">
-                                                        <label class="form-check-label" for="includeSources">Include Sources</label>
+                                                        <label class="form-check-label" for="includeSources">Include
+                                                            Sources</label>
                                                     </div>
                                                     <div class="form-check">
                                                         <input class="form-check-input" id="includeExecutionTrace"
@@ -89,40 +90,46 @@
                                                             Trace</label>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" id="useCascadePattern"
-                                                               name="useCascadePattern"
-                                                               type="checkbox" value="true"
+                                                        <input class="form-check-input"
+                                                               data-bs-title="Requires exactly 1 expert result"
                                                                data-bs-toggle="tooltip"
-                                                               data-bs-title="Requires exactly 1 expert result">
+                                                               id="useCascadePattern" name="useCascadePattern"
+                                                               type="checkbox"
+                                                               value="true">
                                                         <label class="form-check-label" for="useCascadePattern">Use
                                                             Cascade
                                                             Pattern</label>
-                                                        <small class="form-text text-muted d-block ms-4" style="font-size: 0.85em;">
+                                                        <small class="form-text text-muted d-block ms-4"
+                                                               style="font-size: 0.85em;">
                                                             Requires exactly 1 expert result
                                                         </small>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" id="useRoutingPattern"
-                                                               name="useRoutingPattern"
-                                                               type="checkbox" value="true"
+                                                        <input class="form-check-input"
+                                                               data-bs-title="Can be used with either Cascade or Cycle pattern"
                                                                data-bs-toggle="tooltip"
-                                                               data-bs-title="Can be used with either Cascade or Cycle pattern">
+                                                               id="useRoutingPattern" name="useRoutingPattern"
+                                                               type="checkbox"
+                                                               value="true">
                                                         <label class="form-check-label" for="useRoutingPattern">Use
                                                             Routing
                                                             Pattern</label>
-                                                        <small class="form-text text-muted d-block ms-4" style="font-size: 0.85em;">
+                                                        <small class="form-text text-muted d-block ms-4"
+                                                               style="font-size: 0.85em;">
                                                             Can be used with either Cascade or Cycle pattern
                                                         </small>
                                                     </div>
                                                     <div class="form-check">
-                                                        <input class="form-check-input" id="useCyclePattern"
-                                                               name="useCyclePattern"
-                                                               type="checkbox" value="true"
+                                                        <input class="form-check-input"
+                                                               data-bs-title="Requires multiple expert results (>1)"
                                                                data-bs-toggle="tooltip"
-                                                               data-bs-title="Requires multiple expert results (>1)">
+                                                               id="useCyclePattern" name="useCyclePattern"
+                                                               type="checkbox"
+                                                               value="true">
                                                         <label class="form-check-label" for="useCyclePattern">Use Cycle
                                                             Pattern</label>
-                                                        <small class="form-text text-muted d-block ms-4" style="font-size: 0.85em;">
+                                                        <small class="form-text text-muted d-block ms-4"
+                                                               style="font-size: 0.85em;">
                                                             Requires multiple expert results (>1)
                                                         </small>
                                                     </div>
@@ -257,7 +264,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div id="sourcesSection" class="mb-4"
+                                    <div class="mb-4" id="sourcesSection"
                                          th:if="${queryResult.getSources() != null && !queryResult.getSources().isEmpty()}">
                                         <h5 class="mb-2">Sources:</h5>
                                         <ul class="list-group">

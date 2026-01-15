@@ -223,8 +223,7 @@ If custom configuration is not provided, the application falls back to auto-conf
 
 1. **Auto-configuration**: Uses `spring.ai.ollama.*` or `spring.ai.openai.*` properties
 2. **Profile-based selection**:
-
-     - `local` profile: Prefers Ollama
+- `local` profile: Prefers Ollama
     - `dev`, `staging`, `prod` profiles: Prefer OpenAI
 3. **Multiple models**: If both Ollama and OpenAI are configured, selects based on active profile
 
@@ -240,14 +239,12 @@ To verify your configuration:
    ```
 
 2. Test each component:
-
-     - **Chat**: Submit a query and check response quality
+- **Chat**: Submit a query and check response quality
     - **Embedding**: Generate embeddings and verify dimensions
     - **Reranking**: Enable reranking and check result ordering
 
 3. Monitor performance and costs:
-
-     - Track API usage for OpenAI components
+- Track API usage for OpenAI components
     - Monitor Ollama server performance
     - Adjust providers based on requirements
 

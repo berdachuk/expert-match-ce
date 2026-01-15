@@ -1,8 +1,7 @@
 package com.berdachuk.expertmatch.llm.tools;
 
-import com.berdachuk.expertmatch.chat.ChatService;
-import com.berdachuk.expertmatch.data.ChatRepository;
-import com.berdachuk.expertmatch.security.HeaderBasedUserContext;
+import com.berdachuk.expertmatch.chat.service.ChatService;
+import com.berdachuk.expertmatch.core.security.HeaderBasedUserContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
@@ -32,14 +31,14 @@ public class ChatManagementTools {
             @ToolParam(description = "Chat name (optional, defaults to generated name)") String name
     ) {
         String userId = userContext.getUserIdOrAnonymous();
-        ChatRepository.Chat chat = chatService.createChat(userId, name);
+        com.berdachuk.expertmatch.chat.domain.Chat chat = chatService.createChat(userId, name);
         return toChatInfo(chat);
     }
 
     @Tool(description = "List all chat sessions for the current user.")
     public List<ChatInfo> listChats() {
         String userId = userContext.getUserIdOrAnonymous();
-        List<ChatRepository.Chat> chats = chatService.listChats(userId);
+        List<com.berdachuk.expertmatch.chat.domain.Chat> chats = chatService.listChats(userId);
         return chats.stream()
                 .map(this::toChatInfo)
                 .collect(Collectors.toList());
@@ -72,11 +71,11 @@ public class ChatManagementTools {
     @Tool(description = "Get or create the default chat for the current user.")
     public ChatInfo getOrCreateDefaultChat() {
         String userId = userContext.getUserIdOrAnonymous();
-        ChatRepository.Chat chat = chatService.getOrCreateDefaultChat(userId);
+        com.berdachuk.expertmatch.chat.domain.Chat chat = chatService.getOrCreateDefaultChat(userId);
         return toChatInfo(chat);
     }
 
-    private ChatInfo toChatInfo(ChatRepository.Chat chat) {
+    private ChatInfo toChatInfo(com.berdachuk.expertmatch.chat.domain.Chat chat) {
         return new ChatInfo(
                 chat.id(),
                 chat.name(),

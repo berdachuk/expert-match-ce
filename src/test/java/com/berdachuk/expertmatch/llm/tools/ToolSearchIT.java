@@ -1,6 +1,6 @@
 package com.berdachuk.expertmatch.llm.tools;
 
-import com.berdachuk.expertmatch.config.ToolSearchConfiguration;
+import com.berdachuk.expertmatch.core.config.ToolSearchConfiguration;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springaicommunity.tool.search.SearchType;
@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Integration tests for Tool Search Tool functionality.
  * Tests tool discovery flow using PgVector-based semantic search.
- *
+ * <p>
  * IMPORTANT: This is an integration test with database. All LLM calls MUST be mocked.
  * - Extends BaseIntegrationTest which uses TestAIConfig mocks
  * - All LLM API calls use mocked services to avoid external service dependencies
@@ -181,7 +181,7 @@ class ToolSearchIT extends BaseIntegrationTest {
                 Object similarityObj = result.get("similarity");
                 assertNotNull(similarityObj, "Similarity should not be null");
                 // Check that similarity is a Number (Double in this case)
-                assertTrue(similarityObj instanceof Number, "Similarity should be a Number, got: " + similarityObj.getClass().getName());
+                assertInstanceOf(Number.class, similarityObj, "Similarity should be a Number, got: " + similarityObj.getClass().getName());
                 double similarity = ((Number) similarityObj).doubleValue();
                 // Check that similarity is not NaN and is in valid range [0.0, 1.0] or slightly outside due to floating point precision
                 // Note: The database query filters for similarity >= 0.5, but we check the full range for robustness

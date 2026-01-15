@@ -8,25 +8,27 @@ This report compares the codebase against the project rules defined in `.cursorr
 
 | Rule Category         | Status       | Violations Found               |
 |-----------------------|--------------|--------------------------------|
-| Logging               | ✅ Compliant  | 0                              |
-| Database Testing      | ✅ Compliant  | 0                              |
-| Fully Qualified Names | ❌ Violations | 5+ files                       |
-| Prompt Management     | ⚠️ Partial   | 2 files with hardcoded prompts |
-| Error Handling        | ✅ Compliant  | 0                              |
+| Logging               |  Compliant  | 0                              |
+| Database Testing      |  Compliant  | 0                              |
+| Fully Qualified Names |  Violations | 5+ files                       |
+| Prompt Management     |  Partial   | 2 files with hardcoded prompts |
+| Error Handling        |  Compliant  | 0                              |
 
 ---
 
 ## Detailed Findings
 
-### ✅ 1. Logging Rules - COMPLIANT
+###  1. Logging Rules - COMPLIANT
 
 **Rule**: Always use Lombok's `@Slf4j` annotation, never use static logger declarations.
 
-**Status**: ✅ **FULLY COMPLIANT**
+**Status**:
 
-- ✅ No static logger declarations found (`private static final Logger`)
-- ✅ 24 files using `@Slf4j` annotation correctly
-- ✅ All logging uses Lombok's `log` field
+**FULLY COMPLIANT**
+
+- No static logger declarations found (`private static final Logger`)
+- 24 files using `@Slf4j` annotation correctly
+- All logging uses Lombok's `log` field
 
 **Examples of correct usage**:
 
@@ -36,17 +38,19 @@ This report compares the codebase against the project rules defined in `.cursorr
 
 ---
 
-### ✅ 2. Database Testing Rules - COMPLIANT
+###  2. Database Testing Rules - COMPLIANT
 
 **Rule**: Always use Testcontainers with PostgreSQL, never use H2 or mock database access.
 
-**Status**: ✅ **FULLY COMPLIANT**
+**Status**:
 
-- ✅ No H2 database usage found
-- ✅ 16 test files extend `BaseIntegrationTest` (using Testcontainers)
-- ✅ All database tests use real PostgreSQL via Testcontainers
-- ✅ Custom test container image configured: `expertmatch-postgres-test:latest`
-- ✅ Container reuse properly configured
+**FULLY COMPLIANT**
+
+- No H2 database usage found
+- 16 test files extend `BaseIntegrationTest` (using Testcontainers)
+- All database tests use real PostgreSQL via Testcontainers
+- Custom test container image configured: `expertmatch-postgres-test:latest`
+- Container reuse properly configured
 
 **Examples of correct usage**:
 
@@ -57,12 +61,14 @@ This report compares the codebase against the project rules defined in `.cursorr
 
 ---
 
-### ❌ 3. Imports and Class Names - VIOLATIONS FOUND
+###  3. Imports and Class Names - VIOLATIONS FOUND
 
 **Rule**: Use imports instead of fully qualified class names. Never use `java.util.*`, `java.time.*`, `java.lang.*` as
 fully qualified names.
 
-**Status**: ❌ **VIOLATIONS FOUND**
+**Status**:
+
+**VIOLATIONS FOUND**
 
 #### Violations:
 
@@ -97,7 +103,6 @@ fully qualified names.
    **Should be**: Use `Arrays.asList()` and `Arrays.toString()` with `import java.util.Arrays;`
 
 #### Files with violations:
-
 - `GraphBuilderService.java`
 - `QueryResponse.java`
 - `ApiMapper.java` (MapStruct expressions - may be acceptable)
@@ -105,15 +110,16 @@ fully qualified names.
 
 ---
 
-### ⚠️ 4. Prompt Management Rules - PARTIAL COMPLIANCE
+###  4. Prompt Management Rules - PARTIAL COMPLIANCE
 
 **Rule**: All LLM prompts must use Spring AI `PromptTemplate` with external `.st` (StringTemplate) files. No hardcoded
 prompt strings or StringBuilder-based prompt construction.
 
-**Status**: ⚠️ **PARTIAL COMPLIANCE**
+**Status**:
 
-#### ✅ Compliant Files:
+**PARTIAL COMPLIANCE**
 
+####  Compliant Files:
 - `EntityExtractor.java` - Uses PromptTemplate correctly for all extractions
 - `QueryParser.java` - Uses PromptTemplate correctly for all extractions
 - `QueryClassificationService.java` - Uses PromptTemplate correctly
@@ -122,7 +128,7 @@ prompt strings or StringBuilder-based prompt construction.
 - `DeepResearchService.buildQueryRefinementPrompt()` - Uses PromptTemplate (builds dynamic sections with StringBuilder,
   which is acceptable)
 
-#### ❌ Violations Found:
+####  Violations Found:
 
 1. **DeepResearchService.java:238-278** - `buildGapAnalysisPrompt()`
     - **Violation**: Entire prompt built with `StringBuilder`, not using PromptTemplate
@@ -133,8 +139,7 @@ prompt strings or StringBuilder-based prompt construction.
 2. **AnswerGenerationService.java:298, 366-407** - `buildRAGPrompt()`
     - **Violation**: Hardcoded system message and instructions section
     - **Location**:
-
-          - Line 298: Hardcoded system message
+- Line 298: Hardcoded system message
         - Lines 366-407: Hardcoded instructions section built with StringBuilder
     - **Issue**: While using `ragPromptTemplate`, the template content includes hardcoded strings that should be in the
       `.st` file
@@ -144,8 +149,7 @@ prompt strings or StringBuilder-based prompt construction.
 
 #### Existing Prompt Templates:
 
-✅ The following `.st` files exist in `src/main/resources/prompts/`:
-
+ The following `.st` files exist in `src/main/resources/prompts/`:
 - `cascade-evaluation.st`
 - `cycle-evaluation.st`
 - `domain-extraction.st`
@@ -162,33 +166,36 @@ prompt strings or StringBuilder-based prompt construction.
 - `technology-extraction.st`
 
 #### Missing Prompt Templates:
-
-- ❌ `gap-analysis.st` - Required for `DeepResearchService.buildGapAnalysisPrompt()`
+- `gap-analysis.st` - Required for `DeepResearchService.buildGapAnalysisPrompt()`
 
 ---
 
-### ✅ 5. Error Handling Rules - COMPLIANT
+###  5. Error Handling Rules - COMPLIANT
 
 **Rule**: Never add fallback mechanisms that silently handle errors. Fail fast, throw exceptions.
 
-**Status**: ✅ **COMPLIANT**
+**Status**:
 
-- ✅ No fallback patterns found in error handling
-- ✅ No silent error handling with alternative behaviors
-- ✅ Errors are properly logged and exceptions are thrown
+**COMPLIANT**
+
+- No fallback patterns found in error handling
+- No silent error handling with alternative behaviors
+- Errors are properly logged and exceptions are thrown
 
 ---
 
-### ✅ 6. TDD Approach - VERIFIED
+###  6. TDD Approach - VERIFIED
 
 **Rule**: Always follow TDD - write tests first, then implementation.
 
-**Status**: ✅ **VERIFIED**
+**Status**:
 
-- ✅ Comprehensive test suite exists
-- ✅ Integration tests properly structured
-- ✅ Tests use real database (Testcontainers)
-- ✅ Test files follow naming conventions (`*IT.java`)
+**VERIFIED**
+
+- Comprehensive test suite exists
+- Integration tests properly structured
+- Tests use real database (Testcontainers)
+- Test files follow naming conventions (`*IT.java`)
 
 ---
 
@@ -198,8 +205,7 @@ prompt strings or StringBuilder-based prompt construction.
 
 1. **Fix Fully Qualified Names** (5 files)
     - Replace `java.util.*` with imports in:
-
-          - `GraphBuilderService.java:481`
+- `GraphBuilderService.java:481`
         - `QueryResponse.java:139`
         - `SpringAIConfig.java:53-59, 98-100`
     - Review `ApiMapper.java` MapStruct expressions (may be acceptable for MapStruct)

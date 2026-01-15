@@ -101,7 +101,7 @@ start
 note right
   Uses standard hybrid retrieval:
 
-  - Vector search
+- Vector search
   - Graph traversal
   - Keyword search
   - Result fusion
@@ -118,7 +118,7 @@ endif
 note right
   Enrich initial experts with:
 
-  - Full profile data
+- Full profile data
   - Skills and technologies
   - Project history
   - Seniority level
@@ -128,7 +128,7 @@ end note
 note right
   LLM analyzes:
 
-  - Missing information
+- Missing information
   - Ambiguities
   - Gaps in coverage
   - Need for expansion
@@ -156,7 +156,7 @@ endif
 note right
   For each refined query:
 
-  - Perform hybrid retrieval
+- Perform hybrid retrieval
   - Collect results
 end note
 
@@ -170,7 +170,7 @@ endif
 note right
   Combine initial and expanded results:
 
-  - Weighted scoring
+- Weighted scoring
   - Initial: 60% weight
   - Expanded: 40% weight
   - Deduplicate and rank
@@ -373,7 +373,7 @@ end note
 note right
   For each expert ID:
 
-  - If in initial: add initial score
+- If in initial: add initial score
   - If in expanded: add expanded score
   - If in both: weighted average
 end note
@@ -503,7 +503,7 @@ Deep research involves:
 Deep research provides detailed progress logs at each step:
 
 ```
-🔬 Starting deep research for query: '...'
+Starting deep research for query: '...'
 Deep Research Step 1/6: Performing initial retrieval...
 Initial retrieval completed: X experts found
 Deep Research Step 2/6: Enriching experts for gap analysis...
@@ -517,7 +517,7 @@ Deep Research Step 5/6: Performing expanded retrieval for X refined queries...
   Expanded retrieval 2/X: '...' completed: X experts found
   Expanded retrieval 3/X: '...' completed: X experts found
 Deep Research Step 6/6: Synthesizing results (initial: X, expanded: X)...
-🔬 Deep research completed: X experts in final synthesized result
+Deep research completed: X experts in final synthesized result
 ```
 
 ### Monitoring Deep Research
@@ -525,7 +525,7 @@ Deep Research Step 6/6: Synthesizing results (initial: X, expanded: X)...
 Watch deep research logs in real-time:
 
 ```bash
-tail -f logs/expert-match-debug.log | grep -E '🔬|Deep Research Step|deep research|Expanded retrieval'
+tail -f logs/expert-match-debug.log | grep -E 'Deep Research Step|deep research|Expanded retrieval'
 ```
 
 ### Execution Tracing

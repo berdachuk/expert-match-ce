@@ -93,7 +93,7 @@ The plugin is configured in `mkdocs.yml`:
 ```yaml
 plugins:
 
-  - plantuml:
+- plantuml:
       server: https://www.plantuml.com/plantuml
       output_format: svg
       cachedir: .plantuml-cache
@@ -141,8 +141,7 @@ For offline rendering or enhanced privacy, you can use a local PlantUML server:
 3. Update `mkdocs.yml` to use local rendering:
    ```yaml
    plugins:
-
-     - plantuml:
+- plantuml:
          render: local
          output_format: svg
          cachedir: .plantuml-cache
@@ -187,8 +186,7 @@ The site uses Material for MkDocs theme. Customize it in `mkdocs.yml`:
 theme:
   name: material
   palette:
-
-    - scheme: default
+- scheme: default
       primary: indigo
       accent: indigo
 ```

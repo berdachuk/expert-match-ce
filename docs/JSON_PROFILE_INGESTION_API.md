@@ -395,7 +395,7 @@ All errors are included in the `IngestionResult` response for reporting.
 3. **Apply Defaults**: Fills missing optional fields with default values
 4. **Process Employee**: Creates or updates employee record
 5. **Process Projects**: For each project:
-    - Creates/updates project record
+- Creates/updates project record
     - Creates work experience record
     - Links technologies
 6. **Return Result**: Returns `IngestionResult` with success/error counts

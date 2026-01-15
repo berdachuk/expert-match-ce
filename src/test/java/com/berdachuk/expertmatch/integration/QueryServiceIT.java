@@ -1,9 +1,9 @@
 package com.berdachuk.expertmatch.integration;
 
-import com.berdachuk.expertmatch.chat.ChatService;
-import com.berdachuk.expertmatch.query.QueryRequest;
-import com.berdachuk.expertmatch.query.QueryResponse;
-import com.berdachuk.expertmatch.query.QueryService;
+import com.berdachuk.expertmatch.chat.service.ChatService;
+import com.berdachuk.expertmatch.query.domain.QueryRequest;
+import com.berdachuk.expertmatch.query.domain.QueryResponse;
+import com.berdachuk.expertmatch.query.service.QueryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration test for QueryService.
- *
+ * <p>
  * IMPORTANT: This is an integration test with database. All LLM calls MUST be mocked.
  * - Uses "test" profile which excludes SpringAIConfig (via @Profile("!test"))
  * - TestAIConfig provides @Primary mocks for ChatModel and EmbeddingModel
@@ -32,7 +32,7 @@ class QueryServiceIT extends BaseIntegrationTest {
     private NamedParameterJdbcTemplate namedJdbcTemplate;
 
     private String chatId;
-    private String userId = "test-user-id";
+    private final String userId = "test-user-id";
 
     @BeforeEach
     void setUp() {
@@ -64,9 +64,9 @@ class QueryServiceIT extends BaseIntegrationTest {
     @Test
     void testProcessQuery() {
         QueryRequest request = new QueryRequest(
-            "Looking for experts in Java and Spring Boot",
-            null,
-                new QueryRequest.QueryOptions(10, 0.7, true, true, true, false, false, false, false, false)
+                "Looking for experts in Java and Spring Boot",
+                null,
+                new com.berdachuk.expertmatch.query.domain.QueryRequest.QueryOptions(10, 0.7, true, true, true, false, false, false, false, false)
         );
 
         QueryResponse response = queryService.processQuery(request, chatId, userId);
@@ -85,9 +85,9 @@ class QueryServiceIT extends BaseIntegrationTest {
     @Test
     void testProcessQueryWithOptions() {
         QueryRequest request = new QueryRequest(
-            "Need a team for a banking app",
-            null,
-                new QueryRequest.QueryOptions(5, 0.8, true, true, true, false, false, false, false, false)
+                "Need a team for a banking app",
+                null,
+                new com.berdachuk.expertmatch.query.domain.QueryRequest.QueryOptions(5, 0.8, true, true, true, false, false, false, false, false)
         );
 
         QueryResponse response = queryService.processQuery(request, chatId, userId);
@@ -114,7 +114,7 @@ class QueryServiceIT extends BaseIntegrationTest {
         QueryRequest request = new QueryRequest(
                 "Looking for Java expert",
                 null,
-                new QueryRequest.QueryOptions(1, 0.7, true, true, true, false, true, false, false, false)
+                new com.berdachuk.expertmatch.query.domain.QueryRequest.QueryOptions(1, 0.7, true, true, true, false, true, false, false, false)
         );
 
         QueryResponse response = queryService.processQuery(request, chatId, userId);
@@ -137,7 +137,7 @@ class QueryServiceIT extends BaseIntegrationTest {
         QueryRequest request = new QueryRequest(
                 "Looking for Java experts",
                 null,
-                new QueryRequest.QueryOptions(5, 0.7, true, true, true, false, false, false, true, false)
+                new com.berdachuk.expertmatch.query.domain.QueryRequest.QueryOptions(5, 0.7, true, true, true, false, false, false, true, false)
         );
 
         QueryResponse response = queryService.processQuery(request, chatId, userId);

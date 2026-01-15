@@ -1,5 +1,6 @@
 package com.berdachuk.expertmatch.ingestion;
 
+import com.berdachuk.expertmatch.ingestion.service.TestDataGenerator;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -24,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Integration test for IngestionController.
  * Uses Testcontainers PostgreSQL and MockMvc for endpoint testing.
- *
+ * <p>
  * IMPORTANT: This is an integration test with database. All LLM calls MUST be mocked.
  * - Extends BaseIntegrationTest which uses TestAIConfig mocks
  * - TestDataGenerator.generateEmbeddings() uses mocked EmbeddingModel
@@ -35,17 +36,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SuppressWarnings("null")
 class IngestionControllerIT extends BaseIntegrationTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private TestDataGenerator testDataGenerator;
-
-    @Autowired
-    private NamedParameterJdbcTemplate namedJdbcTemplate;
-
     @SuppressWarnings("null")
     private static final MediaType APPLICATION_JSON = Objects.requireNonNull(MediaType.APPLICATION_JSON);
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private TestDataGenerator testDataGenerator;
+    @Autowired
+    private NamedParameterJdbcTemplate namedJdbcTemplate;
 
     @BeforeEach
     void setUp() {
@@ -72,7 +70,7 @@ class IngestionControllerIT extends BaseIntegrationTest {
     @WithMockUser(roles = "ADMIN")
     void testGenerateTestData() throws Exception {
         mockMvc.perform(post("/api/v1/test-data")
-                .param("size", "small")
+                        .param("size", "small")
                         .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -83,7 +81,7 @@ class IngestionControllerIT extends BaseIntegrationTest {
         Integer count = namedJdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM expertmatch.employee",
                 new HashMap<>(),
-            Integer.class
+                Integer.class
         );
         assertNotNull(count);
         assertTrue(count > 0);
@@ -127,7 +125,7 @@ class IngestionControllerIT extends BaseIntegrationTest {
     @WithMockUser(roles = "ADMIN")
     void testGenerateCompleteDataset() throws Exception {
         mockMvc.perform(post("/api/v1/test-data/complete")
-                .param("size", "small")
+                        .param("size", "small")
                         .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -137,7 +135,7 @@ class IngestionControllerIT extends BaseIntegrationTest {
         Integer empCount = namedJdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM expertmatch.employee",
                 new HashMap<>(),
-            Integer.class
+                Integer.class
         );
         assertNotNull(empCount);
         assertTrue(empCount > 0);
@@ -146,10 +144,11 @@ class IngestionControllerIT extends BaseIntegrationTest {
     @Test
     @Disabled("TestSecurityConfig permits all requests, so security tests cannot work with current test setup. " +
             "These tests would require a different security configuration that enforces authorization.")
-    @WithMockUser(roles = "USER") // Non-admin user
+    @WithMockUser(roles = "USER")
+        // Non-admin user
     void testGenerateTestDataUnauthorized() throws Exception {
         mockMvc.perform(post("/api/v1/test-data")
-                .param("size", "small")
+                        .param("size", "small")
                         .contentType(APPLICATION_JSON))
                 .andExpect(status().isForbidden());
     }
@@ -159,7 +158,7 @@ class IngestionControllerIT extends BaseIntegrationTest {
             "These tests would require a different security configuration that enforces authentication.")
     void testGenerateTestDataUnauthenticated() throws Exception {
         mockMvc.perform(post("/api/v1/test-data")
-                .param("size", "small")
+                        .param("size", "small")
                         .contentType(APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }

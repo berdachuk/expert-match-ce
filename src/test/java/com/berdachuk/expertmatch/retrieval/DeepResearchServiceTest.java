@@ -1,9 +1,9 @@
 package com.berdachuk.expertmatch.retrieval;
 
-import com.berdachuk.expertmatch.data.ExpertEnrichmentService;
-import com.berdachuk.expertmatch.query.QueryParser;
-import com.berdachuk.expertmatch.query.QueryRequest;
-import com.berdachuk.expertmatch.query.QueryResponse;
+import com.berdachuk.expertmatch.employee.service.ExpertEnrichmentService;
+import com.berdachuk.expertmatch.query.domain.QueryRequest;
+import com.berdachuk.expertmatch.retrieval.service.DeepResearchService;
+import com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,10 +27,10 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for DeepResearchService.
- *
+ * <p>
  * Note: Full integration testing of ChatClient interactions requires integration tests
  * due to the complexity of mocking Spring AI's fluent ChatClient API.
- *
+ * <p>
  * WARNING: Some tests that require ChatClient mocking are currently disabled due to
  * Spring AI inner type accessibility issues. These should be tested via integration tests.
  */
@@ -82,15 +82,15 @@ class DeepResearchServiceTest {
     void testPerformDeepResearchWithEmptyInitialResults() {
         // Setup
         QueryRequest request = createRequest("test query", true);
-        QueryParser.ParsedQuery parsedQuery = new QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
+        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery = new com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
 
-        HybridRetrievalService.RetrievalResult emptyResult =
-                new HybridRetrievalService.RetrievalResult(List.of(), Map.of());
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult emptyResult =
+                new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(List.of(), Map.of());
 
         when(retrievalService.retrieve(any(), any(), any())).thenReturn(emptyResult);
 
         // Execute
-        HybridRetrievalService.RetrievalResult result =
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult result =
                 deepResearchService.performDeepResearch(request, parsedQuery);
 
         // Verify
@@ -105,15 +105,15 @@ class DeepResearchServiceTest {
     void testPerformDeepResearchWithNoGaps() {
         // Setup
         QueryRequest request = createRequest("test query", true);
-        QueryParser.ParsedQuery parsedQuery = new QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
+        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery = new com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
 
-        HybridRetrievalService.RetrievalResult initialResult =
-                new HybridRetrievalService.RetrievalResult(
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult initialResult =
+                new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(
                         List.of("expert1", "expert2"),
                         Map.of("expert1", 0.9, "expert2", 0.8)
                 );
 
-        List<QueryResponse.ExpertMatch> experts = List.of(
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> experts = List.of(
                 createMockExpert("expert1", "Expert 1"),
                 createMockExpert("expert2", "Expert 2")
         );
@@ -134,7 +134,7 @@ class DeepResearchServiceTest {
         mockChatClientResponse(gapAnalysisJson);
 
         // Execute
-        HybridRetrievalService.RetrievalResult result =
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult result =
                 deepResearchService.performDeepResearch(request, parsedQuery);
 
         // Verify
@@ -151,15 +151,15 @@ class DeepResearchServiceTest {
     void testPerformDeepResearchWithGapsAndExpansion() {
         // Setup
         QueryRequest request = createRequest("Find Java experts with Spring Boot and AWS", true);
-        QueryParser.ParsedQuery parsedQuery = new QueryParser.ParsedQuery("Find Java experts with Spring Boot and AWS", List.of(), List.of(), null, "expert_search", List.of());
+        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery = new com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery("Find Java experts with Spring Boot and AWS", List.of(), List.of(), null, "expert_search", List.of());
 
-        HybridRetrievalService.RetrievalResult initialResult =
-                new HybridRetrievalService.RetrievalResult(
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult initialResult =
+                new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(
                         List.of("expert1"),
                         Map.of("expert1", 0.8)
                 );
 
-        List<QueryResponse.ExpertMatch> experts = List.of(
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> experts = List.of(
                 createMockExpert("expert1", "Expert 1")
         );
 
@@ -180,14 +180,14 @@ class DeepResearchServiceTest {
                 """;
 
         // Mock expanded retrieval results
-        HybridRetrievalService.RetrievalResult expandedResult1 =
-                new HybridRetrievalService.RetrievalResult(
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult expandedResult1 =
+                new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(
                         List.of("expert2", "expert3"),
                         Map.of("expert2", 0.85, "expert3", 0.75)
                 );
 
-        HybridRetrievalService.RetrievalResult expandedResult2 =
-                new HybridRetrievalService.RetrievalResult(
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult expandedResult2 =
+                new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(
                         List.of("expert4"),
                         Map.of("expert4", 0.7)
                 );
@@ -203,7 +203,7 @@ class DeepResearchServiceTest {
         mockChatClientResponses(gapAnalysisJson, refinedQueriesJson);
 
         // Execute
-        HybridRetrievalService.RetrievalResult result =
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult result =
                 deepResearchService.performDeepResearch(request, parsedQuery);
 
         // Verify
@@ -219,15 +219,15 @@ class DeepResearchServiceTest {
     void testPerformDeepResearchWithEmptyRefinedQueries() {
         // Setup
         QueryRequest request = createRequest("test query", true);
-        QueryParser.ParsedQuery parsedQuery = new QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
+        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery = new com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
 
-        HybridRetrievalService.RetrievalResult initialResult =
-                new HybridRetrievalService.RetrievalResult(
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult initialResult =
+                new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(
                         List.of("expert1"),
                         Map.of("expert1", 0.9)
                 );
 
-        List<QueryResponse.ExpertMatch> experts = List.of(
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> experts = List.of(
                 createMockExpert("expert1", "Expert 1")
         );
 
@@ -247,7 +247,7 @@ class DeepResearchServiceTest {
         mockChatClientResponses(gapAnalysisJson, refinedQueriesJson);
 
         // Execute
-        HybridRetrievalService.RetrievalResult result =
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult result =
                 deepResearchService.performDeepResearch(request, parsedQuery);
 
         // Verify - should return initial results when no refined queries
@@ -261,15 +261,15 @@ class DeepResearchServiceTest {
     void testPerformDeepResearchWithExpandedRetrievalError() {
         // Setup
         QueryRequest request = createRequest("test query", true);
-        QueryParser.ParsedQuery parsedQuery = new QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
+        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery = new com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
 
-        HybridRetrievalService.RetrievalResult initialResult =
-                new HybridRetrievalService.RetrievalResult(
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult initialResult =
+                new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(
                         List.of("expert1"),
                         Map.of("expert1", 0.9)
                 );
 
-        List<QueryResponse.ExpertMatch> experts = List.of(
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> experts = List.of(
                 createMockExpert("expert1", "Expert 1")
         );
 
@@ -293,7 +293,7 @@ class DeepResearchServiceTest {
         mockChatClientResponses(gapAnalysisJson, refinedQueriesJson);
 
         // Execute - should handle error gracefully and return initial results
-        HybridRetrievalService.RetrievalResult result =
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult result =
                 deepResearchService.performDeepResearch(request, parsedQuery);
 
         // Verify - should return initial results when expanded retrieval fails
@@ -307,15 +307,15 @@ class DeepResearchServiceTest {
     void testGapAnalysisParsingWithMarkdownCodeBlock() {
         // Setup
         QueryRequest request = createRequest("test query", true);
-        QueryParser.ParsedQuery parsedQuery = new QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
+        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery = new com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
 
-        HybridRetrievalService.RetrievalResult initialResult =
-                new HybridRetrievalService.RetrievalResult(
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult initialResult =
+                new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(
                         List.of("expert1"),
                         Map.of("expert1", 0.9)
                 );
 
-        List<QueryResponse.ExpertMatch> experts = List.of(
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> experts = List.of(
                 createMockExpert("expert1", "Expert 1")
         );
 
@@ -337,13 +337,13 @@ class DeepResearchServiceTest {
 
         when(retrievalService.retrieve(any(), any(), any()))
                 .thenReturn(initialResult)
-                .thenReturn(new HybridRetrievalService.RetrievalResult(List.of("expert2"), Map.of("expert2", 0.8)))
-                .thenReturn(new HybridRetrievalService.RetrievalResult(List.of("expert3"), Map.of("expert3", 0.7)));
+                .thenReturn(new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(List.of("expert2"), Map.of("expert2", 0.8)))
+                .thenReturn(new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(List.of("expert3"), Map.of("expert3", 0.7)));
         when(enrichmentService.enrichExperts(any(), any())).thenReturn(experts);
         mockChatClientResponses(gapAnalysisResponse, refinedQueriesResponse);
 
         // Execute
-        HybridRetrievalService.RetrievalResult result =
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult result =
                 deepResearchService.performDeepResearch(request, parsedQuery);
 
         // Verify - should parse JSON from markdown code block
@@ -355,15 +355,15 @@ class DeepResearchServiceTest {
     void testGapAnalysisParsingFailure() {
         // Setup
         QueryRequest request = createRequest("test query", true);
-        QueryParser.ParsedQuery parsedQuery = new QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
+        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery = new com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
 
-        HybridRetrievalService.RetrievalResult initialResult =
-                new HybridRetrievalService.RetrievalResult(
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult initialResult =
+                new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(
                         List.of("expert1"),
                         Map.of("expert1", 0.9)
                 );
 
-        List<QueryResponse.ExpertMatch> experts = List.of(
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> experts = List.of(
                 createMockExpert("expert1", "Expert 1")
         );
 
@@ -387,15 +387,15 @@ class DeepResearchServiceTest {
     void testQueryRefinementParsingWithMarkdown() {
         // Setup
         QueryRequest request = createRequest("test query", true);
-        QueryParser.ParsedQuery parsedQuery = new QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
+        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery = new com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
 
-        HybridRetrievalService.RetrievalResult initialResult =
-                new HybridRetrievalService.RetrievalResult(
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult initialResult =
+                new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(
                         List.of("expert1"),
                         Map.of("expert1", 0.9)
                 );
 
-        List<QueryResponse.ExpertMatch> experts = List.of(
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> experts = List.of(
                 createMockExpert("expert1", "Expert 1")
         );
 
@@ -417,14 +417,14 @@ class DeepResearchServiceTest {
 
         when(retrievalService.retrieve(any(), any(), any()))
                 .thenReturn(initialResult)
-                .thenReturn(new HybridRetrievalService.RetrievalResult(List.of("expert2"), Map.of("expert2", 0.8)))
-                .thenReturn(new HybridRetrievalService.RetrievalResult(List.of("expert3"), Map.of("expert3", 0.7)));
+                .thenReturn(new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(List.of("expert2"), Map.of("expert2", 0.8)))
+                .thenReturn(new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(List.of("expert3"), Map.of("expert3", 0.7)));
 
         when(enrichmentService.enrichExperts(any(), any())).thenReturn(experts);
         mockChatClientResponses(gapAnalysisJson, refinedQueriesResponse);
 
         // Execute
-        HybridRetrievalService.RetrievalResult result =
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult result =
                 deepResearchService.performDeepResearch(request, parsedQuery);
 
         // Verify - should parse queries from markdown
@@ -436,15 +436,15 @@ class DeepResearchServiceTest {
     void testDeepResearchDoesNotRecurse() {
         // Setup - deepResearch is enabled in request
         QueryRequest request = createRequest("test query", true);
-        QueryParser.ParsedQuery parsedQuery = new QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
+        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery = new com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
 
-        HybridRetrievalService.RetrievalResult initialResult =
-                new HybridRetrievalService.RetrievalResult(
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult initialResult =
+                new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(
                         List.of("expert1"),
                         Map.of("expert1", 0.9)
                 );
 
-        List<QueryResponse.ExpertMatch> experts = List.of(
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> experts = List.of(
                 createMockExpert("expert1", "Expert 1")
         );
 
@@ -462,7 +462,7 @@ class DeepResearchServiceTest {
 
         when(retrievalService.retrieve(any(), any(), any()))
                 .thenReturn(initialResult)
-                .thenReturn(new HybridRetrievalService.RetrievalResult(List.of("expert2"), Map.of("expert2", 0.8)));
+                .thenReturn(new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(List.of("expert2"), Map.of("expert2", 0.8)));
 
         when(enrichmentService.enrichExperts(any(), any())).thenReturn(experts);
         mockChatClientResponses(gapAnalysisJson, refinedQueriesJson);
@@ -478,15 +478,15 @@ class DeepResearchServiceTest {
     void testChatClientNullResponse() {
         // Setup
         QueryRequest request = createRequest("test query", true);
-        QueryParser.ParsedQuery parsedQuery = new QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
+        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery = new com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery("test query", List.of(), List.of(), null, "expert_search", List.of());
 
-        HybridRetrievalService.RetrievalResult initialResult =
-                new HybridRetrievalService.RetrievalResult(
+        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult initialResult =
+                new com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult(
                         List.of("expert1"),
                         Map.of("expert1", 0.9)
                 );
 
-        List<QueryResponse.ExpertMatch> experts = List.of(
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> experts = List.of(
                 createMockExpert("expert1", "Expert 1")
         );
 
@@ -543,7 +543,7 @@ class DeepResearchServiceTest {
         return new QueryRequest(
                 query,
                 null,
-                new QueryRequest.QueryOptions(10, 0.7, true, true, true, deepResearch, false, false, false, false)
+                new com.berdachuk.expertmatch.query.domain.QueryRequest.QueryOptions(10, 0.7, true, true, true, deepResearch, false, false, false, false)
         );
     }
 
@@ -561,19 +561,19 @@ class DeepResearchServiceTest {
             Class<?> promptReturnType = invocation.getMethod().getReturnType();
 
             // Create request mock using the actual return type
-            Object requestMock = mock(promptReturnType, withSettings().defaultAnswer((Answer) inv -> {
+            Object requestMock = mock(promptReturnType, withSettings().defaultAnswer(inv -> {
                 String methodName = inv.getMethod().getName();
                 if (methodName.equals("user") && inv.getArguments().length == 1 && inv.getArguments()[0] instanceof String) {
                     // Get the return type of user() method
                     Class<?> userReturnType = inv.getMethod().getReturnType();
                     // Create requestSpec mock using the actual return type
-                    Object requestSpecMock = mock(userReturnType, withSettings().defaultAnswer((Answer) inv2 -> {
+                    Object requestSpecMock = mock(userReturnType, withSettings().defaultAnswer(inv2 -> {
                         String methodName2 = inv2.getMethod().getName();
                         if (methodName2.equals("call")) {
                             // Get the return type of call() method
                             Class<?> callReturnType = inv2.getMethod().getReturnType();
                             // Create response mock using the actual return type
-                            Object responseMock = mock(callReturnType, withSettings().defaultAnswer((Answer) inv3 -> {
+                            Object responseMock = mock(callReturnType, withSettings().defaultAnswer(inv3 -> {
                                 String methodName3 = inv3.getMethod().getName();
                                 if (methodName3.equals("chatResponse")) {
                                     return mockResponse;
@@ -609,19 +609,19 @@ class DeepResearchServiceTest {
             Class<?> promptReturnType = invocation.getMethod().getReturnType();
 
             // Create request mock using the actual return type
-            Object requestMock = mock(promptReturnType, withSettings().defaultAnswer((Answer) inv -> {
+            Object requestMock = mock(promptReturnType, withSettings().defaultAnswer(inv -> {
                 String methodName = inv.getMethod().getName();
                 if (methodName.equals("user") && inv.getArguments().length == 1 && inv.getArguments()[0] instanceof String) {
                     // Get the return type of user() method
                     Class<?> userReturnType = inv.getMethod().getReturnType();
                     // Create requestSpec mock using the actual return type
-                    Object requestSpecMock = mock(userReturnType, withSettings().defaultAnswer((Answer) inv2 -> {
+                    Object requestSpecMock = mock(userReturnType, withSettings().defaultAnswer(inv2 -> {
                         String methodName2 = inv2.getMethod().getName();
                         if (methodName2.equals("call")) {
                             // Get the return type of call() method
                             Class<?> callReturnType = inv2.getMethod().getReturnType();
                             // Create response mock using the actual return type
-                            Object responseMock = mock(callReturnType, withSettings().defaultAnswer((Answer) inv3 -> {
+                            Object responseMock = mock(callReturnType, withSettings().defaultAnswer(inv3 -> {
                                 String methodName3 = inv3.getMethod().getName();
                                 if (methodName3.equals("chatResponse")) {
                                     return resp;
@@ -656,17 +656,17 @@ class DeepResearchServiceTest {
         return response;
     }
 
-    private QueryResponse.ExpertMatch createMockExpert(String id, String name) {
-        return new QueryResponse.ExpertMatch(
+    private com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch createMockExpert(String id, String name) {
+        return new com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch(
                 id,
                 name,
                 name + "@example.com",
                 "A4",
-                new QueryResponse.LanguageProficiency("C1"),
-                new QueryResponse.SkillMatch(5, 5, 0, 0, 1.0),
-                new QueryResponse.MatchedSkills(List.of("Java", "Spring"), List.of()),
+                new com.berdachuk.expertmatch.query.domain.QueryResponse.LanguageProficiency("C1"),
+                new com.berdachuk.expertmatch.query.domain.QueryResponse.SkillMatch(5, 5, 0, 0, 1.0),
+                new com.berdachuk.expertmatch.query.domain.QueryResponse.MatchedSkills(List.of("Java", "Spring"), List.of()),
                 List.of(),
-                new QueryResponse.Experience(false, false, false, false, false),
+                new com.berdachuk.expertmatch.query.domain.QueryResponse.Experience(false, false, false, false, false),
                 0.9,
                 "available"
         );

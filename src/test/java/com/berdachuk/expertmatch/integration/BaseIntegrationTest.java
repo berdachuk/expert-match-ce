@@ -1,9 +1,9 @@
 package com.berdachuk.expertmatch.integration;
 
-import com.berdachuk.expertmatch.config.TestAIConfig;
-import com.berdachuk.expertmatch.config.TestAIConfigListener;
-import com.berdachuk.expertmatch.config.TestProfileExclusions;
-import com.berdachuk.expertmatch.config.TestSecurityConfig;
+import com.berdachuk.expertmatch.core.config.TestAIConfig;
+import com.berdachuk.expertmatch.core.config.TestAIConfigListener;
+import com.berdachuk.expertmatch.core.config.TestProfileExclusions;
+import com.berdachuk.expertmatch.core.config.TestSecurityConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -157,7 +157,7 @@ public abstract class BaseIntegrationTest {
                     try {
                         Thread.sleep(retryDelayMs);
                         // Exponential backoff with max delay
-                        retryDelayMs = Math.min((long)(retryDelayMs * 1.5), maxDelayMs);
+                        retryDelayMs = Math.min((long) (retryDelayMs * 1.5), maxDelayMs);
                     } catch (InterruptedException ie) {
                         Thread.currentThread().interrupt();
                         throw new RuntimeException("Interrupted while waiting for database", ie);
@@ -167,11 +167,11 @@ public abstract class BaseIntegrationTest {
         }
 
         throw new RuntimeException(
-            "Failed to connect to test database after " + maxRetries + " retries. " +
-            "Container running: " + postgres.isRunning() + ", " +
-            "Container state: " + (postgres.isRunning() ? "running" : "not running") + ", " +
-            "JDBC URL: " + postgres.getJdbcUrl(),
-            lastException
+                "Failed to connect to test database after " + maxRetries + " retries. " +
+                        "Container running: " + postgres.isRunning() + ", " +
+                        "Container state: " + (postgres.isRunning() ? "running" : "not running") + ", " +
+                        "JDBC URL: " + postgres.getJdbcUrl(),
+                lastException
         );
     }
 

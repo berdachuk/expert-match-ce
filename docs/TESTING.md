@@ -1,34 +1,50 @@
 # Testing Guide
 
-## Test Structure
+## Test-Driven Development Approach
 
-The ExpertMatch backend includes unit tests and integration tests.
+ExpertMatch follows a **Test-Driven Development (TDD)** approach with emphasis on integration tests. See [CODING_RULES.md](CODING_RULES.md#test-driven-development-approach) for complete guidelines.
 
-### Unit Tests
+### Core Principles
 
-Located in `src/test/java/com/berdachuk/expertmatch/`:
+1. **Integration Tests First**: Prefer integration tests over unit tests
+2. **Full Flow Verification**: Test complete workflows from API endpoints to database
+3. **Test Independence**: Each test prepares its own data and cleans up after itself
+4. **Minimize Unit Tests**: Use unit tests only for pure logic, algorithms, or when integration tests are impractical
 
-- `QueryParserTest` - Tests query parsing functionality
-- `ResultFusionServiceTest` - Tests RRF fusion logic
-- `IdGeneratorTest` - Tests ID generation
+### Test Structure
 
-### Integration Tests
+The ExpertMatch backend follows TDD principles with **integration tests as the primary testing strategy**.
 
-Located in `src/test/java/com/berdachuk/expertmatch/`:
+#### Integration Tests (Primary)
 
-- `EmployeeRepositoryTest` - Database integration test for employee repository
-- `WorkExperienceRepositoryTest` - Database integration test for work experience repository
-- `VectorSearchServiceTest` - Integration test for vector similarity search
-- `KeywordSearchServiceTest` - Integration test for keyword/full-text search
-- `ChatServiceTest` - Integration test for chat management operations
-- `QueryServiceIntegrationTest` - Full integration test for query processing pipeline
+Integration tests verify the complete flow (Controller → Service → Repository → Database) and are located in `src/test/java/com/berdachuk/expertmatch/`:
+
+- `EmployeeRepositoryIT` - Database integration test for employee repository
+- `WorkExperienceRepositoryIT` - Database integration test for work experience repository
+- `VectorSearchServiceIT` - Integration test for vector similarity search
+- `KeywordSearchServiceIT` - Integration test for keyword/full-text search
+- `ChatServiceIT` - Integration test for chat management operations
+- `QueryServiceIT` - Full integration test for query processing pipeline
 - `GraphServiceIT` - Integration test for Apache AGE graph operations
-- `GraphBuilderServiceIT` - Comprehensive integration test for graph building from database data, including Customer
-  vertices and relationships
+- `GraphBuilderServiceIT` - Comprehensive integration test for graph building from database data
+- `ProfileProcessorIT` - Integration test for profile processing with database persistence
+- `JsonProfileIngestionServiceIT` - Integration test for JSON profile ingestion (full flow)
+- `TestDataGeneratorSiarheiBerdachukIT` - Integration test for Siarhei Berdachuk profile data generation
 
-### Unit Tests (Mocked Dependencies)
+**Naming Convention**: Integration tests use `*IT` suffix (e.g., `EmployeeRepositoryIT`)
 
-- `EmbeddingServiceTest` - Unit test for embedding generation (mocks EmbeddingClient)
+#### Unit Tests (Limited Use)
+
+Unit tests are used **only** for pure logic functions without database dependencies:
+
+- `ResultFusionServiceTest` - Pure algorithm logic (result fusion/ranking)
+- `QueryExamplesServiceTest` - Static data service (no database)
+- `ValidationUtilsTest` - Pure utility functions (no dependencies)
+- `IdGeneratorTest` - Pure utility functions
+- `QueryParserTest` - Pure parsing logic (with mocked LLM)
+- `EntityExtractorTest` - Pure extraction logic (with mocked LLM)
+
+**Note**: Unit tests with mocks are acceptable only when testing pure logic or when integration test setup is prohibitively complex.
 
 ### Integration Tests
 
@@ -81,7 +97,6 @@ Tests use the `test` profile with:
 ### Mock AI Provider Configuration
 
 **CRITICAL**: All integration tests use **mock AI providers** instead of real LLM services. This ensures:
-
 - Tests run fast without network dependencies
 - No API costs or rate limits
 - Tests are deterministic and reproducible
@@ -90,29 +105,24 @@ Tests use the `test` profile with:
 #### How It Works
 
 1. **TestAIConfig** (`src/test/java/com/berdachuk/expertmatch/config/TestAIConfig.java`):
-
-     - Provides `@Primary` mock beans for `ChatModel`, `EmbeddingModel`, and `rerankingChatModel`
+- Provides `@Primary` mock beans for `ChatModel`, `EmbeddingModel`, and `rerankingChatModel`
     - Mocks return valid JSON responses without making real API calls
     - Only active in `test` profile
 
 2. **SpringAIConfig Exclusion**:
-
-     - `SpringAIConfig` is excluded from test profile via `@Profile("!test")`
+- `SpringAIConfig` is excluded from test profile via `@Profile("!test")`
     - Prevents real LLM models from being created during tests
 
 3. **Auto-Configuration Exclusions**:
-
-    - Spring AI auto-configuration classes are excluded in `application-test.yml`:
-
-          - `OllamaChatAutoConfiguration`
+- Spring AI auto-configuration classes are excluded in `application-test.yml`:
+- `OllamaChatAutoConfiguration`
         - `OllamaEmbeddingAutoConfiguration`
         - `OllamaApiAutoConfiguration`
         - `OpenAiChatAutoConfiguration`
         - `OpenAiEmbeddingAutoConfiguration`
 
 4. **BaseIntegrationTest**:
-
-     - All integration tests extend `BaseIntegrationTest`
+- All integration tests extend `BaseIntegrationTest`
     - Ensures test profile is active and mocks are used
 
 #### Verifying Mock Usage
@@ -146,7 +156,7 @@ To verify tests are using mocks:
 
 ```bash
 # Run tests and check for mock usage
-mvn clean test 2>&1 | grep -E "(MOCK|REAL|⚠️|✗)"
+mvn clean test 2>&1 | grep -E "(MOCK|REAL||✗)"
 
 # Check for SpringAIConfig instantiation (should NOT happen in tests)
 mvn clean test 2>&1 | grep "SpringAIConfig"
@@ -176,8 +186,7 @@ If you see real LLM usage during tests:
    ```
 
 3. **Check Auto-Configuration Exclusions**:
-
-     - Verify `application-test.yml` has exclusions configured
+- Verify `application-test.yml` has exclusions configured
     - Verify `BaseIntegrationTest` has exclusions in properties
 
 4. **Verify TestAIConfig is Loaded**:
@@ -187,8 +196,7 @@ If you see real LLM usage during tests:
    ```
 
 5. **Check for SpringAIConfig Bean**:
-
-     - If `SpringAIConfig` is instantiated in test profile, it will throw an exception
+- If `SpringAIConfig` is instantiated in test profile, it will throw an exception
     - Check logs for "SpringAIConfig should NOT be active in test profile"
 
 #### Mock Behavior
@@ -242,37 +250,70 @@ docker build -f docker/Dockerfile.test -t expertmatch-postgres-test:latest .
 
 ## Writing Tests
 
-### Database Test Example
+### Integration Test Pattern (Required)
+
+All integration tests must follow this pattern for test independence:
 
 ```java
-class EmployeeRepositoryTest extends BaseIntegrationTest {
+@SpringBootTest
+class EmployeeRepositoryIT extends BaseIntegrationTest {
     
     @Autowired
-    private EmployeeRepository repository;
+    private EmployeeRepository employeeRepository;  // Inject interface, not implementation
+    
+    @Autowired
+    private NamedParameterJdbcTemplate namedJdbcTemplate;
     
     @BeforeEach
     void setUp() {
-        // Set up test data in PostgreSQL
+        // Clear existing data to ensure test independence
+        namedJdbcTemplate.getJdbcTemplate().execute("DELETE FROM expertmatch.work_experience");
+        namedJdbcTemplate.getJdbcTemplate().execute("DELETE FROM expertmatch.employee");
+        
+        // Prepare required test data for this test
+        createTestData();
     }
     
     @Test
+    @Transactional
     void testFindById() {
-        // Test implementation
+        // Test complete flow with real database
+        // Verify actual database changes, not just method calls
+    }
+    
+    private void createTestData() {
+        // Create test data specific to this test
     }
 }
 ```
 
-### Integration Test Example
+### Key Requirements
+
+1. **Extend BaseIntegrationTest**: All integration tests extend `BaseIntegrationTest`
+2. **Inject Interfaces**: Always inject service/repository interfaces, never concrete implementations
+3. **Clear Data in @BeforeEach**: Always clear relevant tables before creating test data
+4. **Prepare Test Data**: Create all required test data in `@BeforeEach` or at the start of test methods
+5. **Use Unique Identifiers**: Use unique IDs (UUIDs, timestamps) to avoid conflicts between parallel test runs
+6. **Test Full Flow**: Verify actual database persistence, not just method calls
+
+### Unit Test Pattern (Limited Use)
+
+Unit tests are acceptable only for pure logic:
 
 ```java
-class QueryServiceIntegrationTest extends BaseIntegrationTest {
+/**
+ * Unit test for ResultFusionService.
+ * 
+ * Note: This is a legitimate unit test because it tests pure algorithm logic (result fusion/ranking)
+ * without database dependencies. According to TDD rules, unit tests are acceptable for pure logic functions.
+ */
+class ResultFusionServiceTest {
     
-    @Autowired
-    private QueryService queryService;
+    private final ResultFusionService fusionService = new ResultFusionServiceImpl();
     
     @Test
-    void testProcessQuery() {
-        // Test implementation
+    void testFuseResults() {
+        // Test pure algorithm logic
     }
 }
 ```
@@ -334,26 +375,40 @@ class GraphBuilderServiceIT extends BaseIntegrationTest {
 
 ## Best Practices
 
-1. **Unit Tests**: Test individual components in isolation
-2. **Integration Tests**: Test component interactions
-3. **Test Data**:
+### Test-Driven Development
 
-    - Use constants for test data values instead of hardcoded strings
-   - Create helper methods for common test data creation patterns
-   - Use unique identifiers to avoid conflicts between tests
-   - Extract cleanup logic into separate methods
-4. **Cleanup**:
+1. **Integration Tests First**: Always prefer integration tests that verify full flow
+2. **Test Independence**: Each test must prepare its own data and clean up after itself
+3. **Full Flow Verification**: Test complete workflows from API to database
+4. **Minimize Unit Tests**: Use unit tests only for pure logic, algorithms, or utilities
 
-    - Use `@Transactional` or manual cleanup in `@BeforeEach`/`@AfterEach`
-   - Clear database tables and graph state before each test
-   - Extract cleanup logic into helper methods (e.g., `clearDatabaseTables()`, `clearGraph()`)
-5. **Assertions**: Use descriptive assertion messages
-6. **Code Organization**:
+### Test Data Management
 
-    - Keep `setUp()` methods simple and focused
-   - Extract complex logic into helper methods
-   - Use constants for magic strings and repeated values
-   - Group related test data constants together
+1. **Prepare in @BeforeEach**: Always prepare test data in `@BeforeEach` before each test
+2. **Clear Before Create**: Clear relevant tables before creating test data
+3. **Use Constants**: Use constants for test data values instead of hardcoded strings
+4. **Helper Methods**: Create helper methods for common test data creation patterns
+5. **Unique Identifiers**: Use unique identifiers (UUIDs, timestamps) to avoid conflicts
+6. **Extract Cleanup**: Extract cleanup logic into separate methods (e.g., `clearDatabaseTables()`, `clearGraph()`)
+
+### Code Organization
+
+1. **Keep setUp() Focused**: Keep `setUp()` methods simple and focused on data preparation
+2. **Extract Complex Logic**: Extract complex logic into helper methods
+3. **Use Constants**: Use constants for magic strings and repeated values
+4. **Group Constants**: Group related test data constants together
+
+### Dependency Injection
+
+1. **Inject Interfaces**: Always inject service/repository interfaces, never concrete implementations
+2. **Use @Autowired**: Use Spring's `@Autowired` for dependency injection in integration tests
+3. **Interface Types**: Use interface types for variables even when instantiating implementations directly in unit tests
+
+### Assertions
+
+1. **Descriptive Messages**: Use descriptive assertion messages
+2. **Verify Database**: Verify actual database changes, not just method calls
+3. **Full Flow**: Test complete workflows end-to-end
 
 ## Test Coverage Goals
 
@@ -467,7 +522,6 @@ The `WebControllerIT` class tests the web UI endpoints that make HTTP calls to t
 ### Important: Avoiding Duplicate Headers
 
 **CRITICAL**: When making API calls from `WebController`, the `X-User-Id` header must be set **only once**:
-
 - The generated API client automatically sets the `X-User-Id` header from the `userId` parameter
 - **Do NOT** call `setApiHeaders(userId)` before API methods that accept `userId` as a parameter
 - Calling `setApiHeaders()` creates duplicate headers (e.g., `test-user-web-123,test-user-web-123`), which causes chat
@@ -476,7 +530,7 @@ The `WebControllerIT` class tests the web UI endpoints that make HTTP calls to t
 **Correct Pattern**:
 
 ```java
-// ✅ CORRECT: Pass userId as parameter, generated client sets header
+//  CORRECT: Pass userId as parameter, generated client sets header
 QueryResponse response = queryApi.processQuery(
                 queryRequest,
                 userId,  // Generated client sets X-User-Id header from this parameter
@@ -488,7 +542,7 @@ QueryResponse response = queryApi.processQuery(
 **Incorrect Pattern**:
 
 ```java
-// ❌ WRONG: This creates duplicate headers
+//  WRONG: This creates duplicate headers
 setApiHeaders(userId);  // Sets default header
 
 QueryResponse response = queryApi.processQuery(
@@ -525,13 +579,11 @@ If you see "Access denied to chat" errors in tests:
    ```
 
 2. **Verify Header is Set Once**:
-
-    - Check that `setApiHeaders()` is NOT called before API methods that accept `userId` parameter
+- Check that `setApiHeaders()` is NOT called before API methods that accept `userId` parameter
    - The generated client automatically sets the header from the parameter
 
 3. **Check User ID Consistency**:
-
-    - Ensure the test creates the chat with the same user ID used in the request
+- Ensure the test creates the chat with the same user ID used in the request
    - Verify the `X-User-Id` header matches the chat owner's user ID
 
 ---
@@ -550,8 +602,7 @@ technologies, tools, project types, etc.) using LLM.
    to ensure thread safety
 3. **LLM Calls**: Service uses prompt templates to call LLM and request additional values for each constant type
 4. **Caching**: Results are cached in two layers:
-
-     - `ConstantExpansionService` caches results by input hash to avoid repeated LLM calls
+- `ConstantExpansionService` caches results by input hash to avoid repeated LLM calls
     - `TestDataGenerator` caches expanded constants in instance fields after first expansion
 5. **Fallback**: If LLM is unavailable or fails, the service falls back to base constants
 6. **Usage**: `TestDataGenerator` uses expanded constants when available, otherwise uses base constants

@@ -5,7 +5,7 @@
 
 ## Executive Summary
 
-✅ **Recommendation: Use `qwen3-embedding:8b` (8B model) with 1024 dimensions**
+ **Recommendation: Use `qwen3-embedding:8b` (8B model) with 1024 dimensions**
 
 **Key Finding**: The 8B model **supports user-defined output dimensions ranging from 32 to 4096** (per Ollama library). You can configure it to output 1024 dimensions, making it compatible with your current schema while providing superior quality.
 
@@ -24,8 +24,8 @@
 | **Model Size**             | ~7.6GB                                                   | ~639MB                                                 | 0.6B (12x smaller)        |
 | **Inference Speed**        | Slower                                                   | Faster                                                 | 0.6B (much faster)        |
 | **Memory Usage**           | ~8GB RAM                                                 | ~1GB RAM                                               | 0.6B (8x less)            |
-| **Database Compatibility** | ✅ **Compatible** (with 1024 dims)                        | ✅ **Compatible**                                       | **Both**                  |
-| **Code Compatibility**     | ✅ **Compatible** (with 1024 dims)                        | ✅ **Compatible**                                       | **Both**                  |
+| **Database Compatibility** |  **Compatible** (with 1024 dims)                        |  **Compatible**                                       | **Both**                  |
+| **Code Compatibility**     |  **Compatible** (with 1024 dims)                        |  **Compatible**                                       | **Both**                  |
 | **Quality (MTEB)**         | **70.58** (MMTEB), **75.22** (English), **80.68** (Code) | **64.3** (MMTEB), **70.7** (English), **75.41** (Code) | **8B** (better)           |
 
 ---
@@ -48,30 +48,29 @@ Your code expects **1024 dimensions**:
 private final int embeddingDimension = 1024; // Qwen3-Embedding-8B dimension
 ```
 
-### ✅ Solution: Configure 8B Model for 1024 Dimensions
+###  Solution: Configure 8B Model for 1024 Dimensions
 
 **Key Discovery**: According to [Ollama library documentation](https://ollama.com/library/qwen3-embedding), the `qwen3-embedding:8b` model **supports user-defined output dimensions ranging from 32 to 4096**.
 
 This means you can configure the 8B model to output **1024 dimensions**, making it:
 
-- ✅ **Compatible** with your database schema (`vector(1024)`)
-- ✅ **Compatible** with your code (expects 1024 dimensions)
-- ✅ **No schema changes** required
-- ✅ **No code changes** required
-- ✅ **Same storage** as 0.6B model (1024 dimensions)
-- ✅ **Same memory** for vector operations (1024 dimensions)
-- ✅ **Better quality** than 0.6B model (8B parameters vs 0.6B)
+- **Compatible** with your database schema (`vector(1024)`)
+- **Compatible** with your code (expects 1024 dimensions)
+- **No schema changes** required
+- **No code changes** required
+- **Same storage** as 0.6B model (1024 dimensions)
+- **Same memory** for vector operations (1024 dimensions)
+- **Better quality** than 0.6B model (8B parameters vs 0.6B)
 
 ### The Solution: 0.6B Model
 
 The `qwen3-embedding:0.6b` model produces **1024 dimensions**, which:
-
-- ✅ **Matches** your database schema exactly
-- ✅ **Matches** your code expectations exactly
-- ✅ **No schema changes** required
-- ✅ **No code changes** required
-- ✅ **Optimal storage** usage
-- ✅ **Fast similarity search**
+- **Matches** your database schema exactly
+- **Matches** your code expectations exactly
+- **No schema changes** required
+- **No code changes** required
+- **Optimal storage** usage
+- **Fast similarity search**
 
 ---
 
@@ -110,9 +109,9 @@ The 8B model demonstrates **superior performance** across multiple benchmarks:
 
 | Dimension | Quality     | Storage (2M docs) | Index Size | Query Speed | Recommendation       |
 |-----------|-------------|-------------------|------------|-------------|----------------------|
-| **1024**  | 100% (SOTA) | ~8GB              | ~12GB      | Fastest     | ✅ **Best for local** |
+| **1024**  | 100% (SOTA) | ~8GB              | ~12GB      | Fastest     |  **Best for local** |
 | 1536      | 95-98%      | ~12GB             | ~18GB      | Fast        | Good for cloud       |
-| 4096      | 100%        | ~32GB             | ~48GB      | Slower      | ❌ Overkill           |
+| 4096      | 100%        | ~32GB             | ~48GB      | Slower      |  Overkill           |
 
 ---
 
@@ -147,18 +146,18 @@ The 8B model demonstrates **superior performance** across multiple benchmarks:
 
 ## Recommendation
 
-### ✅ **Use `qwen3-embedding:8b` with 1024 dimensions (Recommended)**
+###  **Use `qwen3-embedding:8b` with 1024 dimensions (Recommended)**
 
 **Reasons**:
-1. ✅ **Perfect compatibility** - Configure to output 1024 dimensions (matches schema)
-2. ✅ **Superior quality** - 6-10% better performance on benchmarks
-3. ✅ **No schema changes** - Uses same 1024 dimensions as 0.6B
-4. ✅ **No code changes** - Same dimension output
-5. ✅ **Same storage** - 1024 dimensions = same storage as 0.6B
-6. ✅ **Better semantic understanding** - 8B parameters vs 0.6B
-7. ✅ **Ranked #1 in MTEB multilingual benchmarks** (per Ollama library)
-8. ✅ **Supports 100+ languages** (same as 0.6B)
-9. ✅ **Larger context window** - 40K vs 32K tokens
+1.  **Perfect compatibility** - Configure to output 1024 dimensions (matches schema)
+2.  **Superior quality** - 6-10% better performance on benchmarks
+3.  **No schema changes** - Uses same 1024 dimensions as 0.6B
+4.  **No code changes** - Same dimension output
+5.  **Same storage** - 1024 dimensions = same storage as 0.6B
+6.  **Better semantic understanding** - 8B parameters vs 0.6B
+7.  **Ranked #1 in MTEB multilingual benchmarks** (per Ollama library)
+8.  **Supports 100+ languages** (same as 0.6B)
+9.  **Larger context window** - 40K vs 32K tokens
 
 **Configuration**:
 ```yaml
@@ -172,7 +171,7 @@ spring:
             dimensions: 1024  # Configure to output 1024 dimensions
 ```
 
-### ⚠️ Alternative: Use `qwen3-embedding:0.6b` (If Resources Are Limited)
+###  Alternative: Use `qwen3-embedding:0.6b` (If Resources Are Limited)
 
 **Use 0.6B if**:
 
@@ -182,11 +181,11 @@ spring:
 - You're doing development/testing
 
 **Reasons**:
-1. ✅ **Faster inference** - 2-4x faster than 8B
-2. ✅ **Less memory** - ~1GB vs ~8GB RAM
-3. ✅ **Smaller model** - 639MB vs 4.7GB
-4. ✅ **Still good quality** - 64-75% on benchmarks
-5. ✅ **Higher quantization** - Q8_0 vs Q4_K_M (better precision)
+1.  **Faster inference** - 2-4x faster than 8B
+2.  **Less memory** - ~1GB vs ~8GB RAM
+3.  **Smaller model** - 639MB vs 4.7GB
+4.  **Still good quality** - 64-75% on benchmarks
+5.  **Higher quantization** - Q8_0 vs Q4_K_M (better precision)
 
 ---
 
@@ -217,10 +216,10 @@ spring:
 
 The model will now output 1024-dimensional embeddings, which:
 
-- ✅ Matches your database schema (`vector(1024)`)
-- ✅ Matches your code expectations (1024 dimensions)
-- ✅ Uses the same storage as 0.6B model
-- ✅ Provides better quality (8B parameters)
+- Matches your database schema (`vector(1024)`)
+- Matches your code expectations (1024 dimensions)
+- Uses the same storage as 0.6B model
+- Provides better quality (8B parameters)
 
 **No schema or code changes required!**
 
@@ -253,7 +252,7 @@ The model will now output 1024-dimensional embeddings, which:
 
 ## Final Recommendation
 
-### ✅ **Use `qwen3-embedding:8b` with 1024 dimensions (Recommended)**
+###  **Use `qwen3-embedding:8b` with 1024 dimensions (Recommended)**
 
 **Configuration**:
 ```yaml
@@ -269,31 +268,30 @@ spring:
 
 **Benefits**:
 
-- ✅ Works with your current setup (no schema/code changes needed)
-- ✅ **6-10% better quality** than 0.6B model
-- ✅ Same storage requirements (1024 dimensions)
-- ✅ Ranked #1 in MTEB multilingual benchmarks
-- ✅ Better semantic understanding (8B parameters)
-- ✅ Larger context window (40K vs 32K tokens)
+- Works with your current setup (no schema/code changes needed)
+- **6-10% better quality** than 0.6B model
+- Same storage requirements (1024 dimensions)
+- Ranked #1 in MTEB multilingual benchmarks
+- Better semantic understanding (8B parameters)
+- Larger context window (40K vs 32K tokens)
 
 **When to Use 0.6B Model**:
 
-- ⚠️ If you have limited RAM (< 8GB available)
-- ⚠️ If you prioritize inference speed over quality
-- ⚠️ If you're doing development/testing
-- ⚠️ If you have limited disk space
+- If you have limited RAM (< 8GB available)
+- If you prioritize inference speed over quality
+- If you're doing development/testing
+- If you have limited disk space
 
 ---
 
 ## Conclusion
 
 **Use the 8B model (`qwen3-embedding:8b`) configured for 1024 dimensions**. It provides:
-
-- ✅ **6-10% better quality** than 0.6B model (proven by benchmarks)
-- ✅ **Perfect compatibility** with your current setup (1024 dimensions)
-- ✅ **No changes required** - just configure dimensions parameter
-- ✅ **Same storage** as 0.6B model (1024 dimensions)
-- ✅ **Ranked #1** in MTEB multilingual benchmarks
+- **6-10% better quality** than 0.6B model (proven by benchmarks)
+- **Perfect compatibility** with your current setup (1024 dimensions)
+- **No changes required** - just configure dimensions parameter
+- **Same storage** as 0.6B model (1024 dimensions)
+- **Ranked #1** in MTEB multilingual benchmarks
 
 **The 0.6B model is a good alternative** if you have resource constraints, but the 8B model with 1024 dimensions gives you the best quality without any compatibility issues.
 
@@ -301,7 +299,7 @@ spring:
 
 **Report Generated**: 2025-12-04  
 **Updated**: 2025-12-04 (after discovering 8B supports configurable dimensions)  
-**Recommendation**: ✅ Use `qwen3-embedding:8b` with `dimensions: 1024`  
+**Recommendation**:  Use `qwen3-embedding:8b` with `dimensions: 1024`  
 **Quality**: Superior (6-10% better than 0.6B, #1 in MTEB benchmarks)  
 **Compatibility**: Perfect (matches schema and code with dimension configuration)  
 **Source**: [Ollama Library - qwen3-embedding](https://ollama.com/library/qwen3-embedding)

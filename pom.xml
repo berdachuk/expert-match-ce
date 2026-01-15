@@ -157,6 +157,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Apache Commons IO for file operations -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.18.0</version>
+        </dependency>
+
         <!-- Datafaker for synthetic test data generation -->
         <dependency>
             <groupId>net.datafaker</groupId>
@@ -350,7 +357,8 @@
             </plugin>
 
             <!-- Maven Failsafe Plugin (Integration Tests) -->
-            <!-- Runs during 'integration-test' phase (before 'verify') -->
+            <!-- Runs during 'integration-test' phase (after 'package' phase) -->
+            <!-- Integration tests must use IT suffix (e.g., *IT.java) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -358,6 +366,7 @@
                 <executions>
                     <execution>
                         <id>integration-tests</id>
+                        <phase>integration-test</phase>
                         <goals>
                             <goal>integration-test</goal>
                             <goal>verify</goal>

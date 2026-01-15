@@ -6,6 +6,16 @@
  * - Chat CRUD operations
  * - Conversation history persistence
  * - Chat-specific memory
+ * <p>
+ * Exposes:
+ * - ChatService (service layer)
+ * - ChatController (REST API)
  */
+@org.springframework.modulith.ApplicationModule(
+    id = "chat",
+    displayName = "Chat Management",
+    allowedDependencies = {"core"}
+)
 package com.berdachuk.expertmatch.chat;
 
+import org.springframework.modulith.ApplicationModule;

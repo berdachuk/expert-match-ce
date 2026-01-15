@@ -1,5 +1,7 @@
 package com.berdachuk.expertmatch.retrieval;
 
+import com.berdachuk.expertmatch.retrieval.service.ResultFusionService;
+import com.berdachuk.expertmatch.retrieval.service.ResultFusionServiceImpl;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -10,10 +12,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for ResultFusionService.
+ * <p>
+ * Note: This is a legitimate unit test because it tests pure algorithm logic (result fusion/ranking)
+ * without database dependencies. According to TDD rules, unit tests are acceptable for pure logic functions.
  */
 class ResultFusionServiceTest {
 
-    private final ResultFusionService fusionService = new ResultFusionService();
+    private final ResultFusionService fusionService = new ResultFusionServiceImpl();
 
     @Test
     void testFuseResults() {
@@ -38,8 +43,8 @@ class ResultFusionServiceTest {
         results.put("graph", List.of("expert2", "expert3"));
 
         Map<String, Double> weights = Map.of(
-            "vector", 1.0,
-            "graph", 0.8
+                "vector", 1.0,
+                "graph", 0.8
         );
 
         List<String> fused = fusionService.fuseResults(results, weights);

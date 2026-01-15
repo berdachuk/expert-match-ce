@@ -38,7 +38,7 @@ class QueryClassificationServiceTest {
         lenient().when(routingConfig.isEnabled()).thenReturn(true);
         lenient().when(queryClassificationPromptTemplate.render(any())).thenReturn("test prompt");
 
-        service = new QueryClassificationService(structuredOutputHelper, config, queryClassificationPromptTemplate);
+        service = new QueryClassificationServiceImpl(structuredOutputHelper, config, queryClassificationPromptTemplate);
     }
 
     @Test
@@ -70,7 +70,7 @@ class QueryClassificationServiceTest {
         // Arrange - create new service with disabled config to avoid unnecessary stubbings
         SGRPatternConfig disabledConfig = mock(SGRPatternConfig.class);
         when(disabledConfig.isEnabled()).thenReturn(false);
-        QueryClassificationService disabledService = new QueryClassificationService(structuredOutputHelper, disabledConfig, queryClassificationPromptTemplate);
+        QueryClassificationService disabledService = new QueryClassificationServiceImpl(structuredOutputHelper, disabledConfig, queryClassificationPromptTemplate);
 
         String query = "Find experts";
 
@@ -88,7 +88,7 @@ class QueryClassificationServiceTest {
         when(routingDisabledConfig.getRouting()).thenReturn(disabledRoutingConfig);
         when(routingDisabledConfig.isEnabled()).thenReturn(true);
         when(disabledRoutingConfig.isEnabled()).thenReturn(false);
-        QueryClassificationService routingDisabledService = new QueryClassificationService(structuredOutputHelper, routingDisabledConfig, queryClassificationPromptTemplate);
+        QueryClassificationService routingDisabledService = new QueryClassificationServiceImpl(structuredOutputHelper, routingDisabledConfig, queryClassificationPromptTemplate);
 
         String query = "Find experts";
 

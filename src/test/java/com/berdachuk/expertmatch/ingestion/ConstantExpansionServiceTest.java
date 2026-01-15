@@ -1,5 +1,7 @@
 package com.berdachuk.expertmatch.ingestion;
 
+import com.berdachuk.expertmatch.ingestion.service.ConstantExpansionService;
+import com.berdachuk.expertmatch.ingestion.service.impl.ConstantExpansionServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,7 +57,7 @@ class ConstantExpansionServiceTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        service = new ConstantExpansionService(
+        service = new ConstantExpansionServiceImpl(
                 chatClient,
                 technologiesExpansionTemplate,
                 toolsExpansionTemplate,
@@ -219,7 +221,7 @@ class ConstantExpansionServiceTest {
     void testParseJsonArray_WithMarkdown() {
         // Given - response wrapped in markdown code block
         String jsonWithMarkdown = "```json\n[\"Technology1\", \"Technology2\"]\n```";
-        List<String> existing = Arrays.asList("Java");
+        List<String> existing = List.of("Java");
 
         when(technologiesExpansionTemplate.render(any())).thenReturn("mock prompt");
         mockChatClientResponse(jsonWithMarkdown);
@@ -237,7 +239,7 @@ class ConstantExpansionServiceTest {
     void testParseJsonArray_WithoutMarkdown() {
         // Given - plain JSON
         String plainJson = "[\"Technology1\", \"Technology2\"]";
-        List<String> existing = Arrays.asList("Java");
+        List<String> existing = List.of("Java");
 
         when(technologiesExpansionTemplate.render(any())).thenReturn("mock prompt");
         mockChatClientResponse(plainJson);
@@ -254,7 +256,7 @@ class ConstantExpansionServiceTest {
     @Test
     void testParseJsonObject_Success() {
         // Given
-        List<String> technologies = Arrays.asList("C#");
+        List<String> technologies = List.of("C#");
         Map<String, String> existing = new HashMap<>();
         String mockResponse = "{\"C#\": \"Programming Language\"}";
 
@@ -279,15 +281,15 @@ class ConstantExpansionServiceTest {
 
         lenient().when(chatClient.prompt()).thenAnswer((Answer) invocation -> {
             Class<?> promptReturnType = invocation.getMethod().getReturnType();
-            Object requestMock = mock(promptReturnType, withSettings().defaultAnswer((Answer) inv -> {
+            Object requestMock = mock(promptReturnType, withSettings().defaultAnswer(inv -> {
                 String methodName = inv.getMethod().getName();
                 if (methodName.equals("user") && inv.getArguments().length == 1 && inv.getArguments()[0] instanceof String) {
                     Class<?> userReturnType = inv.getMethod().getReturnType();
-                    Object requestSpecMock = mock(userReturnType, withSettings().defaultAnswer((Answer) inv2 -> {
+                    Object requestSpecMock = mock(userReturnType, withSettings().defaultAnswer(inv2 -> {
                         String methodName2 = inv2.getMethod().getName();
                         if (methodName2.equals("call")) {
                             Class<?> callReturnType = inv2.getMethod().getReturnType();
-                            Object responseMock = mock(callReturnType, withSettings().defaultAnswer((Answer) inv3 -> {
+                            Object responseMock = mock(callReturnType, withSettings().defaultAnswer(inv3 -> {
                                 String methodName3 = inv3.getMethod().getName();
                                 if (methodName3.equals("chatResponse")) {
                                     return mockChatResponse;

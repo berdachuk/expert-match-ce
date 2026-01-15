@@ -1,9 +1,10 @@
 package com.berdachuk.expertmatch.retrieval;
 
-import com.berdachuk.expertmatch.data.IdGenerator;
-import com.berdachuk.expertmatch.graph.GraphBuilderService;
-import com.berdachuk.expertmatch.graph.GraphService;
+import com.berdachuk.expertmatch.core.util.IdGenerator;
+import com.berdachuk.expertmatch.graph.service.GraphBuilderService;
+import com.berdachuk.expertmatch.graph.service.GraphService;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
+import com.berdachuk.expertmatch.retrieval.service.GraphSearchService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

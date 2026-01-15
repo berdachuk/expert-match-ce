@@ -5,13 +5,13 @@
 This document analyzes the current ingestion endpoints to identify what's fully implemented, what's partially
 implemented, and what can be removed.
 
-## Fully Implemented Endpoints ✅
+## Fully Implemented Endpoints 
 
 These endpoints are fully functional and should be kept:
 
 ### 1. `POST /api/v1/test-data`
 
-- **Status**: ✅ Fully implemented
+- **Status**:  Fully implemented
 - **Implementation**: `IngestionController.generateTestData()`
 - **Service**: `TestDataGenerator.generateTestData()`
 - **Purpose**: Generate synthetic test data (employees, work experience, technologies, projects)
@@ -19,7 +19,7 @@ These endpoints are fully functional and should be kept:
 
 ### 2. `POST /api/v1/test-data/embeddings`
 
-- **Status**: ✅ Fully implemented
+- **Status**:  Fully implemented
 - **Implementation**: `IngestionController.generateEmbeddings()`
 - **Service**: `TestDataGenerator.generateEmbeddings()`
 - **Purpose**: Generate embeddings for work experience records
@@ -27,7 +27,7 @@ These endpoints are fully functional and should be kept:
 
 ### 3. `POST /api/v1/test-data/graph`
 
-- **Status**: ✅ Fully implemented
+- **Status**:  Fully implemented
 - **Implementation**: `IngestionController.buildGraph()`
 - **Service**: `GraphBuilderService.buildGraph()`
 - **Purpose**: Build graph relationships from database data
@@ -35,7 +35,7 @@ These endpoints are fully functional and should be kept:
 
 ### 4. `POST /api/v1/test-data/complete`
 
-- **Status**: ✅ Fully implemented
+- **Status**:  Fully implemented
 - **Implementation**: `IngestionController.generateCompleteDataset()`
 - **Service**: `TestDataGenerator.generateTestData()` + `generateEmbeddings()` + `GraphBuilderService.buildGraph()`
 - **Purpose**: Complete pipeline: test data + embeddings + graph
@@ -43,25 +43,25 @@ These endpoints are fully functional and should be kept:
 
 ### 5. `POST /api/v1/ingestion/json-profiles`
 
-- **Status**: ✅ Fully implemented
+- **Status**:  Fully implemented
 - **Implementation**: `IngestionController.ingestJsonProfiles()`
 - **Service**: `JsonProfileIngestionService`
 - **Purpose**: Ingest expert profiles from JSON files (array or single object format)
 - **Features**:
-    - Supports array format: `[{profile1}, {profile2}]`
+- Supports array format: `[{profile1}, {profile2}]`
     - Supports single object format: `{profile1}` (backward compatible)
     - Handles partial data with default values
     - Processes multiple files from directory
     - Error recovery (continues on failure)
 - **Keep**: Yes
 
-## Partially Implemented / Placeholder Endpoints ⚠️
+## Partially Implemented / Placeholder Endpoints 
 
 These endpoints have API contracts but only implement status management, not actual ingestion logic:
 
 ### 6. `POST /api/v1/ingestion/trigger/{sourceName}`
 
-- **Status**: ⚠️ Placeholder only
+- **Status**:  Placeholder only
 - **Implementation**: `IngestionController.triggerIngestion()`
 - **Service**: `IngestionService.triggerIngestion()`
 - **Current Behavior**: Only creates/updates ingestion status in database, no actual ingestion
@@ -70,7 +70,7 @@ These endpoints have API contracts but only implement status management, not act
 
 ### 7. `GET /api/v1/ingestion/status`
 
-- **Status**: ⚠️ Partially implemented
+- **Status**:  Partially implemented
 - **Implementation**: `IngestionController.getAllStatuses()`
 - **Service**: `IngestionService.getAllStatuses()`
 - **Current Behavior**: Returns status from database (but statuses are only created by placeholders)
@@ -78,7 +78,7 @@ These endpoints have API contracts but only implement status management, not act
 
 ### 8. `GET /api/v1/ingestion/status/{sourceName}`
 
-- **Status**: ⚠️ Partially implemented
+- **Status**:  Partially implemented
 - **Implementation**: `IngestionController.getStatus()`
 - **Service**: `IngestionService.getStatus()`
 - **Current Behavior**: Returns status from database (but statuses are only created by placeholders)
@@ -86,7 +86,7 @@ These endpoints have API contracts but only implement status management, not act
 
 ### 9. `POST /api/v1/ingestion/pause/{sourceName}`
 
-- **Status**: ⚠️ Placeholder only
+- **Status**:  Placeholder only
 - **Implementation**: `IngestionController.pauseIngestion()`
 - **Service**: `IngestionService.pauseIngestion()`
 - **Current Behavior**: Only updates status to "PAUSED", no actual pause logic
@@ -94,7 +94,7 @@ These endpoints have API contracts but only implement status management, not act
 
 ### 10. `POST /api/v1/ingestion/resume/{sourceName}`
 
-- **Status**: ⚠️ Placeholder only
+- **Status**:  Placeholder only
 - **Implementation**: `IngestionController.resumeIngestion()`
 - **Service**: `IngestionService.resumeIngestion()`
 - **Current Behavior**: Only updates status to "RUNNING", no actual resume logic
@@ -102,7 +102,7 @@ These endpoints have API contracts but only implement status management, not act
 
 ### 11. `POST /api/v1/ingestion/file`
 
-- **Status**: ⚠️ Placeholder only
+- **Status**:  Placeholder only
 - **Implementation**: `IngestionController.uploadFile()`
 - **Service**: `IngestionService.processFileUpload()`
 - **Current Behavior**: Only creates status and marks as "COMPLETED", no actual file parsing/ingestion
@@ -131,16 +131,13 @@ These endpoints have API contracts but only implement status management, not act
 ## Related Code to Remove
 
 ### Services:
-
 - `IngestionService` - Can be removed entirely (only contains placeholder logic)
 - `IngestionStatusRepository` - Can be removed (only used by placeholders)
 
 ### Database Tables:
-
 - `ingestion_status` table (if exists) - Can be removed
 
 ### OpenAPI Spec:
-
 - Remove the 6 placeholder endpoints from `openapi.yaml`
 - Remove related schemas: `TriggerIngestionResponse`, `IngestionStatusResponse`, `IngestionStatusListResponse`,
   `PauseResumeIngestionResponse`, `FileUploadResponse`

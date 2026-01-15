@@ -1,5 +1,6 @@
 package com.berdachuk.expertmatch.graph;
 
+import com.berdachuk.expertmatch.graph.service.GraphService;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,9 +55,9 @@ class GraphServiceIT extends BaseIntegrationTest {
     void testExecuteCypherCreateVertex() {
         // Create a test vertex
         String cypher = """
-            CREATE (e:Expert {id: $id, name: $name})
-            RETURN e
-            """;
+                CREATE (e:Expert {id: $id, name: $name})
+                RETURN e
+                """;
 
         Map<String, Object> params = new HashMap<>();
         params.put("id", "test-expert-001");
@@ -72,9 +73,9 @@ class GraphServiceIT extends BaseIntegrationTest {
     void testExecuteCypherQueryVertex() {
         // First create a vertex
         String createCypher = """
-            CREATE (e:Expert {id: $id, name: $name})
-            RETURN e
-            """;
+                CREATE (e:Expert {id: $id, name: $name})
+                RETURN e
+                """;
 
         Map<String, Object> createParams = new HashMap<>();
         createParams.put("id", "test-expert-002");
@@ -84,9 +85,9 @@ class GraphServiceIT extends BaseIntegrationTest {
 
         // Then query it - return the whole node (single column)
         String queryCypher = """
-            MATCH (e:Expert {id: $id})
-                RETURN e
-            """;
+                MATCH (e:Expert {id: $id})
+                    RETURN e
+                """;
 
         Map<String, Object> queryParams = new HashMap<>();
         queryParams.put("id", "test-expert-002");
@@ -101,9 +102,9 @@ class GraphServiceIT extends BaseIntegrationTest {
     void testExecuteCypherAndExtract() {
         // Create a vertex
         String createCypher = """
-            CREATE (e:Expert {id: $id, name: $name})
-            RETURN e
-            """;
+                CREATE (e:Expert {id: $id, name: $name})
+                RETURN e
+                """;
 
         Map<String, Object> createParams = new HashMap<>();
         createParams.put("id", "test-expert-003");
@@ -113,9 +114,9 @@ class GraphServiceIT extends BaseIntegrationTest {
 
         // Query and extract - return the whole node, extract id from result
         String queryCypher = """
-            MATCH (e:Expert {id: $id})
-                RETURN e
-            """;
+                MATCH (e:Expert {id: $id})
+                    RETURN e
+                """;
 
         Map<String, Object> queryParams = new HashMap<>();
         queryParams.put("id", "test-expert-003");
@@ -132,9 +133,9 @@ class GraphServiceIT extends BaseIntegrationTest {
     @Test
     void testExecuteCypherWithEmptyParameters() {
         String cypher = """
-            MATCH (e:Expert)
-                RETURN count(e) as expertCount
-            """;
+                MATCH (e:Expert)
+                    RETURN count(e) as expertCount
+                """;
 
         List<Map<String, Object>> results = graphService.executeCypher(cypher, new HashMap<>());
 
@@ -144,9 +145,9 @@ class GraphServiceIT extends BaseIntegrationTest {
     @Test
     void testExecuteCypherWithNullParameters() {
         String cypher = """
-            MATCH (e:Expert)
-                RETURN count(e) as expertCount
-            """;
+                MATCH (e:Expert)
+                    RETURN count(e) as expertCount
+                """;
 
         List<Map<String, Object>> results = graphService.executeCypher(cypher, Collections.emptyMap());
 
@@ -157,9 +158,9 @@ class GraphServiceIT extends BaseIntegrationTest {
     void testExecuteCypherWithComplexParameters() {
         // Test with different parameter types
         String cypher = """
-            CREATE (e:Expert {id: $id, name: $name, age: $age, active: $active})
-            RETURN e
-            """;
+                CREATE (e:Expert {id: $id, name: $name, age: $age, active: $active})
+                RETURN e
+                """;
 
         Map<String, Object> params = new HashMap<>();
         params.put("id", "test-expert-004");
@@ -176,9 +177,9 @@ class GraphServiceIT extends BaseIntegrationTest {
     void testExecuteCypherWithSpecialCharacters() {
         // Test JSON escaping with special characters
         String cypher = """
-            CREATE (e:Expert {id: $id, name: $name})
-            RETURN e
-            """;
+                CREATE (e:Expert {id: $id, name: $name})
+                RETURN e
+                """;
 
         Map<String, Object> params = new HashMap<>();
         params.put("id", "test-expert-005");

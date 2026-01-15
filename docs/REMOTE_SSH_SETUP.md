@@ -216,13 +216,13 @@ export OLLAMA_EMBEDDING_MODEL=qwen3-embedding-8b
 ```bash
 # Check which Ollama is available
 if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
-    echo "✅ Local Ollama is available on port 11434"
+    echo " Local Ollama is available on port 11434"
     export OLLAMA_BASE_URL=http://localhost:11434
 elif curl -s http://localhost:11435/api/tags > /dev/null 2>&1; then
-    echo "✅ Docker Ollama is available on port 11435"
+    echo " Docker Ollama is available on port 11435"
     export OLLAMA_BASE_URL=http://localhost:11435
 else
-    echo "❌ No Ollama service found. Start local Ollama or Docker Ollama container."
+    echo " No Ollama service found. Start local Ollama or Docker Ollama container."
 fi
 ```
 
@@ -361,14 +361,12 @@ If you get connection refused or timeout:
 ### Method 1: Direct Connection (Recommended if network allows)
 
 1. **Configure Base URL**:
-
-     - Set your API client base URL to: `http://192.168.0.73:8080`
+- Set your API client base URL to: `http://192.168.0.73:8080`
     - For cURL: Use the full URL in requests
     - For API clients with variables: Set `base_url` variable
 
 2. **Configure JWT Tokens** (if OAuth2 is enabled):
-
-     - Set JWT token in your API client
+- Set JWT token in your API client
     - Set `jwt_token` to your JWT token (for regular user)
     - Set `jwt_token_admin` to your admin JWT token (optional)
 
@@ -403,28 +401,23 @@ Then in your API client:
 ### Complete Testing Workflow
 
 1. **Authentication Setup** (if OAuth2 enabled):
-
-     - Test health check endpoint: `GET http://192.168.0.73:8080/api/v1/system/health`
+- Test health check endpoint: `GET http://192.168.0.73:8080/api/v1/system/health`
     - Verify service is accessible
 
 2. **Generate Test Data** (requires ADMIN role):
-
-     - POST `http://192.168.0.73:8080/api/v1/ingestion/test-data?size=small`
+- POST `http://192.168.0.73:8080/api/v1/ingestion/test-data?size=small`
     - Wait for completion (may take a few minutes)
 
 3. **List Chats**:
-
-     - GET `http://192.168.0.73:8080/api/v1/chat`
+- GET `http://192.168.0.73:8080/api/v1/chat`
     - Note the default chat ID from the response
 
 4. **Process Query**:
-
-     - POST `http://192.168.0.73:8080/api/v1/query` with query payload
+- POST `http://192.168.0.73:8080/api/v1/query` with query payload
     - Verify response contains experts and answer
 
 5. **View Conversation History**:
-
-     - GET `http://192.168.0.73:8080/api/v1/chat/{chatId}/history?page=0&size=20`
+- GET `http://192.168.0.73:8080/api/v1/chat/{chatId}/history?page=0&size=20`
     - Verify messages are returned
 
 ## Troubleshooting
@@ -546,8 +539,7 @@ curl http://localhost:11435/api/tags | jq '.models[].name'
 - **Port conflict**: If port 11435 is busy, change it in `docker-compose.yml` or use local Ollama on 11434.
 - **Models not found**: Pull required models (see Step 4).
 - **Wrong port**: Verify `OLLAMA_BASE_URL` matches your setup:
-
-      - Docker Ollama: `http://localhost:11435`
+- Docker Ollama: `http://localhost:11435`
     - Local Ollama: `http://localhost:11434`
 - **Container won't start**: Check Docker logs: `docker logs expertmatch-ollama`
 
@@ -657,13 +649,13 @@ sudo systemctl status expert-match
 
 ## Summary
 
-1. ✅ Connect to remote server via SSH
-2. ✅ Navigate to project directory
-3. ✅ Set environment variables
-4. ✅ Start service (using Maven, JAR, or systemd)
-5. ✅ Verify service is running and accessible
-6. ✅ Configure API client with remote server URL (`http://192.168.0.73:8080`)
-7. ✅ Test endpoints using API client
+1.  Connect to remote server via SSH
+2.  Navigate to project directory
+3.  Set environment variables
+4.  Start service (using Maven, JAR, or systemd)
+5.  Verify service is running and accessible
+6.  Configure API client with remote server URL (`http://192.168.0.73:8080`)
+7.  Test endpoints using API client
 
 ## Additional Resources
 

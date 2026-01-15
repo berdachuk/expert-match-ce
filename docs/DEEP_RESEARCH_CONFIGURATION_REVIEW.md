@@ -72,9 +72,9 @@ private static final double SYNTHESIS_WEIGHT_EXPANDED = 0.4;  // Weight for expa
 
 **Current Implementation**:
 
-- ✅ `SYNTHESIS_WEIGHT_INITIAL` (0.6) and `SYNTHESIS_WEIGHT_EXPANDED` (0.4) are used in `synthesizeResults()` method
-- ✅ `MAX_REFINED_QUERIES` (3) limits the number of refined queries generated
-- ✅ All configuration is now hardcoded as constants (no external configuration needed)
+- `SYNTHESIS_WEIGHT_INITIAL` (0.6) and `SYNTHESIS_WEIGHT_EXPANDED` (0.4) are used in `synthesizeResults()` method
+- `MAX_REFINED_QUERIES` (3) limits the number of refined queries generated
+- All configuration is now hardcoded as constants (no external configuration needed)
 
 ---
 
@@ -110,8 +110,7 @@ alt deepResearch = true
   QueryService -> DeepResearch: performDeepResearch()
   note right
     Uses hardcoded constants:
-
-    - MAX_REFINED_QUERIES = 3
+- MAX_REFINED_QUERIES = 3
     - SYNTHESIS_WEIGHT_INITIAL = 0.6
     - SYNTHESIS_WEIGHT_EXPANDED = 0.4
   end note
@@ -187,8 +186,8 @@ collect(Collectors.toList());
 
 **Current Logic**:
 
-- ✅ Uses `SYNTHESIS_WEIGHT_INITIAL` (0.6) for initial results
-- ✅ Uses `SYNTHESIS_WEIGHT_EXPANDED` (0.4) for expanded results
+- Uses `SYNTHESIS_WEIGHT_INITIAL` (0.6) for initial results
+- Uses `SYNTHESIS_WEIGHT_EXPANDED` (0.4) for expanded results
 - Combines scores with weighted average
 
 **Code**:
@@ -222,18 +221,17 @@ double weightedScore = expandedScore * SYNTHESIS_WEIGHT_EXPANDED;
 
 ## Current Configuration Status
 
-### ✅ Configuration Simplification (Completed 2025-12-09)
+###  Configuration Simplification (Completed 2025-12-09)
 
 **Changes Made**:
 
-1. ✅ Removed `deep-research` section from `application.yml`
-2. ✅ Removed `@Value` annotations from `DeepResearchService`
-3. ✅ Replaced configuration with hardcoded constants:
-
-     - `MAX_REFINED_QUERIES = 3`
+1.  Removed `deep-research` section from `application.yml`
+2.  Removed `@Value` annotations from `DeepResearchService`
+3.  Replaced configuration with hardcoded constants:
+- `MAX_REFINED_QUERIES = 3`
     - `SYNTHESIS_WEIGHT_INITIAL = 0.6`
     - `SYNTHESIS_WEIGHT_EXPANDED = 0.4`
-4. ✅ `deepResearch` is now **API-only** - controlled via `QueryOptions.deepResearch` parameter
+4.  `deepResearch` is now **API-only** - controlled via `QueryOptions.deepResearch` parameter
 
 **Rationale**:
 
@@ -255,15 +253,13 @@ If configurability is needed in the future, consider:
 
 ### Current State (As of 2025-12-09)
 
-✅ **Working**:
-
+ **Working**:
 - API-level `deepResearch` flag works correctly
 - Result synthesis uses hardcoded weight constants (0.6 and 0.4)
 - Service integration is functional
 - Configuration simplified - API-only approach
 
-✅ **Configuration**:
-
+ **Configuration**:
 - `deepResearch` is controlled exclusively via API parameter
 - No `application.yml` configuration needed
 - Internal constants: `MAX_REFINED_QUERIES = 3`, `SYNTHESIS_WEIGHT_INITIAL = 0.6`, `SYNTHESIS_WEIGHT_EXPANDED = 0.4`

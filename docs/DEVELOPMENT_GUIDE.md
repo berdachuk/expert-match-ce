@@ -31,6 +31,8 @@ This guide provides comprehensive instructions for setting up and developing Exp
 
 ## Project Structure
 
+### Directory Layout
+
 ```
 ./
 ├── expert-match/              # Backend (Spring Boot) - current directory
@@ -48,6 +50,65 @@ This guide provides comprehensive instructions for setting up and developing Exp
 │   └── ...                   # Other Thymeleaf templates
 │
 ```
+
+### Module Structure
+
+ExpertMatch follows a **domain-driven module organization** with consistent, layered structure across all modules:
+
+```
+[domain-module]/
+├── domain/                    # Domain entities, DTOs, enums, constants, filters, wrappers
+│   ├── [Entity].java
+│   ├── [RelatedEntity].java
+│   ├── dto/                  # Data Transfer Objects
+│   ├── filters/              # Query filters
+│   └── wrappers/            # Response wrappers
+├── repository/              # Data access layer interfaces
+│   ├── [Entity]Repository.java        # Interface
+│   ├── [RelatedEntity]Repository.java # Interface
+│   └── impl/                 # Repository implementations
+│       ├── [Entity]RepositoryImpl.java
+│       └── [Entity]Mapper.java        # RowMapper for JDBC
+├── service/                  # Business logic layer interfaces
+│   ├── [Entity]Service.java           # Interface
+│   ├── [RelatedEntity]Service.java    # Interface
+│   └── impl/                 # Service implementations
+│       └── [Entity]ServiceImpl.java
+└── rest/                     # REST API controllers
+    ├── [Entity]RestControllerV2.java
+    └── [Entity]DataRestControllerV2.java
+```
+
+**Example: Employee Module**
+
+```
+employee/
+├── domain/
+│   └── Employee.java         # Employee entity record
+├── repository/
+│   ├── EmployeeRepository.java           # Interface
+│   └── impl/
+│       ├── EmployeeRepositoryImpl.java   # Implementation
+│       └── EmployeeMapper.java           # RowMapper
+├── service/
+│   ├── EmployeeService.java              # Interface
+│   ├── ExpertEnrichmentService.java      # Interface
+│   └── impl/
+│       ├── EmployeeServiceImpl.java      # Implementation
+│       └── ExpertEnrichmentServiceImpl.java
+└── rest/
+    └── (REST controllers if needed)
+```
+
+**Key Principles:**
+
+- **Interface-Based Design**: All services and repositories are defined as interfaces with separate implementations
+- **Layer Separation**: Clear separation between domain, repository, service, and REST layers
+- **Self-Contained Modules**: Each module contains its own domain, repository, service, and REST layers
+- **Mappers in impl/**: RowMappers are located in the same `impl/` folder as repository implementations
+- **Consistent Structure**: All modules follow the same structure for maintainability
+
+See [Interface-Based Design](#interface-based-design) section for more details.
 
 ## Backend Setup
 
@@ -213,6 +274,48 @@ Once the backend is running, access the frontend at:
 
 ## Testing
 
+### Test-Driven Development Approach
+
+ExpertMatch follows a **Test-Driven Development (TDD)** approach. See [CODING_RULES.md](CODING_RULES.md#test-driven-development-approach) for complete guidelines.
+
+**Core Principles:**
+
+1. **Integration Tests First**: Always prefer integration tests that verify full flow
+2. **Full Flow Verification**: Test complete workflows from API endpoints to database
+3. **Test Independence**: Each test prepares its own data and cleans up after itself
+4. **Minimize Unit Tests**: Use unit tests only for pure logic, algorithms, or utilities
+
+**Test Pattern:**
+
+```java
+@SpringBootTest
+class MyServiceIT extends BaseIntegrationTest {
+    
+    @Autowired
+    private MyService myService;  // Inject interface
+    
+    @Autowired
+    private NamedParameterJdbcTemplate namedJdbcTemplate;
+    
+    @BeforeEach
+    void setUp() {
+        // Clear existing data to ensure test independence
+        namedJdbcTemplate.getJdbcTemplate().execute("DELETE FROM expertmatch.related_table");
+        namedJdbcTemplate.getJdbcTemplate().execute("DELETE FROM expertmatch.main_table");
+        
+        // Prepare required test data for this test
+        createTestData();
+    }
+    
+    @Test
+    @Transactional
+    void testFullFlow() {
+        // Test complete flow from service to database
+        // Verify actual database changes, not just method calls
+    }
+}
+```
+
 ### Backend Testing
 
 See [Testing Guide](TESTING.md) for detailed information.
@@ -222,8 +325,9 @@ See [Testing Guide](TESTING.md) for detailed information.
 - Always use Testcontainers (never H2)
 - Custom test container: `expertmatch-postgres-test:latest`
 - Base class: `BaseIntegrationTest`
-- TDD approach: Write tests first
+- TDD approach: Write integration tests first
 - **Mock AI providers** - All tests use mocks, no real LLM calls
+- **Test Independence** - Each test clears and prepares its own data
 
 **Run Tests:**
 
@@ -231,13 +335,15 @@ See [Testing Guide](TESTING.md) for detailed information.
 mvn test                    # All tests
 mvn test -Dtest=ClassName   # Specific test class
 mvn clean test             # Fresh database container
+mvn verify                 # Full build with tests
 ```
 
 **Important: Test Isolation**
 
 - Tests automatically use mock AI providers (ChatModel, EmbeddingModel)
+- Each test must clear data in `@BeforeEach` for independence
 - No real LLM API calls are made during tests
-- Verify mock usage: `mvn test 2>&1 | grep -E "(MOCK|REAL|⚠️)"`
+- Verify mock usage: `mvn test 2>&1 | grep -E "(MOCK|REAL|)"`
 - If you see real LLM usage, check for running application instances:
   ```bash
   ps aux | grep ExpertMatchApplication | grep -v grep
@@ -377,14 +483,13 @@ dev/staging/prod prefer OpenAI).
 
 1. **Backend**:
 
-     - Add controller method in appropriate controller
+- Add controller method in appropriate controller
     - Update OpenAPI spec: `src/main/resources/api/openapi.yaml`
     - Add tests
     - Rebuild backend
 
 2. **Frontend**:
-
-    - Update Thymeleaf templates to use new API endpoints
+- Update Thymeleaf templates to use new API endpoints
     - Update JavaScript code for API calls if needed
     - Test UI integration
 
@@ -527,6 +632,702 @@ mvn clean install
 - Use Bootstrap or custom CSS for styling
 - Keep templates organized in fragments for reusability
 
+## Data Access Patterns
+
+ExpertMatch follows standardized data access patterns inspired by WCA-Backend for consistency, maintainability, and scalability.
+
+### Overview
+
+The project uses three key patterns for data access:
+
+1. **External SQL Files** - SQL queries stored in separate `.sql` files
+2. **Dedicated Row Mappers** - Reusable mapper classes for ResultSet mapping
+3. **DataAccessUtils.uniqueResult()** - Standard Spring pattern for single-result queries
+
+### Pattern 1: External SQL Files with @InjectSql
+
+**Purpose**: Separate SQL logic from Java code for better maintainability and IDE support.
+
+**Infrastructure**:
+- `@InjectSql` annotation: Marks fields for SQL injection
+- `SqlInjectBeanPostProcessor`: Loads SQL files at startup and injects them into annotated fields
+- SQL files stored in `src/main/resources/sql/{module}/{operation}.sql`
+
+**Usage Example**:
+
+```java
+@Repository
+public class EmployeeRepository {
+    @InjectSql("/sql/employee/findById.sql")
+    private String findByIdSql;
+
+    @InjectSql("/sql/employee/findByEmail.sql")
+    private String findByEmailSql;
+
+    public Optional<Employee> findById(String id) {
+        Map<String, Object> params = Map.of("id", id);
+        List<Employee> results = namedJdbcTemplate.query(findByIdSql, params, employeeMapper);
+        return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
+    }
+}
+```
+
+**SQL File** (`src/main/resources/sql/employee/findById.sql`):
+```sql
+SELECT id, name, email, seniority, language_english, availability_status
+FROM expertmatch.employee
+WHERE id = :id
+```
+
+**File Organization**:
+```
+src/main/resources/sql/
+├── employee/
+│   ├── findById.sql
+│   ├── findByEmail.sql
+│   ├── findByIds.sql
+│   └── findEmployeeIdsByName.sql
+└── chat/
+    ├── findById.sql
+    ├── findAllByUserId.sql
+    └── create.sql
+```
+
+**Benefits**:
+
+- Full SQL syntax highlighting in IDE
+- SQL changes reviewed independently
+- Easier to maintain complex queries
+- Separation of concerns
+- No runtime performance overhead (loaded at startup)
+
+**Error Handling**: `SqlInjectBeanPostProcessor` throws `BeanCreationException` at startup if SQL file is not found (fail-fast).
+
+### Pattern 2: Dedicated Row Mapper Classes
+
+**Purpose**: Centralize ResultSet mapping logic for reusability and testability.
+
+**Location**: Mappers are located in the same `impl/` folder as repository implementations (e.g., `repository/impl/EmployeeMapper.java`).
+
+**Implementation**:
+
+Create mapper classes implementing Spring's `RowMapper<T>`:
+
+```java
+package com.berdachuk.expertmatch.employee.repository.impl;
+
+import com.berdachuk.expertmatch.employee.domain.Employee;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Component;
+
+@Component
+public class EmployeeMapper implements RowMapper<Employee> {
+    @Override
+    public Employee mapRow(ResultSet rs, int rowNum) throws SQLException {
+        return new Employee(
+                rs.getString("id"),
+                rs.getString("name"),
+                rs.getString("email"),
+                rs.getString("seniority"),
+                rs.getString("language_english"),
+                rs.getString("availability_status")
+        );
+    }
+}
+```
+
+**Usage in Repository Implementation**:
+
+```java
+package com.berdachuk.expertmatch.employee.repository.impl;
+
+import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
+import com.berdachuk.expertmatch.employee.domain.Employee;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class EmployeeRepositoryImpl implements EmployeeRepository {
+    private final NamedParameterJdbcTemplate namedJdbcTemplate;
+    private final EmployeeMapper employeeMapper;
+
+    public EmployeeRepositoryImpl(
+            NamedParameterJdbcTemplate namedJdbcTemplate,
+            EmployeeMapper employeeMapper) {
+        this.namedJdbcTemplate = namedJdbcTemplate;
+        this.employeeMapper = employeeMapper;
+    }
+
+    @Override
+    public Optional<Employee> findById(String id) {
+        Map<String, Object> params = Map.of("id", id);
+        List<Employee> results = namedJdbcTemplate.query(findByIdSql, params, employeeMapper);
+        return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
+    }
+
+    @Override
+    public Optional<Employee> findByEmail(String email) {
+        Map<String, Object> params = Map.of("email", email);
+        List<Employee> results = namedJdbcTemplate.query(findByEmailSql, params, employeeMapper);
+        return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
+    }
+}
+```
+
+**Benefits**:
+
+- Reusable across multiple repository methods
+- Testable independently (unit test mapping logic)
+- Centralized mapping logic (easier to maintain)
+- Consistent pattern across all repositories
+- Handles complex entities and nested objects well
+
+**Null Handling Example** (ChatMapper):
+
+```java
+package com.berdachuk.expertmatch.chat.repository.impl;
+
+import com.berdachuk.expertmatch.chat.domain.Chat;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ChatMapper implements RowMapper<Chat> {
+    @Override
+    public Chat mapRow(ResultSet rs, int rowNum) throws SQLException {
+        return new Chat(
+                rs.getString("id"),
+                rs.getString("user_id"),
+                rs.getString("name"),
+                rs.getBoolean("is_default"),
+                mapTimestamp(rs, "created_at"),
+                mapTimestamp(rs, "updated_at"),
+                mapTimestamp(rs, "last_activity_at"),
+                rs.getInt("message_count")
+        );
+    }
+
+    private Instant mapTimestamp(ResultSet rs, String columnName) throws SQLException {
+        var timestamp = rs.getTimestamp(columnName);
+        return timestamp != null ? timestamp.toInstant() : null;
+    }
+}
+```
+
+### Pattern 3: DataAccessUtils.uniqueResult()
+
+**Purpose**: Standard Spring pattern for handling single-result queries with automatic validation.
+
+**Usage**:
+
+```java
+import org.springframework.dao.support.DataAccessUtils;
+
+public Optional<Employee> findById(String id) {
+    Map<String, Object> params = Map.of("id", id);
+    List<Employee> results = namedJdbcTemplate.query(findByIdSql, params, employeeMapper);
+    return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
+}
+```
+
+**Behavior**:
+- **Single Result**: Returns the element if exactly one result exists
+- **No Results**: Returns `null` (wrapped in `Optional.empty()`)
+- **Multiple Results**: Throws `IncorrectResultSizeDataAccessException` (data integrity check)
+
+**Benefits**:
+
+- Concise and readable code
+- Validates exactly one result (fails fast on unexpected duplicates)
+- Standard Spring Framework pattern
+- Better data integrity (detects constraint violations or query errors)
+- Consistent with WCA-Backend approach
+
+**Before (Manual Check)**:
+```java
+List<Employee> results = namedJdbcTemplate.query(sql, params, mapper);
+return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+```
+
+**After (DataAccessUtils)**:
+```java
+List<Employee> results = namedJdbcTemplate.query(sql, params, mapper);
+return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
+```
+
+### Complete Example
+
+**Repository Interface** (`repository/EmployeeRepository.java`):
+
+```java
+package com.berdachuk.expertmatch.employee.repository;
+
+import com.berdachuk.expertmatch.employee.domain.Employee;
+import java.util.List;
+import java.util.Optional;
+
+public interface EmployeeRepository {
+    Optional<Employee> findById(String employeeId);
+    Optional<Employee> findByEmail(String email);
+    List<Employee> findByIds(List<String> employeeIds);
+}
+```
+
+**Repository Implementation** (`repository/impl/EmployeeRepositoryImpl.java`):
+
+```java
+package com.berdachuk.expertmatch.employee.repository.impl;
+
+import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
+import com.berdachuk.expertmatch.employee.domain.Employee;
+import com.berdachuk.expertmatch.core.repository.sql.InjectSql;
+import org.springframework.dao.support.DataAccessUtils;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+@Repository
+public class EmployeeRepositoryImpl implements EmployeeRepository {
+    private final NamedParameterJdbcTemplate namedJdbcTemplate;
+    private final EmployeeMapper employeeMapper;
+
+    @InjectSql("/sql/employee/findById.sql")
+    private String findByIdSql;
+
+    @InjectSql("/sql/employee/findByEmail.sql")
+    private String findByEmailSql;
+
+    public EmployeeRepositoryImpl(
+            NamedParameterJdbcTemplate namedJdbcTemplate,
+            EmployeeMapper employeeMapper) {
+        this.namedJdbcTemplate = namedJdbcTemplate;
+        this.employeeMapper = employeeMapper;
+    }
+
+    @Override
+    public Optional<Employee> findById(String id) {
+        Map<String, Object> params = Map.of("id", id);
+        List<Employee> results = namedJdbcTemplate.query(findByIdSql, params, employeeMapper);
+        return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
+    }
+
+    @Override
+    public Optional<Employee> findByEmail(String email) {
+        Map<String, Object> params = Map.of("email", email);
+        List<Employee> results = namedJdbcTemplate.query(findByEmailSql, params, employeeMapper);
+        return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
+    }
+}
+```
+
+**Mapper** (`repository/impl/EmployeeMapper.java`):
+
+```java
+package com.berdachuk.expertmatch.employee.repository.impl;
+
+import com.berdachuk.expertmatch.employee.domain.Employee;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Component;
+
+@Component
+public class EmployeeMapper implements RowMapper<Employee> {
+    @Override
+    public Employee mapRow(ResultSet rs, int rowNum) throws SQLException {
+        return new Employee(
+                rs.getString("id"),
+                rs.getString("name"),
+                rs.getString("email"),
+                rs.getString("seniority"),
+                rs.getString("language_english"),
+                rs.getString("availability_status")
+        );
+    }
+}
+```
+
+### Migration Checklist
+
+When creating new repositories or migrating existing ones:
+
+- [ ] Create repository interface in `repository/` package
+- [ ] Create repository implementation in `repository/impl/` package
+- [ ] Create mapper class in `repository/impl/` package (same folder as implementation)
+- [ ] Create SQL files in `src/main/resources/sql/{module}/`
+- [ ] Add `@InjectSql` annotations to repository implementation fields
+- [ ] Implement `RowMapper<T>` in mapper class
+- [ ] Inject mapper via constructor in repository implementation
+- [ ] Use `DataAccessUtils.uniqueResult()` for single-result queries
+- [ ] Remove inline SQL strings and lambda mappers
+- [ ] Update all references to use repository interface (not implementation)
+- [ ] Run tests to verify functionality
+
+### When to Use Each Pattern
+
+**External SQL Files**: Always use for all SQL queries (separation of concerns, IDE support)
+
+**Dedicated Mappers**: Use for all entities (reusability, testability, maintainability)
+
+**DataAccessUtils.uniqueResult()**: Use for all single-result queries (`findById`, `findByEmail`, etc.)
+
+### References
+
+- **WCA-Backend Pattern**: `/home/berdachuk/projects/wca-lab/wca-backend`
+- **Spring DataAccessUtils**: `org.springframework.dao.support.DataAccessUtils`
+- **Spring RowMapper**: `org.springframework.jdbc.core.RowMapper`
+
+## Interface-Based Design
+
+ExpertMatch follows an **interface-based design pattern** for all services and repositories, ensuring loose coupling, better testability, and maintainability.
+
+### Principles
+
+- **Always Use Interfaces**: All services and repositories must be defined as interfaces with separate implementation classes
+- **Interface Location**: Interfaces are in the main package (e.g., `service/`, `repository/`)
+- **Implementation Location**: Implementations are in `impl/` subdirectories (e.g., `service/impl/`, `repository/impl/`)
+- **Dependency Injection**: Always inject interfaces, never concrete implementations
+- **Mapper Location**: RowMappers are located in the same `impl/` folder as repository implementations
+
+### Service Example
+
+**Service Interface** (`service/EmployeeService.java`):
+
+```java
+package com.berdachuk.expertmatch.employee.service;
+
+import com.berdachuk.expertmatch.employee.domain.Employee;
+import java.util.List;
+import java.util.Optional;
+
+public interface EmployeeService {
+    Optional<Employee> findById(String employeeId);
+    List<Employee> findAll();
+}
+```
+
+**Service Implementation** (`service/impl/EmployeeServiceImpl.java`):
+
+```java
+package com.berdachuk.expertmatch.employee.service.impl;
+
+import com.berdachuk.expertmatch.employee.service.EmployeeService;
+import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class EmployeeServiceImpl implements EmployeeService {
+    private final EmployeeRepository employeeRepository;
+    
+    public EmployeeServiceImpl(EmployeeRepository employeeRepository) {
+        this.employeeRepository = employeeRepository;
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Employee> findById(String employeeId) {
+        return employeeRepository.findById(employeeId);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<Employee> findAll() {
+        return employeeRepository.findAll();
+    }
+}
+```
+
+### Repository Example
+
+**Repository Interface** (`repository/EmployeeRepository.java`):
+
+```java
+package com.berdachuk.expertmatch.employee.repository;
+
+import com.berdachuk.expertmatch.employee.domain.Employee;
+import java.util.Optional;
+
+public interface EmployeeRepository {
+    Optional<Employee> findById(String employeeId);
+}
+```
+
+**Repository Implementation** (`repository/impl/EmployeeRepositoryImpl.java`):
+
+```java
+package com.berdachuk.expertmatch.employee.repository.impl;
+
+import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
+import com.berdachuk.expertmatch.employee.domain.Employee;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class EmployeeRepositoryImpl implements EmployeeRepository {
+    private final NamedParameterJdbcTemplate namedJdbcTemplate;
+    private final EmployeeMapper employeeMapper;
+    
+    public EmployeeRepositoryImpl(
+            NamedParameterJdbcTemplate namedJdbcTemplate,
+            EmployeeMapper employeeMapper) {
+        this.namedJdbcTemplate = namedJdbcTemplate;
+        this.employeeMapper = employeeMapper;
+    }
+    
+    @Override
+    public Optional<Employee> findById(String employeeId) {
+        // Implementation details
+    }
+}
+```
+
+**Mapper** (`repository/impl/EmployeeMapper.java`):
+
+```java
+package com.berdachuk.expertmatch.employee.repository.impl;
+
+import com.berdachuk.expertmatch.employee.domain.Employee;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Component;
+
+@Component
+public class EmployeeMapper implements RowMapper<Employee> {
+    @Override
+    public Employee mapRow(ResultSet rs, int rowNum) throws SQLException {
+        // Mapping logic
+    }
+}
+```
+
+### Usage in Other Classes
+
+Always inject interfaces, never implementations:
+
+```java
+@Service
+public class QueryService {
+    private final EmployeeService employeeService;  // Interface, not implementation
+    private final EmployeeRepository employeeRepository;  // Interface, not implementation
+    
+    public QueryService(
+            EmployeeService employeeService,
+            EmployeeRepository employeeRepository) {
+        this.employeeService = employeeService;
+        this.employeeRepository = employeeRepository;
+    }
+}
+```
+
+### Benefits
+
+- **Better Testability**: Easy to mock interfaces in unit tests
+- **Loose Coupling**: Components depend on contracts, not implementations
+- **Flexibility**: Easy to swap implementations without changing dependent code
+- **Clear Separation**: Clear distinction between contract and implementation
+- **Easier Maintenance**: Changes to implementation don't affect interface consumers
+
+### Testing
+
+**Note**: Prefer integration tests over unit tests (see Test-Driven Development Approach section). When unit tests are necessary, use implementation classes when instantiating directly:
+
+```java
+// Unit test (use sparingly - prefer integration tests)
+@Test
+void testPureLogic() {
+    EmployeeRepository repository = new EmployeeRepositoryImpl(mockJdbcTemplate, mockMapper);
+    EmployeeService service = new EmployeeServiceImpl(repository);
+    // Test pure logic without database
+}
+
+// Integration test (preferred)
+@SpringBootTest
+class EmployeeServiceIT extends BaseIntegrationTest {
+    @Autowired
+    private EmployeeService employeeService; // Inject interface
+    
+    @Test
+    void testFullFlow() {
+        // Test complete flow with real database
+    }
+}
+```
+
+## Interface Method Documentation
+
+ExpertMatch follows strict JavaDoc rules for interface methods. See [CODING_RULES.md](CODING_RULES.md#interface-method-documentation) for complete guidelines.
+
+### Rule
+
+**Always create JavaDoc comments for all methods in interfaces. Do not duplicate JavaDoc in implementation classes if the interface already has JavaDoc.**
+
+### Interface Example
+
+**Service Interface with JavaDoc** (`service/EmployeeService.java`):
+
+```java
+package com.berdachuk.expertmatch.employee.service;
+
+import com.berdachuk.expertmatch.employee.domain.Employee;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Service interface for employee management operations.
+ */
+public interface EmployeeService {
+    
+    /**
+     * Finds an employee by their unique identifier.
+     *
+     * @param employeeId The unique employee identifier (19-digit numeric string)
+     * @return Optional containing the employee if found, empty otherwise
+     */
+    Optional<Employee> findById(String employeeId);
+    
+    /**
+     * Retrieves all employees from the database.
+     *
+     * @return List of all employees, empty list if none found
+     */
+    List<Employee> findAll();
+}
+```
+
+### Implementation Example
+
+**Service Implementation without Duplicate JavaDoc** (`service/impl/EmployeeServiceImpl.java`):
+
+```java
+package com.berdachuk.expertmatch.employee.service.impl;
+
+import com.berdachuk.expertmatch.employee.service.EmployeeService;
+import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class EmployeeServiceImpl implements EmployeeService {
+    private final EmployeeRepository employeeRepository;
+    
+    public EmployeeServiceImpl(EmployeeRepository employeeRepository) {
+        this.employeeRepository = employeeRepository;
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Employee> findById(String employeeId) {
+        return employeeRepository.findById(employeeId);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<Employee> findAll() {
+        return employeeRepository.findAll();
+    }
+}
+```
+
+**Note**: Implementation methods use `@Override` annotation but do NOT duplicate JavaDoc from the interface.
+
+### Benefits
+
+- **Single Source of Truth**: Documentation lives in the interface, not duplicated
+- **Easier Maintenance**: Update documentation in one place
+- **Clear Contracts**: Interfaces clearly document the contract
+- **Reduced Duplication**: No need to maintain duplicate documentation
+- **SOLID Principles**: Supports Dependency Inversion Principle
+
+## Technology Normalization and Skill Matching
+
+ExpertMatch uses **Technology normalization** to improve skill matching accuracy. The system leverages the `technology`
+table to normalize skill names and handle synonyms.
+
+### Overview
+
+When matching skills from queries against expert technologies, the system:
+
+1. **Normalizes skill names** using the Technology table
+2. **Handles synonyms** (e.g., "React" matches "ReactJS", "React.js", "react")
+3. **Uses normalized matching** for improved accuracy
+4. **Falls back** to simple case-insensitive matching if Technology table is empty
+
+### Technology Table Structure
+
+The `technology` table contains:
+
+- `name`: Original technology name (e.g., "React")
+- `normalized_name`: Normalized version (e.g., "react")
+- `category`: Technology category (e.g., "Frontend Framework")
+- `synonyms`: JSON array of synonyms (e.g., `["ReactJS", "React.js", "reactjs"]`)
+
+### Usage in ExpertEnrichmentService
+
+The `ExpertEnrichmentService` uses `TechnologyRepository` to normalize skills:
+
+```java
+@Service
+public class ExpertEnrichmentServiceImpl implements ExpertEnrichmentService {
+    private final TechnologyRepository technologyRepository;
+    
+    // Technology cache loaded once per service instance
+    private Map<String, String> technologyCache;
+    
+    private String normalizeTechnology(String technology) {
+        // 1. Check exact name match
+        // 2. Check normalized name match
+        // 3. Check synonym match
+        // 4. Return normalized name or lowercase fallback
+    }
+    
+    private boolean matchesSkill(String skill, String technology) {
+        String normalizedSkill = normalizeTechnology(skill);
+        String normalizedTech = normalizeTechnology(technology);
+        
+        // Match using normalized names
+        return normalizedSkill.equals(normalizedTech) 
+            || normalizedSkill.contains(normalizedTech)
+            || normalizedTech.contains(normalizedSkill);
+    }
+}
+```
+
+### TechnologyRepository Methods
+
+The `TechnologyRepository` provides methods for normalization:
+
+- `findByName(String name)`: Find technology by exact name
+- `findByNormalizedName(String normalizedName)`: Find by normalized name
+- `findBySynonym(String synonym)`: Find by synonym
+- `findAll()`: Get all technologies (for cache loading)
+
+### Benefits
+
+- **Improved Accuracy**: Handles technology name variations
+- **Synonym Support**: Matches "React" with "ReactJS", "React.js", etc.
+- **Performance**: Technology cache loaded once per service instance
+- **Fallback**: Works even if Technology table is empty
+
+### Adding New Technologies
+
+To add new technologies with synonyms:
+
+1. Insert into `technology` table:
+   ```sql
+   INSERT INTO technology (id, name, normalized_name, category, synonyms)
+   VALUES ('...', 'React', 'react', 'Frontend Framework', 
+           '["ReactJS", "React.js", "reactjs"]'::jsonb);
+   ```
+
+2. The cache will be reloaded on next service initialization or cache refresh
+
 ## Additional Resources
 
 - [Testing Guide](TESTING.md) - Detailed testing patterns
@@ -544,5 +1345,5 @@ mvn clean install
 
 ---
 
-*Last updated: 2025-12-21 - Added timeout configuration documentation*
+*Last updated: 2026-01-10 - Updated module structure and interface-based design documentation*
 

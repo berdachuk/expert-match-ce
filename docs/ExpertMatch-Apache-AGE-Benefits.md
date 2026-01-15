@@ -561,7 +561,7 @@ skinparam note {
 note right of [Expert A]
   Found via:
 
-  - Kubernetes experience
+- Kubernetes experience
   - Spring Boot experience
   - 2 projects
 end note
@@ -613,7 +613,7 @@ skinparam note {
 note right of [Expert A]
   Collaborators found:
 
-  - Expert B (2 projects)
+- Expert B (2 projects)
   - Expert C (1 project)
   - Expert D (1 project)
 end note
@@ -992,11 +992,11 @@ partition "Apache AGE" {
 
 **Advantages of Apache AGE**:
 
-- ✅ Single database infrastructure
-- ✅ Unified transactions
-- ✅ Lower operational complexity
-- ✅ Cost-effective (no separate database)
-- ✅ Leverages PostgreSQL ecosystem
+- Single database infrastructure
+- Unified transactions
+- Lower operational complexity
+- Cost-effective (no separate database)
+- Leverages PostgreSQL ecosystem
 
 ### 6.2 Apache AGE vs. SQL-Only Approach
 
@@ -1039,10 +1039,10 @@ partition "Apache AGE + Cypher" {
 
 **Advantages of Apache AGE**:
 
-- ✅ 10-50x faster for graph queries
-- ✅ More intuitive query syntax
-- ✅ Better performance for deep traversals
-- ✅ Easier to maintain and extend
+- 10-50x faster for graph queries
+- More intuitive query syntax
+- Better performance for deep traversals
+- Easier to maintain and extend
 
 ---
 
@@ -1193,25 +1193,25 @@ Apache AGE provides significant benefits to ExpertMatch:
 
 ### Technical Benefits
 
-- ✅ **Unified Architecture**: Single database for relational, vector, and graph data
-- ✅ **Fast Traversal**: 10-50x faster than SQL for graph queries
-- ✅ **ACID Transactions**: Full transaction support for data consistency
-- ✅ **Cypher Language**: Intuitive graph query syntax
-- ✅ **PostgreSQL Ecosystem**: Leverages proven PostgreSQL infrastructure
+- **Unified Architecture**: Single database for relational, vector, and graph data
+- **Fast Traversal**: 10-50x faster than SQL for graph queries
+- **ACID Transactions**: Full transaction support for data consistency
+- **Cypher Language**: Intuitive graph query syntax
+- **PostgreSQL Ecosystem**: Leverages proven PostgreSQL infrastructure
 
 ### Business Benefits
 
-- ✅ **Better Discovery**: 30-40% more experts found through relationships
-- ✅ **Relationship-Aware**: Recommendations consider collaboration history
-- ✅ **Faster Queries**: Complex relationship queries execute in milliseconds
-- ✅ **Cost Effective**: No separate graph database infrastructure needed
+- **Better Discovery**: 30-40% more experts found through relationships
+- **Relationship-Aware**: Recommendations consider collaboration history
+- **Faster Queries**: Complex relationship queries execute in milliseconds
+- **Cost Effective**: No separate graph database infrastructure needed
 
 ### Developer Benefits
 
-- ✅ **Familiar Tools**: Use existing PostgreSQL knowledge and tools
-- ✅ **Easy Queries**: Cypher is more intuitive than complex SQL joins
-- ✅ **Type Safety**: Java integration with type-safe query methods
-- ✅ **Rich Ecosystem**: Access to PostgreSQL extensions and tooling
+- **Familiar Tools**: Use existing PostgreSQL knowledge and tools
+- **Easy Queries**: Cypher is more intuitive than complex SQL joins
+- **Type Safety**: Java integration with type-safe query methods
+- **Rich Ecosystem**: Access to PostgreSQL extensions and tooling
 
 ### Overall Impact
 
@@ -1227,8 +1227,7 @@ Apache AGE provides significant benefits to ExpertMatch:
 - [Apache AGE Documentation](https://age.apache.org/)
 - [Expert Search Flow](ExpertMatch-Expert-Search-Flow.md) - Detailed flow with graph traversal
 - [Product Requirements](ExpertMatch.md) - Complete product documentation
-- [Graph Service Implementation](../src/main/java/com/berdachuk/expertmatch/graph/GraphService.java) - Java
-  implementation
+- `GraphService.java` - Java implementation (see source code repository)
 
 ---
 

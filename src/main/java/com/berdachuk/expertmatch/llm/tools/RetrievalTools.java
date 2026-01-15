@@ -1,15 +1,13 @@
 package com.berdachuk.expertmatch.llm.tools;
 
-import com.berdachuk.expertmatch.embedding.EmbeddingService;
-import com.berdachuk.expertmatch.retrieval.GraphSearchService;
-import com.berdachuk.expertmatch.retrieval.PgVectorSearchService;
+import com.berdachuk.expertmatch.embedding.service.EmbeddingService;
+import com.berdachuk.expertmatch.retrieval.service.GraphSearchService;
+import com.berdachuk.expertmatch.retrieval.service.PgVectorSearchService;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Spring AI tools for retrieval operations.
@@ -33,7 +31,7 @@ public class RetrievalTools {
     }
 
     @Tool(description = "Perform vector similarity search for experts. Use this for semantic search based on natural language queries.")
-    public List<VectorSearchResult> vectorSearch(
+    public List<PgVectorSearchService.VectorSearchResult> vectorSearch(
             @ToolParam(description = "Search query text") String query,
             @ToolParam(description = "Maximum number of results (default: 10)") Integer maxResults,
             @ToolParam(description = "Minimum similarity threshold (0.0-1.0, default: 0.7)") Double similarityThreshold
@@ -45,17 +43,7 @@ public class RetrievalTools {
         float[] queryEmbedding = embeddingService.generateEmbeddingAsFloatArray(query);
 
         // Perform vector search
-        List<PgVectorSearchService.VectorSearchResult> results =
-                pgVectorSearch.search(queryEmbedding, maxResults, similarityThreshold);
-
-        // Convert to tool response format
-        return results.stream()
-                .map(r -> new VectorSearchResult(
-                        r.employeeId(),
-                        r.similarity(),
-                        r.metadata()
-                ))
-                .collect(Collectors.toList());
+        return pgVectorSearch.search(queryEmbedding, maxResults, similarityThreshold);
     }
 
     @Tool(description = "Find experts by technology using graph traversal. Use this to find experts who worked with specific technologies.")
@@ -86,14 +74,5 @@ public class RetrievalTools {
         return graphSearch.findExpertsByTechnologies(technologies);
     }
 
-    /**
-     * Vector search result DTO.
-     */
-    public record VectorSearchResult(
-            String employeeId,
-            double similarity,
-            Map<String, Object> metadata
-    ) {
-    }
 }
 

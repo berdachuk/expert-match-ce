@@ -20,8 +20,8 @@
                            th:text="${#temporals.format(chat.createdAt, 'yyyy-MM-dd HH:mm')}"></small>
                 </div>
                 <button class="btn btn-sm btn-outline-danger ms-2 chat-delete-btn"
-                        th:if="${chat.isDefault == null or !chat.isDefault}"
                         th:data-chat-id="${chat.id}"
+                        th:if="${chat.isDefault == null or !chat.isDefault}"
                         title="Delete chat"
                         type="button">
                     <span aria-hidden="true">&times;</span>

@@ -118,13 +118,11 @@ You can configure different providers for chat, embedding, and reranking indepen
 **Using OpenAI-Compatible API with Local Ollama:**
 
 You can use the OpenAI-compatible API format with local Ollama by setting `PROVIDER=openai` and pointing `BASE_URL` to your local Ollama instance (e.g., `http://localhost:11434`). This is useful when:
-
 - You want to use OpenAI-compatible API format but run models locally
 - You're testing with local models before switching to cloud providers
 - You want consistent API format across different environments
 
 **Example Configuration** (as shown in `application-local.yml`):
-
 - Chat: `CHAT_PROVIDER=openai`, `CHAT_BASE_URL=http://localhost:11434`, `CHAT_MODEL=devstral-small-2:24b-cloud`
 - Embedding: `EMBEDDING_PROVIDER=openai`, `EMBEDDING_BASE_URL=http://localhost:11434`, `EMBEDDING_MODEL=qwen3-embedding:0.6b`
 - Reranking: `RERANKING_PROVIDER=openai`, `RERANKING_BASE_URL=http://localhost:11434`, `RERANKING_MODEL=devstral-small-2:24b-cloud`, `RERANKING_TEMPERATURE=0.1`
@@ -295,13 +293,13 @@ buildGraph()                     ← Apache AGE graph relationships
 
 After complete generation, the system contains:
 
-- ✅ Normalized technology catalog with metadata
-- ✅ Employee records with skills and experience
-- ✅ Project records with technology stacks
-- ✅ Work experience records with detailed project information
-- ✅ CSV-aligned metadata (company, tools, roles, team, etc.) stored in JSONB
-- ✅ Vector embeddings for all work experiences
-- ✅ Graph relationships for expert discovery and analysis
+- Normalized technology catalog with metadata
+- Employee records with skills and experience
+- Project records with technology stacks
+- Work experience records with detailed project information
+- CSV-aligned metadata (company, tools, roles, team, etc.) stored in JSONB
+- Vector embeddings for all work experiences
+- Graph relationships for expert discovery and analysis
 
 ### Usage in Development
 
@@ -498,18 +496,15 @@ If you encounter timeout errors during query processing:
    ```
 
 2. **Verify Ollama Server Timeout** (if using local Ollama):
-
-     - Ensure Ollama server has sufficient timeout for long-running inference
+- Ensure Ollama server has sufficient timeout for long-running inference
     - Check Ollama server logs for timeout errors
 
 3. **Monitor Query Processing Time**:
-
-     - Use execution trace (`includeExecutionTrace: true`) to identify slow steps
+- Use execution trace (`includeExecutionTrace: true`) to identify slow steps
     - Check application logs for processing time information
 
 4. **Adjust Timeout Values**:
-
-     - Increase `server.connection-timeout` in `application-local.yml` if needed
+- Increase `server.connection-timeout` in `application-local.yml` if needed
     - Restart application after configuration changes
 
 ## Next Steps

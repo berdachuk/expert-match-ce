@@ -6,9 +6,9 @@
 
 ## Executive Summary
 
-✅ **Primary Model**: `dengcao/Qwen3-Reranker-8B` (multiple quantization versions)  
-✅ **Alternative Models**: `dengcao/Qwen3-Reranker-0.6B`, `dengcao/Qwen3-Reranker-4B`  
-⚠️ **Model Name Format**: Uses `dengcao/Qwen3-Reranker-8B:QUANTIZATION` format, not `qwen3-reranker-8b`
+ **Primary Model**: `dengcao/Qwen3-Reranker-8B` (multiple quantization versions)  
+ **Alternative Models**: `dengcao/Qwen3-Reranker-0.6B`, `dengcao/Qwen3-Reranker-4B`  
+ **Model Name Format**: Uses `dengcao/Qwen3-Reranker-8B:QUANTIZATION` format, not `qwen3-reranker-8b`
 
 ## Available Reranking Models
 
@@ -99,9 +99,9 @@ ollama pull dengcao/Qwen3-Reranker-4B:Q4_K_M
 
 | Model                   | Parameters  | Size (Q4_K_M)  | Quality  | Speed     | Use Case                 |
 |-------------------------|-------------|----------------|----------|-----------|--------------------------|
-| **Qwen3-Reranker-8B**   | 8B          | 5.0GB          | ⭐⭐⭐⭐⭐    | Medium    | Production, high quality |
-| **Qwen3-Reranker-4B**   | 4B          | ~2.5GB         | ⭐⭐⭐⭐     | Fast      | Balanced performance     |
-| **Qwen3-Reranker-0.6B** | 0.6B        | 639MB          | ⭐⭐⭐      | Very Fast | Resource-limited         |
+| **Qwen3-Reranker-8B**   | 8B          | 5.0GB          |     | Medium    | Production, high quality |
+| **Qwen3-Reranker-4B**   | 4B          | ~2.5GB         |      | Fast      | Balanced performance     |
+| **Qwen3-Reranker-0.6B** | 0.6B        | 639MB          |       | Very Fast | Resource-limited         |
 
 ---
 
@@ -156,9 +156,9 @@ expertmatch:
 
 The correct model name format in Ollama is:
 
-- ✅ **Correct**: `dengcao/Qwen3-Reranker-8B:Q4_K_M`
-- ❌ **Incorrect**: `qwen3-reranker-8b`
-- ❌ **Incorrect**: `qwen3-reranker:8b`
+- **Correct**: `dengcao/Qwen3-Reranker-8B:Q4_K_M`
+- **Incorrect**: `qwen3-reranker-8b`
+- **Incorrect**: `qwen3-reranker:8b`
 
 **Format**: `dengcao/Qwen3-Reranker-{SIZE}:{QUANTIZATION}`
 
@@ -309,21 +309,21 @@ model: dengcao/Qwen3-Reranker-8B:Q4_K_M
 
 ### For Production Use
 
-✅ **Recommended**: `dengcao/Qwen3-Reranker-8B:Q4_K_M`
+ **Recommended**: `dengcao/Qwen3-Reranker-8B:Q4_K_M`
 - Best balance of quality and resource usage
 - 5.0GB size, excellent performance
 - Supports 32K context window
 
 ### For Development/Testing
 
-✅ **Recommended**: `dengcao/Qwen3-Reranker-0.6B:Q8_0`
+ **Recommended**: `dengcao/Qwen3-Reranker-0.6B:Q8_0`
 - Fast inference
 - Low resource usage (639MB)
 - Good enough for testing
 
 ### For Maximum Quality
 
-✅ **Recommended**: `dengcao/Qwen3-Reranker-8B:Q8_0` or `F16`
+ **Recommended**: `dengcao/Qwen3-Reranker-8B:Q8_0` or `F16`
 - Highest quality reranking
 - Requires more resources (8.7GB or 16GB)
 
@@ -352,8 +352,7 @@ model: dengcao/Qwen3-Reranker-8B:Q4_K_M
    ```
 
 4. **Verify**:
-
-    - Check logs for reranking model initialization
+- Check logs for reranking model initialization
    - Test a query with reranking enabled
 
 ---
@@ -369,11 +368,11 @@ model: dengcao/Qwen3-Reranker-8B:Q4_K_M
 
 ## Summary
 
-✅ **Primary Recommendation**: `dengcao/Qwen3-Reranker-8B:Q4_K_M`  
-✅ **Model Format**: `dengcao/Qwen3-Reranker-{SIZE}:{QUANTIZATION}`  
-✅ **Available Sizes**: 8B, 4B, 0.6B  
-✅ **Quantization Options**: Q3_K_M, Q4_K_M, Q5_K_M, Q8_0, F16  
-✅ **Integration**: Update `application-local.yml` with correct model name
+ **Primary Recommendation**: `dengcao/Qwen3-Reranker-8B:Q4_K_M`  
+ **Model Format**: `dengcao/Qwen3-Reranker-{SIZE}:{QUANTIZATION}`  
+ **Available Sizes**: 8B, 4B, 0.6B  
+ **Quantization Options**: Q3_K_M, Q4_K_M, Q5_K_M, Q8_0, F16  
+ **Integration**: Update `application-local.yml` with correct model name
 
 **Next Steps**:
 1. Pull the recommended model: `ollama pull dengcao/Qwen3-Reranker-8B:Q4_K_M`

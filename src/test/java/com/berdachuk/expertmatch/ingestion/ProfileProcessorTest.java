@@ -1,16 +1,19 @@
 package com.berdachuk.expertmatch.ingestion;
 
+import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
 import com.berdachuk.expertmatch.ingestion.model.EmployeeData;
 import com.berdachuk.expertmatch.ingestion.model.EmployeeProfile;
 import com.berdachuk.expertmatch.ingestion.model.ProcessingResult;
 import com.berdachuk.expertmatch.ingestion.model.ProjectData;
+import com.berdachuk.expertmatch.ingestion.service.ProfileProcessor;
+import com.berdachuk.expertmatch.project.repository.ProjectRepository;
+import com.berdachuk.expertmatch.workexperience.repository.WorkExperienceRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +28,13 @@ import static org.mockito.Mockito.*;
 class ProfileProcessorTest {
 
     @Mock
-    private NamedParameterJdbcTemplate namedJdbcTemplate;
+    private EmployeeRepository employeeRepository;
+
+    @Mock
+    private ProjectRepository projectRepository;
+
+    @Mock
+    private WorkExperienceRepository workExperienceRepository;
 
     private ProfileProcessor processor;
     private ObjectMapper objectMapper;
@@ -33,7 +42,7 @@ class ProfileProcessorTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        processor = new ProfileProcessor(namedJdbcTemplate, objectMapper);
+        processor = new ProfileProcessor(employeeRepository, projectRepository, workExperienceRepository, objectMapper);
     }
 
     @Test
@@ -48,7 +57,7 @@ class ProfileProcessorTest {
         );
         EmployeeProfile profile = new EmployeeProfile(employee, "Summary", List.of());
 
-        when(namedJdbcTemplate.update(anyString(), any(Map.class))).thenReturn(1);
+        when(employeeRepository.createOrUpdate(any())).thenReturn("4000741400013306668");
 
         ProcessingResult result = processor.processProfile(profile, new HashMap<>());
 
@@ -91,13 +100,13 @@ class ProfileProcessorTest {
         );
         EmployeeProfile profile = new EmployeeProfile(employee, null, List.of());
 
-        when(namedJdbcTemplate.update(anyString(), any(Map.class))).thenReturn(1);
+        when(employeeRepository.createOrUpdate(any())).thenReturn("4000741400013306668");
 
         ProcessingResult result = processor.processProfile(profile, new HashMap<>());
 
         assertTrue(result.success());
-        // Verify that defaults were applied (check the SQL call parameters)
-        verify(namedJdbcTemplate, atLeastOnce()).update(anyString(), any(Map.class));
+        // Verify that employee was created/updated
+        verify(employeeRepository, atLeastOnce()).createOrUpdate(any());
     }
 
     @Test
@@ -125,9 +134,11 @@ class ProfileProcessorTest {
         );
         EmployeeProfile profile = new EmployeeProfile(employee, "Summary", List.of(project));
 
-        when(namedJdbcTemplate.update(anyString(), any(Map.class))).thenReturn(1);
-        when(namedJdbcTemplate.query(anyString(), any(Map.class), any(org.springframework.jdbc.core.RowMapper.class)))
-                .thenReturn(List.of());
+        when(employeeRepository.createOrUpdate(any())).thenReturn("4000741400013306668");
+        when(projectRepository.findIdByName(anyString())).thenReturn(java.util.Optional.empty());
+        when(workExperienceRepository.exists(anyString(), anyString(), any())).thenReturn(false);
+        when(projectRepository.createOrUpdate(any())).thenReturn("PRJ-001");
+        when(workExperienceRepository.createOrUpdate(any(), anyString())).thenReturn("workexp-001");
 
         ProcessingResult result = processor.processProfile(profile, new HashMap<>());
 
@@ -148,7 +159,7 @@ class ProfileProcessorTest {
         );
         EmployeeProfile profile = new EmployeeProfile(employee, "Summary", null);
 
-        when(namedJdbcTemplate.update(anyString(), any(Map.class))).thenReturn(1);
+        when(employeeRepository.createOrUpdate(any())).thenReturn("4000741400013306668");
 
         ProcessingResult result = processor.processProfile(profile, new HashMap<>());
 
@@ -169,14 +180,14 @@ class ProfileProcessorTest {
         );
         EmployeeProfile profile = new EmployeeProfile(employee, "Summary", List.of());
 
-        // ON CONFLICT DO UPDATE should still return 1
-        when(namedJdbcTemplate.update(anyString(), any(Map.class))).thenReturn(1);
+        // createOrUpdate handles both insert and update
+        when(employeeRepository.createOrUpdate(any())).thenReturn("4000741400013306668");
 
         ProcessingResult result = processor.processProfile(profile, new HashMap<>());
 
         assertTrue(result.success());
-        // Verify update was called (ON CONFLICT DO UPDATE)
-        verify(namedJdbcTemplate, atLeastOnce()).update(anyString(), any(Map.class));
+        // Verify createOrUpdate was called
+        verify(employeeRepository, atLeastOnce()).createOrUpdate(any());
     }
 
     @Test
@@ -205,7 +216,7 @@ class ProfileProcessorTest {
         );
         EmployeeProfile profile = new EmployeeProfile(employee, "Summary", List.of(invalidProject));
 
-        when(namedJdbcTemplate.update(anyString(), any(Map.class))).thenReturn(1);
+        when(employeeRepository.createOrUpdate(any())).thenReturn("4000741400013306668");
 
         ProcessingResult result = processor.processProfile(profile, new HashMap<>());
 
@@ -227,7 +238,7 @@ class ProfileProcessorTest {
         );
         EmployeeProfile profile = new EmployeeProfile(employee, "Summary", List.of());
 
-        when(namedJdbcTemplate.update(anyString(), any(Map.class)))
+        when(employeeRepository.createOrUpdate(any()))
                 .thenThrow(new RuntimeException("Database error"));
 
         ProcessingResult result = processor.processProfile(profile, new HashMap<>());

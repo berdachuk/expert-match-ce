@@ -353,6 +353,21 @@ For more details, see:
 - [MkDocs Setup Guide](docs/MKDOCS_SETUP.md)
 - [README_MKDOCS.md](docs/README_MKDOCS.md)
 
+## Development Guidelines
+
+ExpertMatch follows strict coding rules and development practices:
+
+- **[Coding Rules](docs/CODING_RULES.md)** - Complete coding standards and guidelines
+- **[Development Guide](docs/DEVELOPMENT_GUIDE.md)** - Development workflow and best practices
+- **[Testing Guide](docs/TESTING.md)** - Test-Driven Development approach and testing patterns
+
+**Key Principles:**
+
+- **Test-Driven Development**: Integration tests preferred, test independence required
+- **Interface-Based Design**: All services and repositories use interfaces
+- **JavaDoc Rules**: JavaDoc in interfaces, not duplicated in implementations
+- **Full Flow Testing**: Integration tests verify complete workflows
+
 ## Additional Resources
 
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)

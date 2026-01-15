@@ -1793,7 +1793,7 @@ deactivate Service
 note right of Service
   Handles:
 
-  - Extension loading
+- Extension loading
   - Parameter embedding
   - Result parsing
 end note
@@ -1987,7 +1987,7 @@ GraphService --> Flow
 note right of GraphService
   Handles:
 
-  - AGE extension loading
+- AGE extension loading
   - Transaction management
   - Parameter embedding
   - Result parsing
@@ -2146,21 +2146,21 @@ See `src/test/java/com/berdachuk/expertmatch/graph/` for integration test exampl
 
 ## Future Enhancements
 
-### Customer Relationships - ✅ IMPLEMENTED
+### Customer Relationships -  IMPLEMENTED
 
-**Status:** ✅ **Fully Implemented**
+**Status:**  **Fully Implemented**
 
 Customer vertices and relationships are now fully implemented in the graph.
 
 **Implementation:**
 
-- ✅ Customer vertices created from `work_experience` table (`GraphBuilderService.createCustomerVertices()`)
-- ✅ `WORKED_FOR` relationships (Expert → Customer) implemented (
+- Customer vertices created from `work_experience` table (`GraphBuilderService.createCustomerVertices()`)
+- `WORKED_FOR` relationships (Expert → Customer) implemented (
   `GraphBuilderService.createExpertCustomerRelationships()`)
-- ✅ `FOR_CUSTOMER` relationships (Project → Customer) implemented (
+- `FOR_CUSTOMER` relationships (Project → Customer) implemented (
   `GraphBuilderService.createProjectCustomerRelationships()`)
-- ✅ Graph search methods: `GraphSearchService.findExpertsByCustomer()`, `findExpertsByCustomerAndTechnology()`
-- ✅ Graph indexes for Customer properties (GIN index on JSONB)
+- Graph search methods: `GraphSearchService.findExpertsByCustomer()`, `findExpertsByCustomerAndTechnology()`
+- Graph indexes for Customer properties (GIN index on JSONB)
 
 **Query Examples:**
 

@@ -688,9 +688,9 @@ curl -X 'POST' \
 - [ ] `includeEntities` includes/excludes entities
 - [ ] `rerank` affects result ordering
 - [ ] `deepResearch` enables deep research pattern
-- [x] `useCascadePattern` enables cascade pattern (✅ Available in OpenAPI spec as of 2025-12-21)
-- [x] `useRoutingPattern` enables routing pattern (✅ Available in OpenAPI spec as of 2025-12-21)
-- [x] `useCyclePattern` enables cycle pattern (✅ Available in OpenAPI spec as of 2025-12-21)
+- [x] `useCascadePattern` enables cascade pattern ( Available in OpenAPI spec as of 2025-12-21)
+- [x] `useRoutingPattern` enables routing pattern ( Available in OpenAPI spec as of 2025-12-21)
+- [x] `useCyclePattern` enables cycle pattern ( Available in OpenAPI spec as of 2025-12-21)
 - [ ] `includeExecutionTrace` includes execution trace in response
 
 ### SGR Patterns
@@ -729,16 +729,15 @@ curl -X 'POST' \
   endpoints
 - Base URL: `http://localhost:8093/api/v1` (adjust for your environment)
 - Default options are applied if not specified:
-
-      - `maxResults`: 10
+- `maxResults`: 10
     - `minConfidence`: 0.7
     - `includeSources`: true
     - `includeEntities`: true
     - `rerank`: true
     - `deepResearch`: false
-  - `useCascadePattern`: false (✅ Available in OpenAPI spec as of 2025-12-21)
-  - `useRoutingPattern`: false (✅ Available in OpenAPI spec as of 2025-12-21)
-  - `useCyclePattern`: false (✅ Available in OpenAPI spec as of 2025-12-21)
+  - `useCascadePattern`: false ( Available in OpenAPI spec as of 2025-12-21)
+  - `useRoutingPattern`: false ( Available in OpenAPI spec as of 2025-12-21)
+  - `useCyclePattern`: false ( Available in OpenAPI spec as of 2025-12-21)
   - `includeExecutionTrace`: false
 - Chat ID must be a 24-character hexadecimal string if provided
 - Query text has a maximum length of 5000 characters

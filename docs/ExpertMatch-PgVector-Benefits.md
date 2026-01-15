@@ -600,13 +600,13 @@ LIMIT 10;
 | Feature                    | PgVector             | Pinecone            | Weaviate          | Qdrant            |
 |----------------------------|----------------------|---------------------|-------------------|-------------------|
 | **Infrastructure**         | PostgreSQL extension | Separate service    | Separate service  | Separate service  |
-| **ACID Transactions**      | ✅ Full support       | ❌ Limited           | ❌ Limited         | ❌ Limited         |
-| **SQL Integration**        | ✅ Native             | ❌ No                | ❌ No              | ❌ No              |
-| **Cost**                   | ✅ Free (open-source) | ❌ Per-query pricing | ❌ Hosting costs   | ❌ Hosting costs   |
-| **Operational Complexity** | ✅ Low (unified)      | ❌ High (separate)   | ❌ High (separate) | ❌ High (separate) |
-| **Data Consistency**       | ✅ ACID guarantees    | ⚠️ Eventual         | ⚠️ Eventual       | ⚠️ Eventual       |
-| **Query Performance**      | ✅ <1ms (HNSW)        | ✅ <1ms              | ✅ <1ms            | ✅ <1ms            |
-| **Scalability**            | ✅ PostgreSQL scaling | ✅ Managed scaling   | ✅ Managed scaling | ✅ Managed scaling |
+| **ACID Transactions**      |  Full support       |  Limited           |  Limited         |  Limited         |
+| **SQL Integration**        |  Native             |  No                |  No              |  No              |
+| **Cost**                   |  Free (open-source) |  Per-query pricing |  Hosting costs   |  Hosting costs   |
+| **Operational Complexity** |  Low (unified)      |  High (separate)   |  High (separate) |  High (separate) |
+| **Data Consistency**       |  ACID guarantees    |  Eventual         |  Eventual       |  Eventual       |
+| **Query Performance**      |  <1ms (HNSW)        |  <1ms              |  <1ms            |  <1ms            |
+| **Scalability**            |  PostgreSQL scaling |  Managed scaling   |  Managed scaling |  Managed scaling |
 
 **ExpertMatch Choice**: PgVector for unified architecture, ACID guarantees, and cost efficiency.
 
@@ -614,9 +614,9 @@ LIMIT 10;
 
 | Index Type      | Query Speed         | Index Size         | Build Time | Accuracy |
 |-----------------|---------------------|--------------------|------------|----------|
-| **HNSW**        | ✅ Fastest (<1ms)    | Medium (~18GB)     | Medium     | 95-99%   |
-| **IVFFlat**     | Medium (10-50ms)    | ✅ Smallest (~12GB) | ✅ Fastest  | 90-95%   |
-| **Linear Scan** | ❌ Slowest (seconds) | ✅ None             | ✅ Instant  | ✅ 100%   |
+| **HNSW**        |  Fastest (<1ms)    | Medium (~18GB)     | Medium     | 95-99%   |
+| **IVFFlat**     | Medium (10-50ms)    |  Smallest (~12GB) |  Fastest  | 90-95%   |
+| **Linear Scan** |  Slowest (seconds) |  None             |  Instant  |  100%   |
 
 **ExpertMatch Choice**: HNSW for optimal balance of speed and accuracy.
 
@@ -701,14 +701,14 @@ LIMIT 10;  -- Early limit
 
 ### Key Benefits of PgVector in ExpertMatch
 
-✅ **Unified Architecture**: Single database for relational, vector, and graph data
-✅ **High Performance**: Sub-millisecond queries with HNSW indexing
-✅ **Cost Effective**: No additional infrastructure or licensing costs
-✅ **Operational Simplicity**: One system to manage, monitor, and backup
-✅ **ACID Guarantees**: Full transaction support for vector operations
-✅ **Multi-Model Support**: Flexible dimension handling for different embedding models
-✅ **Rich Ecosystem**: Leverages PostgreSQL's extensive tooling and community
-✅ **Hybrid Search**: Enables combination with graph and keyword search
+ **Unified Architecture**: Single database for relational, vector, and graph data
+ **High Performance**: Sub-millisecond queries with HNSW indexing
+ **Cost Effective**: No additional infrastructure or licensing costs
+ **Operational Simplicity**: One system to manage, monitor, and backup
+ **ACID Guarantees**: Full transaction support for vector operations
+ **Multi-Model Support**: Flexible dimension handling for different embedding models
+ **Rich Ecosystem**: Leverages PostgreSQL's extensive tooling and community
+ **Hybrid Search**: Enables combination with graph and keyword search
 
 ### Technical Advantages
 

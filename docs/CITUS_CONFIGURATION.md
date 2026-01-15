@@ -21,7 +21,7 @@ For ExpertMatch, Citus can be used in two modes:
 1. [Prerequisites](#prerequisites)
 2. [Installation Options](#installation-options)
 3. [Single-Node Configuration](#single-node-configuration)
-4. [Multi-Node Configuration](#multi-node-configuration)
+4. [Distributed Tables Setup](#distributed-tables-setup)
 5. [Columnar Storage Setup](#columnar-storage-setup)
 6. [Distributed Tables Setup](#distributed-tables-setup)
 7. [Migration from Current Setup](#migration-from-current-setup)
@@ -231,8 +231,7 @@ BEGIN
         -- ALTER TABLE expertmatch.work_experience SET ACCESS METHOD columnar;
         
         -- For existing tables with data, use this approach:
-
-        -- 1. Create new columnar table
+- - 1. Create new columnar table
         -- 2. Copy data
         -- 3. Drop old table
         -- 4. Rename new table
@@ -326,15 +325,12 @@ services:
       POSTGRES_PASSWORD: expertmatch
       POSTGRES_DB: expertmatch
     ports:
-
-      - "5433:5432"
+- "5433:5432"
     volumes:
-
-      - ~/data/expertmatch-postgres-coordinator:/var/lib/postgresql/data
+- ~/data/expertmatch-postgres-coordinator:/var/lib/postgresql/data
     command: postgres -c shared_preload_libraries='age,vector,citus'
     networks:
-
-      - expertmatch-network
+- expertmatch-network
 
   # Citus Worker 1
   postgres-worker-1:
@@ -348,15 +344,12 @@ services:
       POSTGRES_PASSWORD: expertmatch
       POSTGRES_DB: expertmatch
     ports:
-
-      - "5434:5432"
+- "5434:5432"
     volumes:
-
-      - ~/data/expertmatch-postgres-worker-1:/var/lib/postgresql/data
+- ~/data/expertmatch-postgres-worker-1:/var/lib/postgresql/data
     command: postgres -c shared_preload_libraries='age,vector,citus'
     networks:
-
-      - expertmatch-network
+- expertmatch-network
 
   # Citus Worker 2
   postgres-worker-2:
@@ -370,15 +363,12 @@ services:
       POSTGRES_PASSWORD: expertmatch
       POSTGRES_DB: expertmatch
     ports:
-
-      - "5435:5432"
+- "5435:5432"
     volumes:
-
-      - ~/data/expertmatch-postgres-worker-1:/var/lib/postgresql/data
+- ~/data/expertmatch-postgres-worker-1:/var/lib/postgresql/data
     command: postgres -c shared_preload_libraries='age,vector,citus'
     networks:
-
-      - expertmatch-network
+- expertmatch-network
 
 networks:
   expertmatch-network:

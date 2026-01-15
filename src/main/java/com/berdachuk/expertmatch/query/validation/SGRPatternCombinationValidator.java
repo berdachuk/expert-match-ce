@@ -1,15 +1,15 @@
 package com.berdachuk.expertmatch.query.validation;
 
-import com.berdachuk.expertmatch.query.QueryRequest;
+import com.berdachuk.expertmatch.query.domain.QueryRequest;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
- * Validates SGR pattern combinations in QueryRequest.QueryOptions.
- * 
+ * Validates SGR pattern combinations in com.berdachuk.expertmatch.query.domain.QueryRequest.QueryOptions.
+ * <p>
  * Rules:
  * - Cascade and Cycle patterns are mutually exclusive
- *   (Cascade requires exactly 1 expert, Cycle requires >1 expert)
+ * (Cascade requires exactly 1 expert, Cycle requires >1 expert)
  * - Routing pattern can be used with either Cascade or Cycle
  */
 public class SGRPatternCombinationValidator implements ConstraintValidator<ValidSGRPatternCombination, QueryRequest> {
@@ -25,7 +25,7 @@ public class SGRPatternCombinationValidator implements ConstraintValidator<Valid
             return true; // Let other validators handle null checks
         }
 
-        QueryRequest.QueryOptions options = queryRequest.options();
+        com.berdachuk.expertmatch.query.domain.QueryRequest.QueryOptions options = queryRequest.options();
         Boolean useCascade = options.useCascadePattern();
         Boolean useCycle = options.useCyclePattern();
 
@@ -39,8 +39,8 @@ public class SGRPatternCombinationValidator implements ConstraintValidator<Valid
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(
                     "Invalid SGR pattern combination: Cascade and Cycle patterns cannot be enabled simultaneously. " +
-                    "Cascade pattern requires exactly 1 expert result, while Cycle pattern requires multiple expert results (>1). " +
-                    "Please enable only one of them."
+                            "Cascade pattern requires exactly 1 expert result, while Cycle pattern requires multiple expert results (>1). " +
+                            "Please enable only one of them."
             ).addConstraintViolation();
             return false;
         }

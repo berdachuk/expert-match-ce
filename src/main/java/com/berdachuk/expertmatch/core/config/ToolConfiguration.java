@@ -28,8 +28,10 @@ public class ToolConfiguration {
      * Creates a ChatClient with ExpertMatch tools enabled.
      * This is a separate bean from the default ChatClient to allow
      * tool-enabled interactions while maintaining backward compatibility.
+     * Only created when no other specialized ChatClient beans exist (skills/tool search disabled).
      */
     @Bean("chatClientWithTools")
+    @ConditionalOnMissingBean(name = {"chatClientWithSkills", "chatClientWithToolSearch", "chatClientWithSkillsAndTools"})
     public ChatClient chatClientWithTools(
             ChatClient.Builder builder,
             ExpertMatchTools tools,

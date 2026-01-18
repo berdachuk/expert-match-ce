@@ -31,6 +31,8 @@ spring:
       maximum-pool-size: 10
       minimum-idle: 5
       connection-timeout: 30000
+      # Set search_path to include public schema so vector type is accessible
+      connection-init-sql: SET search_path = public, expertmatch;
 
   # JDBC Configuration
   jdbc:
@@ -286,6 +288,18 @@ expertmatch:
       # (technologies, tools, project types, etc.) using LLM at application startup.
       # Expansion results are cached to avoid repeated LLM calls.
       # Falls back to base constants if LLM is unavailable or fails.
+    external-database:
+      # External database configuration for work experience ingestion
+      enabled: ${EXPERTMATCH_INGESTION_EXTERNAL_DB_ENABLED:false}
+      host: ${INGEST_POSTGRES_HOST:localhost}
+      port: ${INGEST_POSTGRES_PORT:}
+      database: ${INGEST_POSTGRES_DB:}
+      username: ${INGEST_POSTGRES_USER:}
+      password: ${INGEST_POSTGRES_PASSWORD:}
+      schema: ${INGEST_POSTGRES_SCHEMA:}
+      connection-timeout: ${EXPERTMATCH_INGESTION_EXTERNAL_DB_CONNECTION_TIMEOUT:30000}
+      maximum-pool-size: ${EXPERTMATCH_INGESTION_EXTERNAL_DB_MAX_POOL_SIZE:5}
+      minimum-idle: ${EXPERTMATCH_INGESTION_EXTERNAL_DB_MIN_IDLE:2}
   mcp:
     server:
       enabled: true

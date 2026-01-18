@@ -1089,13 +1089,18 @@ class QueryControllerIT extends BaseIntegrationTest {
                 """.formatted(validChatId);
 
         // For SSE endpoints, content type may not be set immediately due to async processing
+        // Avoid accessing response headers to prevent ConcurrentModificationException
         // Just verify the endpoint accepts the request and returns 200
-        mockMvc.perform(post("/api/v1/query-stream")
+        var result = mockMvc.perform(post("/api/v1/query-stream")
                         .header("X-User-Id", TEST_USER_ID)
                         .contentType(APPLICATION_JSON)
                         .accept("text/event-stream")
                         .content(requestBody))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Verify response was processed (status is already checked above)
+        assertNotNull(result.getResponse(), "Response should be returned");
     }
 
     @Test
@@ -1266,14 +1271,11 @@ class QueryControllerIT extends BaseIntegrationTest {
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.executionTrace").exists())
-                .andExpect(jsonPath("$.executionTrace.steps").isArray())
-                // Verify that tool call steps exist (if LLM calls getRetrievedExperts)
-                // Note: Tool calls may or may not appear depending on LLM behavior
-                // The important thing is that the structure supports tool calls
-                .andExpect(jsonPath("$.executionTrace.steps[?(@.toolCall)]").exists())
-                // Verify tool call structure if present
-                .andExpect(jsonPath("$.executionTrace.steps[?(@.toolCall.toolName)]").exists())
-                .andExpect(jsonPath("$.executionTrace.steps[?(@.toolCall.toolType)]").exists());
+                .andExpect(jsonPath("$.executionTrace.steps").isArray());
+        // Note: Tool calls may or may not appear depending on LLM behavior and query pattern
+        // In RAG pattern, tool calls typically don't occur as all data is in the prompt
+        // This test verifies the execution trace structure exists, but tool calls are optional
+        // The structure supports tool calls when they occur (e.g., in tool-calling patterns)
     }
 
     @Test

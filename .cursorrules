@@ -147,6 +147,29 @@
 - **No Incremental Migrations**: Do not create V2, V3, V4, etc. for production/development (use consolidated V1)
 - **Consolidation Process**: When making schema changes, update V1 directly instead of creating new migrations
 - **Post-MVP**: After MVP, can use incremental migrations (V2, V3, etc.) for new features
+- **Flyway Configuration - Primary Database Only**: Flyway MUST use ONLY the primary application database
+  - **CRITICAL**: Flyway migrations must NEVER run on external read-only databases or any secondary DataSources
+  - **Primary Database Only**: Flyway must be explicitly configured to use the primary DataSource from `spring.datasource.*` properties
+  - **Implementation**: In `FlywayConfig`, create the DataSource explicitly from `DataSourceProperties` to ensure the primary database is used
+  - **Verification**: Always verify the DataSource URL in Flyway configuration logs to confirm it's using the primary database (e.g., `jdbc:postgresql://localhost:5433/expertmatch`)
+  - **Invalid**: Injecting DataSource without explicit configuration (may select wrong DataSource when multiple exist)
+  - **Valid**: Creating DataSource explicitly from `DataSourceProperties` in Flyway configuration
+  - **External Database Exclusion**: External read-only DataSource (e.g., `externalDataSource`) must NEVER be used by Flyway
+  - **Example**: 
+    ```java
+    @Bean
+    @Primary
+    public Flyway flyway(DataSourceProperties dataSourceProperties, FlywayProperties properties) {
+        // Create primary DataSource explicitly from properties
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(dataSourceProperties.getUrl());
+        config.setUsername(dataSourceProperties.getUsername());
+        config.setPassword(dataSourceProperties.getPassword());
+        DataSource primaryDataSource = new HikariDataSource(config);
+        // Use primaryDataSource for Flyway
+    }
+    ```
+  - **Benefits**: Prevents accidental migration execution on wrong database, ensures schema consistency, protects external read-only databases from modification
 
 ### Database Testing
 - **Always use Testcontainers**: Never use H2 or other in-memory databases for database tests

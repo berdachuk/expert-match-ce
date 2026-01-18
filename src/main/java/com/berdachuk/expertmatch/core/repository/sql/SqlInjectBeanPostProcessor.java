@@ -58,6 +58,8 @@ public class SqlInjectBeanPostProcessor implements BeanPostProcessor {
                                     "SQL file not found: " + filePath + " for field " + field.getName() + " in " + bean.getClass().getName());
                         }
                         String sql = IOUtils.toString(resource.getInputStream(), StandardCharsets.UTF_8);
+                        // Trim SQL to remove leading/trailing whitespace and normalize line endings
+                        sql = sql.trim().replaceAll("\\r\\n", "\n").replaceAll("\\r", "\n");
                         field.setAccessible(true);
                         ReflectionUtils.setField(field, bean, sql);
                         log.debug("Injected SQL from {} into field {} of bean {}", filePath, field.getName(), beanName);

@@ -53,6 +53,20 @@ public class ProfileProcessor {
      * @return ProcessingResult with success status and details
      */
     public ProcessingResult processProfile(EmployeeProfile profile, Map<String, String> existingProjects) {
+        return processProfile(profile, existingProjects, true);
+    }
+
+    /**
+     * Processes a single employee profile into the database.
+     * Optionally applies default values for missing optional fields.
+     * Creates employee record and work experience records for each project.
+     *
+     * @param profile          EmployeeProfile to process
+     * @param existingProjects Map of existing project IDs to project names (for project lookup)
+     * @param applyDefaults    If true, applies default values for missing optional fields. If false, uses only real data.
+     * @return ProcessingResult with success status and details
+     */
+    public ProcessingResult processProfile(EmployeeProfile profile, Map<String, String> existingProjects, boolean applyDefaults) {
         // Validate profile
         if (!profile.isValid()) {
             String errorMsg = "Profile is invalid: missing required employee fields (id or name)";
@@ -64,8 +78,8 @@ public class ProfileProcessor {
             );
         }
 
-        // Apply defaults to employee data
-        var employee = profile.employee().withDefaults();
+        // Apply defaults only if requested (for test data generation), otherwise use only real data
+        var employee = applyDefaults ? profile.employee().withDefaults() : profile.employee();
         String employeeId = employee.id();
         String employeeName = employee.name();
 
@@ -100,8 +114,8 @@ public class ProfileProcessor {
                             continue;
                         }
 
-                        // Apply defaults to project data
-                        var project = projectData.withDefaults();
+                        // Apply defaults to project data only if requested (for test data generation)
+                        var project = applyDefaults ? projectData.withDefaults() : projectData;
                         processProject(employeeId, project, existingProjects);
                         projectsProcessed++;
                     } catch (Exception e) {

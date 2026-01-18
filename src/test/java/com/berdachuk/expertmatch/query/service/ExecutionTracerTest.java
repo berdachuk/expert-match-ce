@@ -181,5 +181,122 @@ class ExecutionTracerTest {
         ExecutionTrace.TokenUsage sum3 = ExecutionTrace.TokenUsage.sum(null, null);
         assertNull(sum3);
     }
+
+    @Test
+    void testRecordToolCall() {
+        ExecutionTracer tracer = new ExecutionTracer();
+
+        tracer.recordToolCall("Skill", "AGENT_SKILL", "{\"skillName\":\"expert-matching-hybrid-retrieval\"}",
+                "{\"status\":\"executed\"}", "expert-matching-hybrid-retrieval", 150L);
+
+        ExecutionTrace.ExecutionTraceData trace = tracer.buildTrace();
+
+        assertEquals(1, trace.steps().size());
+        ExecutionTrace.ExecutionStep step = trace.steps().get(0);
+        assertEquals("Tool Call: Skill", step.name());
+        assertEquals("ChatClient", step.service());
+        assertEquals("toolCall", step.method());
+        assertEquals("SUCCESS", step.status());
+        assertEquals(150L, step.durationMs());
+        assertNotNull(step.toolCall());
+        assertEquals("Skill", step.toolCall().toolName());
+        assertEquals("AGENT_SKILL", step.toolCall().toolType());
+        assertEquals("{\"skillName\":\"expert-matching-hybrid-retrieval\"}", step.toolCall().parameters());
+        assertEquals("{\"status\":\"executed\"}", step.toolCall().response());
+        assertEquals("expert-matching-hybrid-retrieval", step.toolCall().skillName());
+        assertNull(step.llmModel());
+        assertNull(step.tokenUsage());
+    }
+
+    @Test
+    void testRecordToolCallJavaTool() {
+        ExecutionTracer tracer = new ExecutionTracer();
+
+        tracer.recordToolCall("expertQuery", "JAVA_TOOL", "{\"query\":\"Find Java experts\"}",
+                "{\"results\":[{\"id\":\"123\"}]}", null, 200L);
+
+        ExecutionTrace.ExecutionTraceData trace = tracer.buildTrace();
+
+        assertEquals(1, trace.steps().size());
+        ExecutionTrace.ExecutionStep step = trace.steps().get(0);
+        assertEquals("Tool Call: expertQuery", step.name());
+        assertNotNull(step.toolCall());
+        assertEquals("expertQuery", step.toolCall().toolName());
+        assertEquals("JAVA_TOOL", step.toolCall().toolType());
+        assertNull(step.toolCall().skillName());
+    }
+
+    @Test
+    void testRecordToolCallFileSystemTool() {
+        ExecutionTracer tracer = new ExecutionTracer();
+
+        tracer.recordToolCall("readFile", "FILE_SYSTEM_TOOL", "{\"path\":\"/docs/guide.md\"}",
+                "{\"content\":\"...\"}", null, 50L);
+
+        ExecutionTrace.ExecutionTraceData trace = tracer.buildTrace();
+
+        assertEquals(1, trace.steps().size());
+        ExecutionTrace.ExecutionStep step = trace.steps().get(0);
+        assertEquals("Tool Call: readFile", step.name());
+        assertNotNull(step.toolCall());
+        assertEquals("readFile", step.toolCall().toolName());
+        assertEquals("FILE_SYSTEM_TOOL", step.toolCall().toolType());
+    }
+
+    @Test
+    void testRecordToolCallFailure() {
+        ExecutionTracer tracer = new ExecutionTracer();
+
+        tracer.recordToolCallFailure("Skill", "AGENT_SKILL", "{\"skillName\":\"invalid-skill\"}",
+                "Skill not found", "invalid-skill", 100L);
+
+        ExecutionTrace.ExecutionTraceData trace = tracer.buildTrace();
+
+        assertEquals(1, trace.steps().size());
+        ExecutionTrace.ExecutionStep step = trace.steps().get(0);
+        assertEquals("Tool Call: Skill", step.name());
+        assertEquals("FAILED", step.status());
+        assertNotNull(step.toolCall());
+        assertEquals("ERROR: Skill not found", step.toolCall().response());
+    }
+
+    @Test
+    void testThreadLocalStorage() {
+        ExecutionTracer tracer1 = new ExecutionTracer();
+        ExecutionTracer tracer2 = new ExecutionTracer();
+
+        ExecutionTracer.setCurrent(tracer1);
+        assertEquals(tracer1, ExecutionTracer.getCurrent());
+
+        ExecutionTracer.setCurrent(tracer2);
+        assertEquals(tracer2, ExecutionTracer.getCurrent());
+
+        ExecutionTracer.clear();
+        assertNull(ExecutionTracer.getCurrent());
+    }
+
+    @Test
+    void testToolCallWithRegularSteps() {
+        ExecutionTracer tracer = new ExecutionTracer();
+
+        tracer.startStep("Parse Query", "QueryParser", "parse");
+        tracer.endStep("Query: test", "Intent: expert_search");
+
+        tracer.recordToolCall("Skill", "AGENT_SKILL", "{\"skillName\":\"expert-matching\"}",
+                "{\"status\":\"executed\"}", "expert-matching", 100L);
+
+        tracer.startStep("Generate Answer", "AnswerGenerationService", "generateAnswer");
+        ExecutionTrace.TokenUsage tokenUsage = new ExecutionTrace.TokenUsage(50, 20, 70);
+        tracer.endStepWithLLM("Query: test", "Answer: success", "OllamaChatModel", tokenUsage);
+
+        ExecutionTrace.ExecutionTraceData trace = tracer.buildTrace();
+
+        assertEquals(3, trace.steps().size());
+        assertEquals("Parse Query", trace.steps().get(0).name());
+        assertEquals("Tool Call: Skill", trace.steps().get(1).name());
+        assertNotNull(trace.steps().get(1).toolCall());
+        assertEquals("Generate Answer", trace.steps().get(2).name());
+        assertNull(trace.steps().get(2).toolCall());
+    }
 }
 

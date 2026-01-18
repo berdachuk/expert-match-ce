@@ -10,10 +10,9 @@
  * - EmbeddingService (service layer)
  */
 @org.springframework.modulith.ApplicationModule(
-    id = "embedding",
-    displayName = "Embedding Generation",
-    allowedDependencies = {"core"}
+        id = "embedding",
+        displayName = "Embedding Generation",
+        allowedDependencies = {"core"}
 )
 package com.berdachuk.expertmatch.embedding;
 
-import org.springframework.modulith.ApplicationModule;

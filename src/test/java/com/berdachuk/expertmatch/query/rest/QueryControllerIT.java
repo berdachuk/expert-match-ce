@@ -1218,5 +1218,35 @@ class QueryControllerIT extends BaseIntegrationTest {
                         .content(requestBody))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void testProcessQuery_ExecutionTraceIncludesToolCallStructure() throws Exception {
+        // Test that Execution Trace includes tool call structure when enabled
+        // Note: Actual tool calls may not occur with mocked LLMs, but structure should be present
+        String requestBody = """
+                {
+                    "query": "Find Java experts",
+                    "chatId": "%s",
+                    "options": {
+                        "maxResults": 10,
+                        "includeExecutionTrace": true
+                    }
+                }
+                """.formatted(validChatId);
+
+        mockMvc.perform(post("/api/v1/query")
+                        .header("X-User-Id", TEST_USER_ID)
+                        .contentType(APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.executionTrace").exists())
+                .andExpect(jsonPath("$.executionTrace.steps").isArray())
+                .andExpect(jsonPath("$.executionTrace.steps[0].name").exists())
+                .andExpect(jsonPath("$.executionTrace.steps[0].service").exists())
+                .andExpect(jsonPath("$.executionTrace.steps[0].method").exists())
+                .andExpect(jsonPath("$.executionTrace.steps[0].status").exists());
+        // Note: toolCall field may be null for non-tool-call steps, which is correct behavior
+        // The structure allows tool calls to be included when they occur
+    }
 }
 

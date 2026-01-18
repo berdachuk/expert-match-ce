@@ -11,10 +11,9 @@
  * - GraphSearchService (service layer)
  */
 @org.springframework.modulith.ApplicationModule(
-    id = "graph",
-    displayName = "Graph Management",
-    allowedDependencies = {"core"}
+        id = "graph",
+        displayName = "Graph Management",
+        allowedDependencies = {"core"}
 )
 package com.berdachuk.expertmatch.graph;
 
-import org.springframework.modulith.ApplicationModule;

@@ -50,9 +50,9 @@ public interface WorkExperienceRepository {
     /**
      * Checks if a work experience record exists for the given criteria.
      *
-     * @param employeeId Employee ID
+     * @param employeeId  Employee ID
      * @param projectName Project name
-     * @param startDate Start date
+     * @param startDate   Start date
      * @return true if work experience exists, false otherwise
      */
     boolean exists(String employeeId, String projectName, LocalDate startDate);

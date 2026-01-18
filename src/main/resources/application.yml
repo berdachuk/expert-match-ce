@@ -345,6 +345,9 @@ expertmatch:
       enabled: ${EXPERTMATCH_TOOLS_SEARCH_ENABLED:false}  # Enable Tool Search Tool (Phase 2)
       strategy: ${EXPERTMATCH_TOOLS_SEARCH_STRATEGY:pgvector}  # pgvector, lucene, regex
       max-results: ${EXPERTMATCH_TOOLS_SEARCH_MAX_RESULTS:5}  # Maximum tools to return per search
+  skills:
+    enabled: ${EXPERTMATCH_SKILLS_ENABLED:false}  # Enable Agent Skills (disabled by default)
+    directory: ${EXPERTMATCH_SKILLS_DIRECTORY:.claude/skills}  # Skills directory (classpath or filesystem)
 
 # Logging
 logging:

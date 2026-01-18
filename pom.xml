@@ -27,7 +27,7 @@
 
         <!-- Dependency Versions -->
         <spring-modulith.version>2.0.0</spring-modulith.version>
-        <spring-ai.version>1.1.1</spring-ai.version>
+        <spring-ai.version>1.1.0</spring-ai.version>
         <springdoc-openapi.version>2.7.0</springdoc-openapi.version>
         <pgvector.version>0.1.4</pgvector.version>
         <flyway.version>10.20.0</flyway.version>
@@ -122,6 +122,13 @@
             <version>1.0.1</version>
         </dependency>
 
+        <!-- Spring AI Agent Utils (Agent Skills) -->
+        <dependency>
+            <groupId>org.springaicommunity</groupId>
+            <artifactId>spring-ai-agent-utils</artifactId>
+            <version>0.3.0</version>
+        </dependency>
+
         <!-- Database -->
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -162,6 +169,16 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.18.0</version>
+        </dependency>
+
+        <!-- Spring Retry for retry logic -->
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aspects</artifactId>
         </dependency>
 
         <!-- Datafaker for synthetic test data generation -->

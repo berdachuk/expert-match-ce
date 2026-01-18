@@ -361,6 +361,7 @@ If you get connection refused or timeout:
 ### Method 1: Direct Connection (Recommended if network allows)
 
 1. **Configure Base URL**:
+
 - Set your API client base URL to: `http://192.168.0.73:8080`
     - For cURL: Use the full URL in requests
     - For API clients with variables: Set `base_url` variable
@@ -409,14 +410,17 @@ Then in your API client:
     - Wait for completion (may take a few minutes)
 
 3. **List Chats**:
+
 - GET `http://192.168.0.73:8080/api/v1/chat`
     - Note the default chat ID from the response
 
 4. **Process Query**:
+
 - POST `http://192.168.0.73:8080/api/v1/query` with query payload
     - Verify response contains experts and answer
 
 5. **View Conversation History**:
+
 - GET `http://192.168.0.73:8080/api/v1/chat/{chatId}/history?page=0&size=20`
     - Verify messages are returned
 

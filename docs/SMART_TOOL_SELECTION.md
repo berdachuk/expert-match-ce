@@ -658,6 +658,7 @@ public class ToolSearchConfiguration {
 
 - **Tool Selection Accuracy**: +15-20%
 - **Query Response Time**:
+
 - 10-15% (fewer tokens to process)
 - **Scalability**: Support 100+ tools efficiently
 

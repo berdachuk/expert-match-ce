@@ -61,9 +61,9 @@ public class SpringAIConfig {
      * 2. Exclude rerankingChatModel from selection (it's for reranking only)
      * 3. If multiple models remain, select based on profile
      * <p>
-     * Note: This bean is created as @Primary only when Tool Search Tool is disabled.
-     * When Tool Search Tool is enabled, chatClientWithToolSearch from ToolSearchConfiguration
-     * becomes the primary ChatClient.
+     * Note: This bean is created as @Primary only when Tool Search Tool is disabled AND Agent Skills are disabled.
+     * When Tool Search Tool is enabled, chatClientWithToolSearch from ToolSearchConfiguration becomes the primary ChatClient.
+     * When Agent Skills are enabled, chatClientWithSkills from AgentSkillsConfiguration becomes the primary ChatClient.
      */
     @Bean
     @Primary
@@ -72,6 +72,7 @@ public class SpringAIConfig {
             havingValue = "false",
             matchIfMissing = true
     )
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean(name = "chatClientWithSkills")
     public ChatClient chatClient(@Qualifier("primaryChatModel") ChatModel primaryChatModel) {
         // Always use the @Primary ChatModel (primaryChatModel bean)
         // This ensures we use the custom-configured model, not auto-configured ones
@@ -271,13 +272,12 @@ public class SpringAIConfig {
                     }
                 }
 
-                RetryTemplate retryTemplate = createRetryTemplate();
                 // Use builder pattern for OpenAiChatModel
                 log.info("REAL LLM CREATION: Creating OpenAiChatModel! ");
                 OpenAiChatModel model = OpenAiChatModel.builder()
                         .openAiApi(chatApi)
                         .defaultOptions(optionsBuilder.build())
-                        .retryTemplate(retryTemplate)
+                        // RetryTemplate removed - Spring AI 2.0 handles retry internally
                         .build();
                 log.info("REAL LLM CREATION: OpenAiChatModel created! Type: {} ", model.getClass().getName());
                 return model;
@@ -389,13 +389,11 @@ public class SpringAIConfig {
                     optionsBuilder.temperature(0.1);
                 }
 
-                RetryTemplate retryTemplate = createRetryTemplate();
-
                 log.info("REAL LLM CREATION: Creating OpenAiChatModel for reranking! ");
                 OpenAiChatModel rerankingChatModelInstance = OpenAiChatModel.builder()
                         .openAiApi(rerankingApi)
                         .defaultOptions(optionsBuilder.build())
-                        .retryTemplate(retryTemplate)
+                        // RetryTemplate removed - Spring AI 2.0 handles retry internally
                         .build();
                 log.info("REAL LLM CREATION: OpenAiChatModel created! Type: {} ", rerankingChatModelInstance.getClass().getName());
                 return rerankingChatModelInstance;

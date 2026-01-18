@@ -12,10 +12,9 @@
  * - SGR patterns (service layer)
  */
 @org.springframework.modulith.ApplicationModule(
-    id = "llm",
-    displayName = "LLM Orchestration",
-    allowedDependencies = {"retrieval::API", "core"}
+        id = "llm",
+        displayName = "LLM Orchestration",
+        allowedDependencies = {"retrieval::API", "core"}
 )
 package com.berdachuk.expertmatch.llm;
 
-import org.springframework.modulith.ApplicationModule;

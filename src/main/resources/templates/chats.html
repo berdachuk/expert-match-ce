@@ -337,6 +337,9 @@
                                                                                     <span class="badge ms-2"
                                                                                           th:classappend="${step.getStatus() != null && step.getStatus().toString() == 'SUCCESS'} ? 'bg-success' : (${step.getStatus() != null && step.getStatus().toString() == 'FAILED'} ? 'bg-danger' : 'bg-warning')"
                                                                                           th:text="${step.getStatus() != null ? step.getStatus().toString() : 'UNKNOWN'}"></span>
+                                                                                    <span class="badge bg-info ms-2"
+                                                                                          th:if="${step.getToolCall() != null}"
+                                                                                          title="This step includes a tool call">🔧 Tool</span>
                                                                                 </div>
                                                                                 <div class="text-muted small">
                                                                                     <span th:if="${step.getDurationMs() != null}"
@@ -402,6 +405,58 @@
                                                                                 <div class="bg-light p-2 rounded mt-1">
                                                                                     <pre class="mb-0 small"
                                                                                          th:text="${step.getOutputSummary()}"></pre>
+                                                                                </div>
+                                                                            </div>
+                                                                            <!-- Tool Call Information -->
+                                                                            <div class="mt-3"
+                                                                                 th:if="${step.getToolCall() != null}">
+                                                                                <div class="border-top pt-2">
+                                                                                    <strong class="text-primary">Tool
+                                                                                        Call:</strong>
+                                                                                    <div class="mt-2">
+                                                                                        <div class="row">
+                                                                                            <div class="col-md-6">
+                                                                                                <div class="mb-2"
+                                                                                                     th:if="${step.getToolCall().getToolName() != null}">
+                                                                                                    <strong>Tool
+                                                                                                        Name:</strong>
+                                                                                                    <span class="badge bg-info ms-2"
+                                                                                                          th:text="${step.getToolCall().getToolName()}"></span>
+                                                                                                </div>
+                                                                                                <div class="mb-2"
+                                                                                                     th:if="${step.getToolCall().getToolType() != null}">
+                                                                                                    <strong>Tool
+                                                                                                        Type:</strong>
+                                                                                                    <span class="badge ms-2"
+                                                                                                          th:classappend="${step.getToolCall().getToolType() == 'AGENT_SKILL'} ? 'bg-success' : (${step.getToolCall().getToolType() == 'JAVA_TOOL'} ? 'bg-primary' : 'bg-secondary')"
+                                                                                                          th:text="${step.getToolCall().getToolType()}"></span>
+                                                                                                </div>
+                                                                                                <div class="mb-2"
+                                                                                                     th:if="${step.getToolCall().getSkillName() != null}">
+                                                                                                    <strong>Skill
+                                                                                                        Name:</strong>
+                                                                                                    <span class="badge bg-success ms-2"
+                                                                                                          th:text="${step.getToolCall().getSkillName()}"></span>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div class="mt-2"
+                                                                                             th:if="${step.getToolCall().getParameters() != null}">
+                                                                                            <strong>Parameters:</strong>
+                                                                                            <div class="bg-light p-2 rounded mt-1">
+                                                                                                <pre class="mb-0 small"
+                                                                                                     th:text="${step.getToolCall().getParameters()}"></pre>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div class="mt-2"
+                                                                                             th:if="${step.getToolCall().getResponse() != null}">
+                                                                                            <strong>Response:</strong>
+                                                                                            <div class="bg-light p-2 rounded mt-1">
+                                                                                                <pre class="mb-0 small"
+                                                                                                     th:text="${step.getToolCall().getResponse()}"></pre>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>

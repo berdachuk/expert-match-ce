@@ -254,12 +254,14 @@ If configurability is needed in the future, consider:
 ### Current State (As of 2025-12-09)
 
  **Working**:
+
 - API-level `deepResearch` flag works correctly
 - Result synthesis uses hardcoded weight constants (0.6 and 0.4)
 - Service integration is functional
 - Configuration simplified - API-only approach
 
  **Configuration**:
+
 - `deepResearch` is controlled exclusively via API parameter
 - No `application.yml` configuration needed
 - Internal constants: `MAX_REFINED_QUERIES = 3`, `SYNTHESIS_WEIGHT_INITIAL = 0.6`, `SYNTHESIS_WEIGHT_EXPANDED = 0.4`

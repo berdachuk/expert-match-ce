@@ -2,8 +2,8 @@ package com.berdachuk.expertmatch.retrieval;
 
 import com.berdachuk.expertmatch.employee.service.ExpertEnrichmentService;
 import com.berdachuk.expertmatch.query.domain.QueryRequest;
-import com.berdachuk.expertmatch.retrieval.service.DeepResearchService;
 import com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService;
+import com.berdachuk.expertmatch.retrieval.service.impl.DeepResearchServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,7 +58,7 @@ class DeepResearchServiceTest {
     @Mock
     private PromptTemplate gapAnalysisPromptTemplate;
 
-    private DeepResearchService deepResearchService;
+    private DeepResearchServiceImpl deepResearchService;
     private ObjectMapper objectMapper;
 
     @BeforeEach
@@ -66,7 +66,7 @@ class DeepResearchServiceTest {
         objectMapper = new ObjectMapper();
         lenient().when(queryRefinementPromptTemplate.render(any())).thenReturn("test prompt");
         lenient().when(gapAnalysisPromptTemplate.render(any())).thenReturn("test gap analysis prompt");
-        deepResearchService = new DeepResearchService(
+        deepResearchService = new DeepResearchServiceImpl(
                 retrievalService,
                 enrichmentService,
                 chatClient,

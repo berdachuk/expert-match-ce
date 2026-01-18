@@ -22,17 +22,14 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class QueryServiceIT extends BaseIntegrationTest {
 
+    private final String userId = "test-user-id";
     @Autowired
     private QueryService queryService;
-
     @Autowired
     private ChatService chatService;
-
     @Autowired
     private NamedParameterJdbcTemplate namedJdbcTemplate;
-
     private String chatId;
-    private final String userId = "test-user-id";
 
     @BeforeEach
     void setUp() {

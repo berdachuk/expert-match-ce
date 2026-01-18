@@ -170,26 +170,31 @@ Given three ranking lists:
 
 **RRF Score Calculation** (k=60):
 - **Expert A**:
+
 - Vector: `1.0 * (1 / (60 + 0)) = 0.01667`
     - Graph: `0.8 * (1 / (60 + 2)) = 0.01290`
     - Keyword: `0.6 * (1 / (60 + 1)) = 0.00984`
     - **Total: 0.03941**
 
 - **Expert B**:
+
 - Vector: `1.0 * (1 / (60 + 1)) = 0.01639`
     - Graph: `0.8 * (1 / (60 + 0)) = 0.01333`
     - **Total: 0.02972**
 
 - **Expert C**:
+
 - Vector: `1.0 * (1 / (60 + 2)) = 0.01613`
     - Keyword: `0.6 * (1 / (60 + 0)) = 0.01000`
     - **Total: 0.02613**
 
 - **Expert D**:
+
 - Graph: `0.8 * (1 / (60 + 1)) = 0.01311`
     - **Total: 0.01311**
 
 - **Expert E**:
+
 - Keyword: `0.6 * (1 / (60 + 2)) = 0.00968`
     - **Total: 0.00968`
 

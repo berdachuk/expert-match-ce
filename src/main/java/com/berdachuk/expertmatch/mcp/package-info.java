@@ -11,10 +11,9 @@
  * - MCPController (REST API)
  */
 @org.springframework.modulith.ApplicationModule(
-    id = "mcp",
-    displayName = "MCP Server",
-    allowedDependencies = {"employee::API", "retrieval::API", "core"}
+        id = "mcp",
+        displayName = "MCP Server",
+        allowedDependencies = {"employee::API", "retrieval::API", "core"}
 )
 package com.berdachuk.expertmatch.mcp;
 
-import org.springframework.modulith.ApplicationModule;

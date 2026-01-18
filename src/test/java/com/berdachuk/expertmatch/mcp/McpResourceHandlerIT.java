@@ -100,7 +100,7 @@ class McpResourceHandlerIT extends BaseIntegrationTest {
                 "WEB",
                 List.of("Java", "Spring Boot", "PostgreSQL"),
                 null, // customerId - not in project table
-                null, // customerName - not in project table  
+                null, // customerName - not in project table
                 null  // industry - not in project table
         );
         projectRepository.createOrUpdate(project1);
@@ -232,7 +232,7 @@ class McpResourceHandlerIT extends BaseIntegrationTest {
         assertTrue(root.has("employeeCount"));
         assertTrue(root.has("employees"));
         assertTrue(root.get("employees").isArray());
-        
+
         // Should find employee1 who has Java experience
         assertTrue(root.get("employeeCount").asInt() >= 1);
         boolean foundEmployee1 = false;
@@ -270,7 +270,7 @@ class McpResourceHandlerIT extends BaseIntegrationTest {
         assertTrue(root.has("employeeCount"));
         assertTrue(root.has("employees"));
         assertTrue(root.get("employees").isArray());
-        
+
         // Should find employee1 who has Retail industry experience
         assertTrue(root.get("employeeCount").asInt() >= 1);
         boolean foundEmployee1 = false;

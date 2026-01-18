@@ -221,7 +221,23 @@ public interface ApiMapper {
                 ? org.openapitools.jackson.nullable.JsonNullable.of(domainStep.llmModel())
                 : org.openapitools.jackson.nullable.JsonNullable.undefined());
         apiStep.setTokenUsage(mapTokenUsage(domainStep.tokenUsage()));
+        apiStep.setToolCall(domainStep.toolCall() != null
+                ? mapToolCallInfo(domainStep.toolCall())
+                : null);
         return apiStep;
+    }
+
+    default com.berdachuk.expertmatch.api.model.ToolCallInfo mapToolCallInfo(
+            com.berdachuk.expertmatch.query.domain.ExecutionTrace.ToolCallInfo domainToolCall) {
+        com.berdachuk.expertmatch.api.model.ToolCallInfo apiToolCall = new com.berdachuk.expertmatch.api.model.ToolCallInfo();
+        apiToolCall.setToolName(domainToolCall.toolName());
+        apiToolCall.setToolType(com.berdachuk.expertmatch.api.model.ToolCallInfo.ToolTypeEnum.fromValue(domainToolCall.toolType()));
+        apiToolCall.setParameters(domainToolCall.parameters());
+        apiToolCall.setResponse(domainToolCall.response());
+        apiToolCall.setSkillName(domainToolCall.skillName() != null
+                ? org.openapitools.jackson.nullable.JsonNullable.of(domainToolCall.skillName())
+                : org.openapitools.jackson.nullable.JsonNullable.undefined());
+        return apiToolCall;
     }
 
     default com.berdachuk.expertmatch.api.model.TokenUsage mapTokenUsage(

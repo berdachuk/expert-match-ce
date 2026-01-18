@@ -3,6 +3,7 @@ package com.berdachuk.expertmatch.core.config;
 import com.berdachuk.expertmatch.llm.tools.ExpertMatchTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,6 +15,16 @@ import org.springframework.context.annotation.Configuration;
 public class ToolConfiguration {
 
     /**
+     * Creates ToolCallTracingAdvisor bean for tracking tool calls in Execution Trace.
+     * Only created if not already defined in AgentSkillsConfiguration.
+     */
+    @Bean
+    @ConditionalOnMissingBean(ToolCallTracingAdvisor.class)
+    public ToolCallTracingAdvisor toolCallTracingAdvisor() {
+        return new ToolCallTracingAdvisor();
+    }
+
+    /**
      * Creates a ChatClient with ExpertMatch tools enabled.
      * This is a separate bean from the default ChatClient to allow
      * tool-enabled interactions while maintaining backward compatibility.
@@ -21,11 +32,12 @@ public class ToolConfiguration {
     @Bean("chatClientWithTools")
     public ChatClient chatClientWithTools(
             ChatClient.Builder builder,
-            ExpertMatchTools tools
+            ExpertMatchTools tools,
+            ToolCallTracingAdvisor toolCallTracingAdvisor
     ) {
         return builder
                 .defaultTools(tools)
-                .defaultAdvisors(new SimpleLoggerAdvisor())
+                .defaultAdvisors(toolCallTracingAdvisor, new SimpleLoggerAdvisor())
                 .build();
     }
 }

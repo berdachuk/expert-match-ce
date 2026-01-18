@@ -1,7 +1,7 @@
 package com.berdachuk.expertmatch.retrieval;
 
 import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
-import com.berdachuk.expertmatch.retrieval.service.SemanticReranker;
+import com.berdachuk.expertmatch.retrieval.service.impl.SemanticRerankerImpl;
 import com.berdachuk.expertmatch.workexperience.repository.WorkExperienceRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,11 +43,11 @@ class SemanticRerankerTest {
     private WorkExperienceRepository workExperienceRepository;
     @Mock
     private ObjectMapper objectMapper;
-    private SemanticReranker semanticReranker;
+    private SemanticRerankerImpl semanticReranker;
 
     @BeforeEach
     void setUp() {
-        semanticReranker = new SemanticReranker(
+        semanticReranker = new SemanticRerankerImpl(
                 rerankingChatModel,
                 rerankingPromptTemplate,
                 employeeRepository,
@@ -119,7 +119,7 @@ class SemanticRerankerTest {
     @Test
     void testRerank_WithoutLLMModel_ReturnsOriginalOrder() {
         // Arrange - Create reranker without LLM model
-        SemanticReranker rerankerWithoutModel = new SemanticReranker(
+        SemanticRerankerImpl rerankerWithoutModel = new SemanticRerankerImpl(
                 null, // No LLM model
                 rerankingPromptTemplate,
                 employeeRepository,
@@ -254,7 +254,7 @@ class SemanticRerankerTest {
     @Test
     void testCalculateRelevanceScores_WithoutLLMModel_ReturnsPlaceholderScores() {
         // Arrange - Create reranker without LLM model
-        SemanticReranker rerankerWithoutModel = new SemanticReranker(
+        SemanticRerankerImpl rerankerWithoutModel = new SemanticRerankerImpl(
                 null, // No LLM model
                 rerankingPromptTemplate,
                 employeeRepository,

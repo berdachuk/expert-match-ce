@@ -16,16 +16,19 @@
 ### Why "ingestion" is not appropriate:
 
 1. **Semantic Mismatch**:
+
 - "Ingestion" typically refers to **importing/loading data from external sources** (Kafka, files, APIs, databases)
     - Test data generation is about **creating synthetic data internally**
     - These are fundamentally different operations
 
 2. **Future Confusion**:
+
 - If real ingestion endpoints are added later (Kafka consumers, file uploads, etc.), they would logically go under
       `/api/v1/ingestion/*`
     - Having test data generation under the same path would be confusing
 
 3. **API Clarity**:
+
 - Users expect "ingestion" to mean "bring data in from outside"
     - Test data generation is "create data internally for testing"
 

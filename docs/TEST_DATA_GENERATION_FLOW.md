@@ -100,6 +100,7 @@ Based on `size` parameter:
 For each employee, generates multiple work experience records:
 
 - **Basic Fields**:
+
 - `id`: MongoDB-compatible 24-char hex ID
     - `employee_id`: References employee
     - `project_id`: References project (or null if project doesn't exist)
@@ -210,6 +211,7 @@ Creates graph vertices in this order:
 - **Source**: `expertmatch.employee` table
 - **Vertex Type**: `Expert`
 - **Properties**:
+
 - `id`: Employee ID (external system format)
     - `name`: Employee name
     - `email`: Employee email
@@ -221,6 +223,7 @@ Creates graph vertices in this order:
 - **Source**: `expertmatch.project` table
 - **Vertex Type**: `Project`
 - **Properties**:
+
 - `id`: Project ID (external system format)
     - `name`: Project name
     - `summary`: Project summary
@@ -232,6 +235,7 @@ Creates graph vertices in this order:
 - **Source**: `expertmatch.technology` table
 - **Vertex Type**: `Technology`
 - **Properties**:
+
 - `id`: Technology ID (MongoDB-compatible)
     - `name`: Technology name
     - `category`: Technology category
@@ -243,6 +247,7 @@ Creates graph vertices in this order:
 - **Source**: Distinct industries from `expertmatch.work_experience.industry`
 - **Vertex Type**: `Domain`
 - **Properties**:
+
 - `id`: Generated MongoDB-compatible ID
     - `name`: Industry/domain name (e.g., "Banking", "E-commerce")
 - **Cypher**: `CREATE (d:Domain {id: $id, name: $name})`
@@ -252,6 +257,7 @@ Creates graph vertices in this order:
 - **Source**: Distinct customer names from `expertmatch.work_experience.customer_name`
 - **Vertex Type**: `Customer`
 - **Properties**:
+
 - `id`: Generated customer ID (external system format, or generated if null)
     - `name`: Customer name
 - **Cypher**: `MERGE (c:Customer {id: $id}) SET c.name = $name`
@@ -278,6 +284,7 @@ Creates graph relationships using batch `UNWIND` operations:
 - **Source**: `expertmatch.work_experience` table
 - **Direction**: `Expert -[:PARTICIPATED_IN]-> Project`
 - **Properties**:
+
 - `role`: Role in project
     - `start_date`: Start date
     - `end_date`: End date

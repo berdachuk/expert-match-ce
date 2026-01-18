@@ -489,6 +489,7 @@ dev/staging/prod prefer OpenAI).
     - Rebuild backend
 
 2. **Frontend**:
+
 - Update Thymeleaf templates to use new API endpoints
     - Update JavaScript code for API calls if needed
     - Test UI integration
@@ -522,6 +523,152 @@ dev/staging/prod prefer OpenAI).
 - Thymeleaf template debugging
 - Check API endpoint configuration
 - Verify template syntax in IDE
+
+## Agent Skills Development
+
+### Overview
+
+Agent Skills provide modular knowledge management through Markdown-based skills that complement existing Java `@Tool`
+methods. Skills are loaded from the classpath or filesystem and discovered on-demand during LLM interactions.
+
+### Configuration
+
+Agent Skills are **optional** and disabled by default. Enable them via configuration:
+
+**application.yml**:
+
+```yaml
+expertmatch:
+  skills:
+    enabled: true  # Enable Agent Skills
+    directory: .claude/skills  # Skills directory (classpath or filesystem)
+```
+
+**application-local.yml** (for local development):
+
+```yaml
+expertmatch:
+  skills:
+    enabled: true
+```
+
+### Skills Directory Structure
+
+Skills are organized in directories under `.claude/skills/`:
+
+```
+.claude/skills/
+├── expert-matching-hybrid-retrieval/
+│   └── SKILL.md
+├── rag-answer-generation/
+│   └── SKILL.md
+├── person-name-matching/
+│   └── SKILL.md
+├── query-classification/
+│   └── SKILL.md
+├── rfp-response-generation/
+│   └── SKILL.md
+└── team-formation/
+    └── SKILL.md
+```
+
+### Implementation Details
+
+**Spring AI 1.1.0 Compatibility**:
+
+In Spring AI 1.1.0, `SkillsTool.Builder.build()` returns `ToolCallback`, not `SkillsTool`. The configuration handles
+this:
+
+```java
+@Bean
+@Qualifier("skillsTool")
+public ToolCallback skillsTool() {
+    SkillsTool.Builder builder = SkillsTool.builder();
+    // Load from classpath
+    builder.addSkillsResource(resourceLoader.getResource("classpath:.claude/skills"));
+    // Optionally load from filesystem
+    File skillsDir = new File(".claude/skills");
+    if (skillsDir.exists() && skillsDir.isDirectory()) {
+        builder.addSkillsDirectory(".claude/skills");
+    }
+    return builder.build();  // Returns ToolCallback
+}
+```
+
+**ChatClient Integration**:
+
+Agent Skills are registered via `defaultToolCallbacks()`, not `defaultTools()`:
+
+```java
+@Bean("chatClientWithSkills")
+public ChatClient chatClientWithSkills(
+        ChatClient.Builder builder,
+        @Qualifier("skillsTool") ToolCallback skillsTool,
+        FileSystemTools fileSystemTools,
+        ExpertMatchTools expertTools,
+        ChatManagementTools chatTools,
+        RetrievalTools retrievalTools
+) {
+    return builder
+            .defaultToolCallbacks(skillsTool)  // Agent Skills (ToolCallback)
+            .defaultTools(fileSystemTools)  // File reading tools
+            .defaultTools(expertTools, chatTools, retrievalTools)  // Java @Tool methods
+            .defaultAdvisors(new SimpleLoggerAdvisor())
+            .build();
+}
+```
+
+### Creating a New Skill
+
+1. Create a directory under `.claude/skills/`:
+   ```bash
+   mkdir -p src/main/resources/.claude/skills/my-new-skill
+   ```
+
+2. Create `SKILL.md` file:
+   ```markdown
+   # My New Skill
+
+   ## Purpose
+   Description of what this skill does.
+
+   ## How to Use
+   Instructions for the LLM on when and how to use this skill.
+
+   ## Examples
+   Example usage scenarios.
+   ```
+
+3. Skills are automatically discovered when the application starts (if enabled).
+
+### Testing Agent Skills
+
+Agent Skills configuration is tested in `AgentSkillsConfigurationIT`:
+
+```java
+@SpringBootTest
+@TestPropertySource(properties = {"expertmatch.skills.enabled=true"})
+class AgentSkillsConfigurationIT extends BaseIntegrationTest {
+    @Autowired
+    @Qualifier("skillsTool")
+    private ToolCallback skillsTool;
+    
+    @Test
+    void testSkillsToolBeanExists() {
+        assertThat(skillsTool).isNotNull();
+    }
+}
+```
+
+### Dependencies
+
+- `spring-ai-agent-utils:0.3.0` - Provides `SkillsTool` and `FileSystemTools`
+- `spring-ai:1.1.0` - Spring AI framework (required for `ToolCallback` interface)
+
+### Known Limitations
+
+- **ToolSearchToolCallAdvisor**: Incompatible with Spring AI 1.1.0 (ToolCallAdvisor is final). The Tool Search Tool
+  feature requires an updated version of `spring-ai-agent-utils` compatible with Spring AI 1.1.0.
 
 ## Troubleshooting
 
@@ -649,6 +796,7 @@ The project uses three key patterns for data access:
 **Purpose**: Separate SQL logic from Java code for better maintainability and IDE support.
 
 **Infrastructure**:
+
 - `@InjectSql` annotation: Marks fields for SQL injection
 - `SqlInjectBeanPostProcessor`: Loads SQL files at startup and injects them into annotated fields
 - SQL files stored in `src/main/resources/sql/{module}/{operation}.sql`
@@ -831,6 +979,7 @@ public Optional<Employee> findById(String id) {
 ```
 
 **Behavior**:
+
 - **Single Result**: Returns the element if exactly one result exists
 - **No Results**: Returns `null` (wrapped in `Optional.empty()`)
 - **Multiple Results**: Throws `IncorrectResultSizeDataAccessException` (data integrity check)

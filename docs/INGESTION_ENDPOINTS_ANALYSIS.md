@@ -48,6 +48,7 @@ These endpoints are fully functional and should be kept:
 - **Service**: `JsonProfileIngestionService`
 - **Purpose**: Ingest expert profiles from JSON files (array or single object format)
 - **Features**:
+
 - Supports array format: `[{profile1}, {profile2}]`
     - Supports single object format: `{profile1}` (backward compatible)
     - Handles partial data with default values

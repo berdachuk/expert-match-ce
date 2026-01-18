@@ -49,6 +49,33 @@ public class ExecutionTrace {
     }
 
     /**
+     * Tool call information for tracking tool invocations.
+     */
+    @Schema(description = "Tool call information for tracking tool invocations")
+    public record ToolCallInfo(
+            @Schema(description = "Tool name", example = "Skill")
+            @JsonProperty("toolName")
+            String toolName,
+
+            @Schema(description = "Tool type", example = "AGENT_SKILL", allowableValues = {"AGENT_SKILL", "JAVA_TOOL", "FILE_SYSTEM_TOOL"})
+            @JsonProperty("toolType")
+            String toolType,
+
+            @Schema(description = "Tool parameters (full JSON)", example = "{\"skillName\":\"expert-matching-hybrid-retrieval\"}")
+            @JsonProperty("parameters")
+            String parameters,
+
+            @Schema(description = "Tool response (full JSON)", example = "{\"result\":\"...\"}")
+            @JsonProperty("response")
+            String response,
+
+            @Schema(description = "Skill name (if toolType is AGENT_SKILL)", example = "expert-matching-hybrid-retrieval")
+            @JsonProperty("skillName")
+            String skillName
+    ) {
+    }
+
+    /**
      * Individual execution step with tracking information.
      */
     @Schema(description = "Individual execution step with tracking information")
@@ -87,7 +114,11 @@ public class ExecutionTrace {
 
             @Schema(description = "Token usage (null if no LLM or usage not available)")
             @JsonProperty("tokenUsage")
-            TokenUsage tokenUsage
+            TokenUsage tokenUsage,
+
+            @Schema(description = "Tool call information (null if not a tool call)")
+            @JsonProperty("toolCall")
+            ToolCallInfo toolCall
     ) {
     }
 

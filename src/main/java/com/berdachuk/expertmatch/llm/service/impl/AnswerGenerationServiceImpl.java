@@ -182,10 +182,20 @@ public class AnswerGenerationServiceImpl implements AnswerGenerationService {
         }
         String prompt = buildRAGPrompt(query, expertContexts, intent, conversationHistory);
 
-        ChatResponse response = chatClient.prompt()
-                .user(prompt)
-                .call()
-                .chatResponse();
+        ChatResponse response;
+        try {
+            if (tracer != null) {
+                ExecutionTracer.setCurrent(tracer);
+            }
+            response = chatClient.prompt()
+                    .user(prompt)
+                    .call()
+                    .chatResponse();
+        } finally {
+            if (tracer != null) {
+                ExecutionTracer.clear();
+            }
+        }
 
         if (response == null || response.getResult() == null ||
                 response.getResult().getOutput() == null ||

@@ -139,6 +139,7 @@ prompt strings or StringBuilder-based prompt construction.
 2. **AnswerGenerationService.java:298, 366-407** - `buildRAGPrompt()`
     - **Violation**: Hardcoded system message and instructions section
     - **Location**:
+
 - Line 298: Hardcoded system message
         - Lines 366-407: Hardcoded instructions section built with StringBuilder
     - **Issue**: While using `ragPromptTemplate`, the template content includes hardcoded strings that should be in the

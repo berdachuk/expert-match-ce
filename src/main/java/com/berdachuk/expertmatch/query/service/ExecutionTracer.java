@@ -13,9 +13,39 @@ import java.util.Map;
  */
 @Slf4j
 public class ExecutionTracer {
+    /**
+     * ThreadLocal storage for current ExecutionTracer instance.
+     * Allows advisors to access the tracer without passing it as a parameter.
+     */
+    private static final ThreadLocal<ExecutionTracer> currentTracer = new ThreadLocal<>();
     private final List<com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep> steps = new ArrayList<>();
     private final Map<String, StepContext> activeSteps = new HashMap<>();
     private final long startTime = System.currentTimeMillis();
+
+    /**
+     * Gets the current ExecutionTracer for this thread.
+     *
+     * @return The current ExecutionTracer instance, or null if not set
+     */
+    public static ExecutionTracer getCurrent() {
+        return currentTracer.get();
+    }
+
+    /**
+     * Sets the current ExecutionTracer for this thread.
+     *
+     * @param tracer The ExecutionTracer instance to set
+     */
+    public static void setCurrent(ExecutionTracer tracer) {
+        currentTracer.set(tracer);
+    }
+
+    /**
+     * Clears the current ExecutionTracer for this thread.
+     */
+    public static void clear() {
+        currentTracer.remove();
+    }
 
     /**
      * Starts timing a step.
@@ -73,7 +103,8 @@ public class ExecutionTracer {
                     inputSummary,
                     outputSummary,
                     llmModel,
-                    tokenUsage
+                    tokenUsage,
+                    null // toolCall - null for regular steps
             );
             steps.add(step);
             activeSteps.remove(lastKey);
@@ -103,7 +134,8 @@ public class ExecutionTracer {
                 error,
                 null,
                 null,
-                null
+                null,
+                null // toolCall - null for failed steps
         );
         steps.add(step);
     }
@@ -124,8 +156,83 @@ public class ExecutionTracer {
                 reason,
                 null,
                 null,
-                null
+                null,
+                null // toolCall - null for skipped steps
         );
+        steps.add(step);
+    }
+
+    /**
+     * Records a tool call step.
+     *
+     * @param toolName   Tool name (e.g., "Skill", "expertQuery")
+     * @param toolType   Tool type (AGENT_SKILL, JAVA_TOOL, FILE_SYSTEM_TOOL)
+     * @param parameters Tool parameters (JSON string)
+     * @param response   Tool response (JSON string)
+     * @param skillName  Skill name (if toolType is AGENT_SKILL, null otherwise)
+     * @param durationMs Tool call duration in milliseconds
+     */
+    public void recordToolCall(String toolName, String toolType, String parameters,
+                               String response, String skillName, long durationMs) {
+        com.berdachuk.expertmatch.query.domain.ExecutionTrace.ToolCallInfo toolCallInfo =
+                new com.berdachuk.expertmatch.query.domain.ExecutionTrace.ToolCallInfo(
+                        toolName,
+                        toolType,
+                        parameters,
+                        response,
+                        skillName
+                );
+
+        com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep step =
+                new com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep(
+                        "Tool Call: " + toolName,
+                        "ChatClient",
+                        "toolCall",
+                        durationMs,
+                        "SUCCESS",
+                        "Tool: " + toolName + (skillName != null ? ", Skill: " + skillName : ""),
+                        "Response received",
+                        null, // No LLM model for tool calls
+                        null, // Token usage tracked separately
+                        toolCallInfo
+                );
+        steps.add(step);
+    }
+
+    /**
+     * Records a failed tool call.
+     *
+     * @param toolName   Tool name (e.g., "Skill", "expertQuery")
+     * @param toolType   Tool type (AGENT_SKILL, JAVA_TOOL, FILE_SYSTEM_TOOL)
+     * @param parameters Tool parameters (JSON string)
+     * @param error      Error message
+     * @param skillName  Skill name (if toolType is AGENT_SKILL, null otherwise)
+     * @param durationMs Tool call duration in milliseconds
+     */
+    public void recordToolCallFailure(String toolName, String toolType, String parameters,
+                                      String error, String skillName, long durationMs) {
+        com.berdachuk.expertmatch.query.domain.ExecutionTrace.ToolCallInfo toolCallInfo =
+                new com.berdachuk.expertmatch.query.domain.ExecutionTrace.ToolCallInfo(
+                        toolName,
+                        toolType,
+                        parameters,
+                        "ERROR: " + error,
+                        skillName
+                );
+
+        com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep step =
+                new com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep(
+                        "Tool Call: " + toolName,
+                        "ChatClient",
+                        "toolCall",
+                        durationMs,
+                        "FAILED",
+                        "Tool: " + toolName + (skillName != null ? ", Skill: " + skillName : ""),
+                        "Error: " + error,
+                        null, // No LLM model for tool calls
+                        null, // Token usage tracked separately
+                        toolCallInfo
+                );
         steps.add(step);
     }
 

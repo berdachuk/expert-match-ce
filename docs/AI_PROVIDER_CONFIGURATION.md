@@ -68,6 +68,55 @@ spring:
         temperature: ${RERANKING_TEMPERATURE:0.1}
 ```
 
+## Agent Skills Configuration
+
+ExpertMatch supports optional Agent Skills for modular knowledge management through Markdown-based skills.
+
+### Enabling Agent Skills
+
+**application.yml**:
+
+```yaml
+expertmatch:
+  skills:
+    enabled: ${EXPERTMATCH_SKILLS_ENABLED:false}  # Enable Agent Skills
+    directory: ${EXPERTMATCH_SKILLS_DIRECTORY:.claude/skills}  # Skills directory
+```
+
+**application-local.yml** (for local development):
+
+```yaml
+expertmatch:
+  skills:
+    enabled: true
+```
+
+### Skills Location
+
+Skills are loaded from:
+
+- **Classpath**: `classpath:.claude/skills` (for packaged applications)
+- **Filesystem**: `.claude/skills` directory (for local development)
+
+### Spring AI 1.1.0 Compatibility
+
+In Spring AI 1.1.0, `SkillsTool.Builder.build()` returns `ToolCallback`, not `SkillsTool`. The configuration handles
+this automatically:
+
+- `SkillsTool` bean is created as `ToolCallback` with `@Qualifier("skillsTool")`
+- `ChatClient` uses `defaultToolCallbacks()` to register Agent Skills
+- Java `@Tool` methods are registered via `defaultTools()`
+
+### Dependencies
+
+- `spring-ai-agent-utils:0.3.0` - Provides `SkillsTool` and `FileSystemTools`
+- `spring-ai:1.1.0` - Spring AI framework (required)
+
+### Known Limitations
+
+- **ToolSearchToolCallAdvisor**: Incompatible with Spring AI 1.1.0 (ToolCallAdvisor is final). The Tool Search Tool
+  feature requires an updated version of `spring-ai-agent-utils` compatible with Spring AI 1.1.0.
+
 ## Configuration Properties
 
 ### Chat Configuration
@@ -223,6 +272,7 @@ If custom configuration is not provided, the application falls back to auto-conf
 
 1. **Auto-configuration**: Uses `spring.ai.ollama.*` or `spring.ai.openai.*` properties
 2. **Profile-based selection**:
+
 - `local` profile: Prefers Ollama
     - `dev`, `staging`, `prod` profiles: Prefer OpenAI
 3. **Multiple models**: If both Ollama and OpenAI are configured, selects based on active profile

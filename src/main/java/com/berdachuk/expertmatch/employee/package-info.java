@@ -11,10 +11,9 @@
  * - EmployeeRepository (repository interface)
  */
 @org.springframework.modulith.ApplicationModule(
-    id = "employee",
-    displayName = "Employee Management",
-    allowedDependencies = {"core"}
+        id = "employee",
+        displayName = "Employee Management",
+        allowedDependencies = {"core"}
 )
 package com.berdachuk.expertmatch.employee;
 
-import org.springframework.modulith.ApplicationModule;

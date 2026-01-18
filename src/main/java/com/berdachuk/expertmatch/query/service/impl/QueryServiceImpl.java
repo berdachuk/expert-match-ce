@@ -61,216 +61,229 @@ public class QueryServiceImpl implements QueryService {
                 ? new ExecutionTracer()
                 : null;
 
-        // 1. Save user message to conversation history
+        // Set ThreadLocal for tool call tracking
         if (tracer != null) {
-            tracer.startStep("Save User Message", "ConversationHistoryRepository", "saveMessage");
-        }
-        int userSequenceNumber = historyRepository.getNextSequenceNumber(chatId);
-        historyRepository.saveMessage(
-                chatId,
-                "user",
-                "user",
-                request.query(),
-                userSequenceNumber,
-                null // User messages don't consume tokens
-        );
-        if (tracer != null) {
-            tracer.endStep("ChatId: " + chatId + ", Role: user", "Sequence: " + userSequenceNumber);
+            ExecutionTracer.setCurrent(tracer);
         }
 
-        // 2. Retrieve conversation history for context (with token counting and summarization)
-        log.info("[QUERY] Query [{}] - Loading conversation history for chatId: {}", queryId, chatId);
-        List<ConversationHistoryRepository.ConversationMessage> conversationHistory =
-                historyManager.getOptimizedHistory(chatId, true, tracer);
+        try {
 
-        if (!conversationHistory.isEmpty()) {
-            log.info("[QUERY] Query [{}] - Conversation history loaded: {} messages - will be included in prompt",
-                    queryId, conversationHistory.size());
-        } else {
-            log.info("[QUERY] Query [{}] - No conversation history found - query will be processed without context",
-                    queryId);
-        }
-
-        // 3. Parse query and extract requirements (with routing pattern if enabled)
-        log.info("Parsing query and extracting requirements...");
-        boolean useRoutingPattern = request.options().useRoutingPattern() != null && request.options().useRoutingPattern();
-        if (tracer != null) {
-            tracer.startStep("Parse Query", "QueryParser", "parse");
-        }
-        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery = queryParser.parse(request.query(), useRoutingPattern, tracer);
-        log.info("Query parsed - Intent: {}, Skills: {}, Technologies: {}",
-                parsedQuery.intent(), parsedQuery.skills().size(), parsedQuery.technologies().size());
-        if (tracer != null) {
-            // QueryParser tracks its own steps, so we just need to track the overall parse step
-            tracer.endStep("Query: " + request.query(),
-                    "Intent: " + parsedQuery.intent() + ", Skills: " + parsedQuery.skills().size() +
-                            ", Technologies: " + parsedQuery.technologies().size());
-        }
-
-        // 4. Extract entities
-        log.info("Extracting entities from query...");
-        if (tracer != null) {
-            tracer.startStep("Extract Entities", "EntityExtractor", "extract");
-        }
-        EntityExtractor.ExtractedEntities entities = entityExtractor.extract(request.query(), tracer);
-        log.info("Entities extracted - Persons: {}, Organizations: {}, Technologies: {}, Projects: {}, Domains: {}",
-                entities.persons().size(), entities.organizations().size(), entities.technologies().size(),
-                entities.projects().size(), entities.domains().size());
-        if (tracer != null) {
-            // EntityExtractor tracks its own steps, so we just need to track the overall extract step
-            int totalEntities = entities.persons().size() + entities.organizations().size() +
-                    entities.technologies().size() + entities.projects().size() + entities.domains().size();
-            tracer.endStep("Query: " + request.query(), "Total entities: " + totalEntities);
-        }
-
-        // 5. Perform hybrid GraphRAG retrieval (with deep research if enabled)
-        com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult retrievalResult;
-        if (request.options().deepResearch() != null && request.options().deepResearch()) {
-            log.info("Starting deep research retrieval...");
+            // 1. Save user message to conversation history
             if (tracer != null) {
-                tracer.startStep("Deep Research", "DeepResearchService", "performDeepResearch");
+                tracer.startStep("Save User Message", "ConversationHistoryRepository", "saveMessage");
             }
-            retrievalResult = deepResearchService.performDeepResearch(request, parsedQuery, tracer);
-            log.info("Deep research completed: {} experts found", retrievalResult.expertIds().size());
+            int userSequenceNumber = historyRepository.getNextSequenceNumber(chatId);
+            historyRepository.saveMessage(
+                    chatId,
+                    "user",
+                    "user",
+                    request.query(),
+                    userSequenceNumber,
+                    null // User messages don't consume tokens
+            );
             if (tracer != null) {
-                tracer.endStep("Query: " + request.query(), "Experts found: " + retrievalResult.expertIds().size());
+                tracer.endStep("ChatId: " + chatId + ", Role: user", "Sequence: " + userSequenceNumber);
             }
-        } else {
-            log.info("Starting hybrid retrieval...");
+
+            // 2. Retrieve conversation history for context (with token counting and summarization)
+            log.info("[QUERY] Query [{}] - Loading conversation history for chatId: {}", queryId, chatId);
+            List<ConversationHistoryRepository.ConversationMessage> conversationHistory =
+                    historyManager.getOptimizedHistory(chatId, true, tracer);
+
+            if (!conversationHistory.isEmpty()) {
+                log.info("[QUERY] Query [{}] - Conversation history loaded: {} messages - will be included in prompt",
+                        queryId, conversationHistory.size());
+            } else {
+                log.info("[QUERY] Query [{}] - No conversation history found - query will be processed without context",
+                        queryId);
+            }
+
+            // 3. Parse query and extract requirements (with routing pattern if enabled)
+            log.info("Parsing query and extracting requirements...");
+            boolean useRoutingPattern = request.options().useRoutingPattern() != null && request.options().useRoutingPattern();
             if (tracer != null) {
-                tracer.startStep("Hybrid Retrieval", "HybridRetrievalService", "retrieve");
+                tracer.startStep("Parse Query", "QueryParser", "parse");
             }
-            retrievalResult = retrievalService.retrieve(request, parsedQuery, tracer);
-            log.info("Hybrid retrieval completed: {} experts found", retrievalResult.expertIds().size());
+            com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery = queryParser.parse(request.query(), useRoutingPattern, tracer);
+            log.info("Query parsed - Intent: {}, Skills: {}, Technologies: {}",
+                    parsedQuery.intent(), parsedQuery.skills().size(), parsedQuery.technologies().size());
             if (tracer != null) {
-                tracer.endStep("Query: " + request.query(), "Experts found: " + retrievalResult.expertIds().size());
+                // QueryParser tracks its own steps, so we just need to track the overall parse step
+                tracer.endStep("Query: " + request.query(),
+                        "Intent: " + parsedQuery.intent() + ", Skills: " + parsedQuery.skills().size() +
+                                ", Technologies: " + parsedQuery.technologies().size());
+            }
+
+            // 4. Extract entities
+            log.info("Extracting entities from query...");
+            if (tracer != null) {
+                tracer.startStep("Extract Entities", "EntityExtractor", "extract");
+            }
+            EntityExtractor.ExtractedEntities entities = entityExtractor.extract(request.query(), tracer);
+            log.info("Entities extracted - Persons: {}, Organizations: {}, Technologies: {}, Projects: {}, Domains: {}",
+                    entities.persons().size(), entities.organizations().size(), entities.technologies().size(),
+                    entities.projects().size(), entities.domains().size());
+            if (tracer != null) {
+                // EntityExtractor tracks its own steps, so we just need to track the overall extract step
+                int totalEntities = entities.persons().size() + entities.organizations().size() +
+                        entities.technologies().size() + entities.projects().size() + entities.domains().size();
+                tracer.endStep("Query: " + request.query(), "Total entities: " + totalEntities);
+            }
+
+            // 5. Perform hybrid GraphRAG retrieval (with deep research if enabled)
+            com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult retrievalResult;
+            if (request.options().deepResearch() != null && request.options().deepResearch()) {
+                log.info("Starting deep research retrieval...");
+                if (tracer != null) {
+                    tracer.startStep("Deep Research", "DeepResearchService", "performDeepResearch");
+                }
+                retrievalResult = deepResearchService.performDeepResearch(request, parsedQuery, tracer);
+                log.info("Deep research completed: {} experts found", retrievalResult.expertIds().size());
+                if (tracer != null) {
+                    tracer.endStep("Query: " + request.query(), "Experts found: " + retrievalResult.expertIds().size());
+                }
+            } else {
+                log.info("Starting hybrid retrieval...");
+                if (tracer != null) {
+                    tracer.startStep("Hybrid Retrieval", "HybridRetrievalService", "retrieve");
+                }
+                retrievalResult = retrievalService.retrieve(request, parsedQuery, tracer);
+                log.info("Hybrid retrieval completed: {} experts found", retrievalResult.expertIds().size());
+                if (tracer != null) {
+                    tracer.endStep("Query: " + request.query(), "Experts found: " + retrievalResult.expertIds().size());
+                }
+            }
+
+            // 6. Enrich expert recommendations with detailed data
+            log.info("Enriching {} experts with detailed data...", retrievalResult.expertIds().size());
+            if (tracer != null) {
+                tracer.startStep("Enrich Experts", "ExpertEnrichmentService", "enrichExperts");
+            }
+            List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> experts = enrichmentService.enrichExperts(
+                    retrievalResult, parsedQuery);
+            log.info("Expert enrichment completed: {} experts enriched", experts.size());
+            if (tracer != null) {
+                tracer.endStep("Expert IDs: " + retrievalResult.expertIds().size(),
+                        "Enriched: " + experts.size() + " experts with full details");
+            }
+
+            // 7. Build expert contexts for LLM
+            log.info("Building expert contexts for LLM...");
+            if (tracer != null) {
+                tracer.startStep("Build Expert Contexts", "QueryService", "buildExpertContexts");
+            }
+            List<AnswerGenerationService.ExpertContext> expertContexts = buildExpertContexts(experts, retrievalResult);
+            log.info("Expert contexts built: {} contexts", expertContexts.size());
+            if (tracer != null) {
+                tracer.endStep("Experts: " + experts.size(), "Contexts: " + expertContexts.size());
+            }
+
+            // 8. Generate answer using LLM with enriched expert data and conversation context
+            // Support SGR patterns (Cascade or Cycle) if enabled
+            if (request.options().useCascadePattern() != null && request.options().useCascadePattern()) {
+                log.info("Generating answer using LLM with Cascade pattern...");
+            } else if (request.options().useCyclePattern() != null && request.options().useCyclePattern()) {
+                log.info("Generating answer using LLM with Cycle pattern...");
+            } else {
+                log.info("Generating answer using LLM...");
+            }
+            if (tracer != null) {
+                tracer.startStep("Generate Answer", "AnswerGenerationService", "generateAnswer");
+            }
+            String answer = generateAnswer(
+                    request.query(),
+                    expertContexts,
+                    parsedQuery.intent(),
+                    conversationHistory,
+                    request.options().useCascadePattern() != null && request.options().useCascadePattern(),
+                    request.options().useCyclePattern() != null && request.options().useCyclePattern(),
+                    tracer
+            );
+            log.info("Answer generation completed. Answer length: {}", answer != null ? answer.length() : 0);
+            if (tracer != null) {
+                // AnswerGenerationService tracks its own step, so we just track the overall step
+                tracer.endStep("Query: " + request.query() + ", Experts: " + expertContexts.size(),
+                        "Answer: " + (answer != null ? answer.length() : 0) + " characters");
+            }
+
+            // 9. Save assistant response to conversation history
+            if (tracer != null) {
+                tracer.startStep("Save Assistant Response", "ConversationHistoryRepository", "saveMessage");
+            }
+            String assistantMessageId = IdGenerator.generateId();
+            int assistantSequenceNumber = historyRepository.getNextSequenceNumber(chatId);
+            // Estimate tokens used (rough approximation: ~4 characters per token)
+            Integer tokensUsed = answer != null ? (int) Math.ceil(answer.length() / 4.0) : null;
+            historyRepository.saveMessage(
+                    chatId,
+                    "assistant",
+                    "assistant",
+                    answer,
+                    assistantSequenceNumber,
+                    tokensUsed
+            );
+            if (tracer != null) {
+                tracer.endStep("ChatId: " + chatId + ", Answer: " + (answer != null ? answer.length() : 0) + " chars",
+                        "Sequence: " + assistantSequenceNumber);
+            }
+
+            // 10. Update chat metadata (message count and last activity)
+            if (tracer != null) {
+                tracer.startStep("Update Chat Metadata", "ChatRepository", "updateLastActivity");
+            }
+            chatRepository.updateLastActivity(chatId);
+            if (tracer != null) {
+                tracer.endStep("ChatId: " + chatId, "Last activity updated");
+            }
+
+            // 11. Build sources and entities
+            if (tracer != null) {
+                tracer.startStep("Build Sources and Entities", "QueryService", "buildSources/buildResponseEntities");
+            }
+            List<com.berdachuk.expertmatch.query.domain.QueryResponse.Source> sources = buildSources(experts);
+            List<com.berdachuk.expertmatch.query.domain.QueryResponse.Entity> responseEntities = buildResponseEntities(entities);
+            if (tracer != null) {
+                tracer.endStep("Experts: " + experts.size() + ", Entities: " + entities.persons().size() +
+                                entities.organizations().size() + entities.technologies().size() + entities.projects().size() +
+                                entities.domains().size(),
+                        "Sources: " + sources.size() + ", Response entities: " + responseEntities.size());
+            }
+
+            // 12. Calculate confidence and summary
+            if (tracer != null) {
+                tracer.startStep("Calculate Confidence and Summary", "QueryService", "calculateConfidence/calculateSummary");
+            }
+            double confidence = calculateConfidence(retrievalResult);
+            com.berdachuk.expertmatch.query.domain.QueryResponse.MatchSummary summary = calculateSummary(experts);
+            if (tracer != null) {
+                tracer.endStep("Experts: " + experts.size(), "Confidence: " + confidence +
+                        ", Summary: " + summary.totalExpertsFound() + " total");
+            }
+
+            long processingTime = System.currentTimeMillis() - startTime;
+
+            // Build execution trace if enabled
+            com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionTraceData executionTrace = tracer != null ? tracer.buildTrace() : null;
+
+            return new QueryResponse(
+                    answer,
+                    experts,
+                    sources,
+                    responseEntities,
+                    confidence,
+                    queryId,
+                    chatId,
+                    assistantMessageId,
+                    processingTime,
+                    summary,
+                    executionTrace
+            );
+        } finally {
+            // Clear ThreadLocal after request processing
+            if (tracer != null) {
+                ExecutionTracer.clear();
             }
         }
-
-        // 6. Enrich expert recommendations with detailed data
-        log.info("Enriching {} experts with detailed data...", retrievalResult.expertIds().size());
-        if (tracer != null) {
-            tracer.startStep("Enrich Experts", "ExpertEnrichmentService", "enrichExperts");
-        }
-        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> experts = enrichmentService.enrichExperts(
-                retrievalResult, parsedQuery);
-        log.info("Expert enrichment completed: {} experts enriched", experts.size());
-        if (tracer != null) {
-            tracer.endStep("Expert IDs: " + retrievalResult.expertIds().size(),
-                    "Enriched: " + experts.size() + " experts with full details");
-        }
-
-        // 7. Build expert contexts for LLM
-        log.info("Building expert contexts for LLM...");
-        if (tracer != null) {
-            tracer.startStep("Build Expert Contexts", "QueryService", "buildExpertContexts");
-        }
-        List<AnswerGenerationService.ExpertContext> expertContexts = buildExpertContexts(experts, retrievalResult);
-        log.info("Expert contexts built: {} contexts", expertContexts.size());
-        if (tracer != null) {
-            tracer.endStep("Experts: " + experts.size(), "Contexts: " + expertContexts.size());
-        }
-
-        // 8. Generate answer using LLM with enriched expert data and conversation context
-        // Support SGR patterns (Cascade or Cycle) if enabled
-        if (request.options().useCascadePattern() != null && request.options().useCascadePattern()) {
-            log.info("Generating answer using LLM with Cascade pattern...");
-        } else if (request.options().useCyclePattern() != null && request.options().useCyclePattern()) {
-            log.info("Generating answer using LLM with Cycle pattern...");
-        } else {
-            log.info("Generating answer using LLM...");
-        }
-        if (tracer != null) {
-            tracer.startStep("Generate Answer", "AnswerGenerationService", "generateAnswer");
-        }
-        String answer = generateAnswer(
-                request.query(),
-                expertContexts,
-                parsedQuery.intent(),
-                conversationHistory,
-                request.options().useCascadePattern() != null && request.options().useCascadePattern(),
-                request.options().useCyclePattern() != null && request.options().useCyclePattern(),
-                tracer
-        );
-        log.info("Answer generation completed. Answer length: {}", answer != null ? answer.length() : 0);
-        if (tracer != null) {
-            // AnswerGenerationService tracks its own step, so we just track the overall step
-            tracer.endStep("Query: " + request.query() + ", Experts: " + expertContexts.size(),
-                    "Answer: " + (answer != null ? answer.length() : 0) + " characters");
-        }
-
-        // 9. Save assistant response to conversation history
-        if (tracer != null) {
-            tracer.startStep("Save Assistant Response", "ConversationHistoryRepository", "saveMessage");
-        }
-        String assistantMessageId = IdGenerator.generateId();
-        int assistantSequenceNumber = historyRepository.getNextSequenceNumber(chatId);
-        // Estimate tokens used (rough approximation: ~4 characters per token)
-        Integer tokensUsed = answer != null ? (int) Math.ceil(answer.length() / 4.0) : null;
-        historyRepository.saveMessage(
-                chatId,
-                "assistant",
-                "assistant",
-                answer,
-                assistantSequenceNumber,
-                tokensUsed
-        );
-        if (tracer != null) {
-            tracer.endStep("ChatId: " + chatId + ", Answer: " + (answer != null ? answer.length() : 0) + " chars",
-                    "Sequence: " + assistantSequenceNumber);
-        }
-
-        // 10. Update chat metadata (message count and last activity)
-        if (tracer != null) {
-            tracer.startStep("Update Chat Metadata", "ChatRepository", "updateLastActivity");
-        }
-        chatRepository.updateLastActivity(chatId);
-        if (tracer != null) {
-            tracer.endStep("ChatId: " + chatId, "Last activity updated");
-        }
-
-        // 11. Build sources and entities
-        if (tracer != null) {
-            tracer.startStep("Build Sources and Entities", "QueryService", "buildSources/buildResponseEntities");
-        }
-        List<com.berdachuk.expertmatch.query.domain.QueryResponse.Source> sources = buildSources(experts);
-        List<com.berdachuk.expertmatch.query.domain.QueryResponse.Entity> responseEntities = buildResponseEntities(entities);
-        if (tracer != null) {
-            tracer.endStep("Experts: " + experts.size() + ", Entities: " + entities.persons().size() +
-                            entities.organizations().size() + entities.technologies().size() + entities.projects().size() +
-                            entities.domains().size(),
-                    "Sources: " + sources.size() + ", Response entities: " + responseEntities.size());
-        }
-
-        // 12. Calculate confidence and summary
-        if (tracer != null) {
-            tracer.startStep("Calculate Confidence and Summary", "QueryService", "calculateConfidence/calculateSummary");
-        }
-        double confidence = calculateConfidence(retrievalResult);
-        com.berdachuk.expertmatch.query.domain.QueryResponse.MatchSummary summary = calculateSummary(experts);
-        if (tracer != null) {
-            tracer.endStep("Experts: " + experts.size(), "Confidence: " + confidence +
-                    ", Summary: " + summary.totalExpertsFound() + " total");
-        }
-
-        long processingTime = System.currentTimeMillis() - startTime;
-
-        // Build execution trace if enabled
-        com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionTraceData executionTrace = tracer != null ? tracer.buildTrace() : null;
-
-        return new QueryResponse(
-                answer,
-                experts,
-                sources,
-                responseEntities,
-                confidence,
-                queryId,
-                chatId,
-                assistantMessageId,
-                processingTime,
-                summary,
-                executionTrace
-        );
     }
 
     /**

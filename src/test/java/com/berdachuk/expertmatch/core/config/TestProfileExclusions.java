@@ -22,6 +22,8 @@ import org.springframework.context.annotation.Profile;
         OllamaEmbeddingAutoConfiguration.class,
         OpenAiChatAutoConfiguration.class,
         OpenAiEmbeddingAutoConfiguration.class
+        // Note: SpringAiRetryAutoConfiguration is excluded via property in BaseIntegrationTest
+        // because the class may not be available at compile time in Spring AI 2.0.0-SNAPSHOT
 })
 public class TestProfileExclusions {
     // This class exists solely to exclude Spring AI auto-configurations for test profile

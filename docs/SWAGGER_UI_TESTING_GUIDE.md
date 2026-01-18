@@ -94,6 +94,7 @@ Before testing query functionality, you need to generate sample data.
 2. **Find endpoint**: `POST /api/v1/test-data`
 3. **Click**: "Try it out"
 4. **Set parameters**:
+
 - `size`: Select `small` from dropdown (or enter one of: `tiny`, `small`, `medium`, `large`, `huge`)
 5. **Click**: "Execute"
 6. **Wait**: This may take 1-2 minutes for small dataset (~50 employees)
@@ -156,6 +157,7 @@ Instead of steps 3.1-3.3, you can use the complete dataset generation:
 2. **Find endpoint**: `POST /api/v1/test-data/complete`
 3. **Click**: "Try it out"
 4. **Set parameters**:
+
 - `size`: Select `small` from dropdown
 5. **Click**: "Execute"
 6. **Wait**: This performs all three steps (data + embeddings + graph) and may take 3-7 minutes
@@ -237,6 +239,7 @@ Instead of steps 3.1-3.3, you can use the complete dataset generation:
 2. **Find endpoint**: `GET /api/v1/chats/{chatId}`
 3. **Click**: "Try it out"
 4. **Set path parameter**:
+
 - `chatId`: Paste the chat ID from step 4.2
 5. **Click**: "Execute"
 
@@ -378,6 +381,7 @@ This tests a complete RFP response scenario with detailed requirements.
 2. **Find endpoint**: `GET /api/v1/chats/{chatId}/history`
 3. **Click**: "Try it out"
 4. **Set path parameter**:
+
 - `chatId`: Your chat ID from step 4.2
 5. **Set query parameters** (optional):
 - `page`: `0` (first page)
@@ -483,6 +487,7 @@ data: {"status":"complete","response":{...}}
 2. **Find endpoint**: `GET /api/v1/ingestion/status/{sourceName}`
 3. **Click**: "Try it out"
 4. **Set path parameter**:
+
 - `sourceName`: `test-data`
 5. **Click**: "Execute"
 
@@ -509,6 +514,7 @@ data: {"status":"complete","response":{...}}
 2. **Find endpoint**: `GET /api/v1/chats/{chatId}`
 3. **Click**: "Try it out"
 4. **Set path parameter**:
+
 - `chatId`: `invalid-id-123`
 5. **Click**: "Execute"
 
@@ -520,6 +526,7 @@ data: {"status":"complete","response":{...}}
 2. **Find endpoint**: `GET /api/v1/chats/{chatId}/history`
 3. **Click**: "Try it out"
 4. **Set query parameters**:
+
 - `page`: `-1` (invalid)
     - `size`: `200` (exceeds max of 100)
 5. **Click**: "Execute"

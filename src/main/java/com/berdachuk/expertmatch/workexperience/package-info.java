@@ -9,10 +9,9 @@
  * - WorkExperienceRepository (repository interface)
  */
 @org.springframework.modulith.ApplicationModule(
-    id = "workexperience",
-    displayName = "Work Experience Management",
-    allowedDependencies = {"employee::API", "project::SPI", "technology::SPI", "core"}
+        id = "workexperience",
+        displayName = "Work Experience Management",
+        allowedDependencies = {"employee::API", "project::SPI", "technology::SPI", "core"}
 )
 package com.berdachuk.expertmatch.workexperience;
 
-import org.springframework.modulith.ApplicationModule;

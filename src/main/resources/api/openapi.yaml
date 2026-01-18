@@ -431,6 +431,37 @@ components:
           $ref: '#/components/schemas/TokenUsage'
           nullable: true
           description: Token usage (null if no LLM or usage not available)
+        toolCall:
+          $ref: '#/components/schemas/ToolCallInfo'
+          nullable: true
+          description: Tool call information (null if not a tool call)
+
+    ToolCallInfo:
+      type: object
+      description: Tool call information for tracking tool invocations
+      properties:
+        toolName:
+          type: string
+          description: Tool name
+          example: "Skill"
+        toolType:
+          type: string
+          enum: [ AGENT_SKILL, JAVA_TOOL, FILE_SYSTEM_TOOL ]
+          description: Tool type
+          example: "AGENT_SKILL"
+        parameters:
+          type: string
+          description: Tool parameters (full JSON)
+          example: skillName=expert-matching-hybrid-retrieval
+        response:
+          type: string
+          description: Tool response (full JSON)
+          example: result=success
+        skillName:
+          type: string
+          nullable: true
+          description: Skill name (if toolType is AGENT_SKILL)
+          example: "expert-matching-hybrid-retrieval"
 
     TokenUsage:
       type: object

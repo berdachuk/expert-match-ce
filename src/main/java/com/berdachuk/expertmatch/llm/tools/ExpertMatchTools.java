@@ -3,12 +3,15 @@ package com.berdachuk.expertmatch.llm.tools;
 import com.berdachuk.expertmatch.core.security.HeaderBasedUserContext;
 import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
 import com.berdachuk.expertmatch.employee.service.ExpertEnrichmentService;
+import com.berdachuk.expertmatch.llm.service.AnswerGenerationService;
 import com.berdachuk.expertmatch.query.domain.QueryParser;
 import com.berdachuk.expertmatch.query.domain.QueryRequest;
 import com.berdachuk.expertmatch.query.domain.QueryResponse;
+import com.berdachuk.expertmatch.query.service.ExpertContextHolder;
 import com.berdachuk.expertmatch.query.service.QueryService;
 import com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService;
 import com.berdachuk.expertmatch.workexperience.repository.WorkExperienceRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.context.annotation.Lazy;
@@ -17,6 +20,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +28,7 @@ import java.util.Map;
  * Spring AI tools for ExpertMatch functionality.
  * Provides tool methods that can be called by LLM for expert discovery.
  */
+@Slf4j
 @Component
 public class ExpertMatchTools {
 
@@ -53,13 +58,33 @@ public class ExpertMatchTools {
         this.userContext = userContext;
     }
 
-    @Tool(description = "Process natural language query for expert discovery. Use this for general expert search queries.")
+    @Tool(description = "Get the experts that were already retrieved for the current query. Use this to access expert information that was found by the retrieval system. Call this FIRST before generating your answer.")
+    public List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> getRetrievedExperts() {
+        List<AnswerGenerationService.ExpertContext> contexts = ExpertContextHolder.get();
+        if (contexts == null || contexts.isEmpty()) {
+            log.warn("⚠️  getRetrievedExperts() called but no expert contexts found in ExpertContextHolder");
+            return List.of();
+        }
+        log.info("✅ getRetrievedExperts() called - converting {} expert contexts to ExpertMatch format", contexts.size());
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> result = convertContextsToExpertMatches(contexts);
+        log.info("✅ getRetrievedExperts() returning {} experts", result.size());
+        return result;
+    }
+
+    @Tool(description = "Process natural language query for expert discovery. Use this for general expert search queries. WARNING: Only use this if you need to search for DIFFERENT experts than those already retrieved.")
     public QueryResponse expertQuery(
             @ToolParam(description = "Natural language query describing expert requirements") String query,
             @ToolParam(description = "Optional chat ID for conversation context (24-character hex string)") String chatId
     ) {
+        log.info("✅ expertQuery() tool called with query: {}", query);
+        // Prevent recursion: if we're already processing a query, don't call QueryService again
+        if (ExpertContextHolder.hasContexts()) {
+            log.warn("⚠️  expertQuery tool called while already processing a query - preventing recursion");
+            throw new IllegalStateException("Cannot call expertQuery tool while already processing a query. Use getRetrievedExperts() to access already-retrieved experts.");
+        }
         QueryRequest request = new QueryRequest(query, chatId, null);
         String userId = userContext.getUserIdOrAnonymous();
+        log.info("✅ expertQuery() executing query via QueryService");
         return queryService.processQuery(request, chatId, userId);
     }
 
@@ -70,6 +95,8 @@ public class ExpertMatchTools {
             @ToolParam(description = "Required technologies") List<String> technologies,
             @ToolParam(description = "Domain or industry") String domain
     ) {
+        log.info("✅ findExperts() tool called - skills: {}, seniority: {}, technologies: {}, domain: {}",
+                skills, seniority, technologies, domain);
         // Build query from criteria
         StringBuilder queryBuilder = new StringBuilder();
         if (skills != null && !skills.isEmpty()) {
@@ -100,7 +127,9 @@ public class ExpertMatchTools {
         com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult retrievalResult = retrievalService.retrieve(request, parsedQuery);
 
         // Enrich experts
-        return enrichmentService.enrichExperts(retrievalResult, parsedQuery);
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> result = enrichmentService.enrichExperts(retrievalResult, parsedQuery);
+        log.info("✅ findExperts() returning {} experts", result.size());
+        return result;
     }
 
     @Tool(description = "Get detailed profile for a specific expert by ID or name.")
@@ -108,6 +137,7 @@ public class ExpertMatchTools {
             @ToolParam(description = "Expert ID (VARCHAR(74))") String expertId,
             @ToolParam(description = "Expert name (alternative to expertId)") String expertName
     ) {
+        log.info("✅ getExpertProfile() tool called - expertId: {}, expertName: {}", expertId, expertName);
         com.berdachuk.expertmatch.employee.domain.Employee employee = null;
 
         if (expertId != null && !expertId.isBlank()) {
@@ -145,7 +175,7 @@ public class ExpertMatchTools {
         // Build experience
         com.berdachuk.expertmatch.query.domain.QueryResponse.Experience experience = buildExperience(workExperiences);
 
-        return new com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch(
+        com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch result = new com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch(
                 employee.id(),
                 employee.name(),
                 employee.email(),
@@ -158,12 +188,15 @@ public class ExpertMatchTools {
                 1.0, // relevanceScore
                 employee.availabilityStatus()
         );
+        log.info("✅ getExpertProfile() returning profile for: {}", result.name());
+        return result;
     }
 
     @Tool(description = "Match project requirements with experts. Use this for RFP responses or team formation.")
     public List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> matchProjectRequirements(
             @ToolParam(description = "Project requirements object") Map<String, Object> requirements
     ) {
+        log.info("✅ matchProjectRequirements() tool called with requirements: {}", requirements);
         // Extract requirements
         @SuppressWarnings("unchecked")
         List<String> skills = (List<String>) requirements.getOrDefault("skills", List.of());
@@ -201,7 +234,9 @@ public class ExpertMatchTools {
         com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService.RetrievalResult retrievalResult = retrievalService.retrieve(request, parsedQuery);
 
         // Enrich experts
-        return enrichmentService.enrichExperts(retrievalResult, parsedQuery);
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> result = enrichmentService.enrichExperts(retrievalResult, parsedQuery);
+        log.info("✅ matchProjectRequirements() returning {} experts", result.size());
+        return result;
     }
 
     @Tool(description = "Get experts who worked on a specific project by project ID or name.")
@@ -209,6 +244,7 @@ public class ExpertMatchTools {
             @ToolParam(description = "Project ID (VARCHAR(74))") String projectId,
             @ToolParam(description = "Project name (alternative to projectId)") String projectName
     ) {
+        log.info("✅ getProjectExperts() tool called - projectId: {}, projectName: {}", projectId, projectName);
         // For now, use a simplified approach - query all work experiences and filter
         // In a production system, we'd add a repository method to query by project_id or project_name
         // This is a placeholder implementation
@@ -315,6 +351,91 @@ public class ExpertMatchTools {
                 monitoring,
                 onCall
         );
+    }
+
+    /**
+     * Converts ExpertContext objects to ExpertMatch format.
+     * This is used by getRetrievedExperts() tool to return expert data.
+     */
+    private List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> convertContextsToExpertMatches(
+            List<AnswerGenerationService.ExpertContext> contexts) {
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> expertMatches = new ArrayList<>();
+
+        for (AnswerGenerationService.ExpertContext context : contexts) {
+            // Extract metadata
+            Map<String, Object> metadata = context.metadata() != null ? context.metadata() : new HashMap<>();
+
+            // Build matched skills from context skills
+            List<String> skills = context.skills() != null ? context.skills() : List.of();
+            com.berdachuk.expertmatch.query.domain.QueryResponse.MatchedSkills matchedSkills =
+                    new com.berdachuk.expertmatch.query.domain.QueryResponse.MatchedSkills(
+                            skills, // All skills as must-have for simplicity
+                            List.of() // No nice-to-have distinction in ExpertContext
+                    );
+
+            // Build skill match score from metadata
+            Double matchScore = metadata.containsKey("matchScore")
+                    ? ((Number) metadata.get("matchScore")).doubleValue()
+                    : null;
+            com.berdachuk.expertmatch.query.domain.QueryResponse.SkillMatch skillMatch = null;
+            if (matchScore != null) {
+                skillMatch = new com.berdachuk.expertmatch.query.domain.QueryResponse.SkillMatch(
+                        skills.size(), // mustHaveMatched
+                        skills.size(), // mustHaveTotal
+                        0, // niceToHaveMatched
+                        0, // niceToHaveTotal
+                        matchScore
+                );
+            }
+
+            // Build relevant projects from context projects
+            List<com.berdachuk.expertmatch.query.domain.QueryResponse.RelevantProject> relevantProjects =
+                    context.projects() != null
+                            ? context.projects().stream()
+                            .map(projectName -> new com.berdachuk.expertmatch.query.domain.QueryResponse.RelevantProject(
+                                    projectName,
+                                    List.of(), // Technologies not available in ExpertContext
+                                    null, // Role not available
+                                    null // Duration not available
+                            ))
+                            .toList()
+                            : List.of();
+
+            // Get relevance score from metadata
+            Double relevanceScore = metadata.containsKey("relevanceScore")
+                    ? ((Number) metadata.get("relevanceScore")).doubleValue()
+                    : (matchScore != null ? matchScore : 0.5);
+
+            // Build language proficiency (default to English if not available)
+            com.berdachuk.expertmatch.query.domain.QueryResponse.LanguageProficiency language =
+                    new com.berdachuk.expertmatch.query.domain.QueryResponse.LanguageProficiency("English");
+
+            // Build experience (minimal - not available in ExpertContext)
+            com.berdachuk.expertmatch.query.domain.QueryResponse.Experience experience =
+                    new com.berdachuk.expertmatch.query.domain.QueryResponse.Experience(
+                            false, false, false, false, false
+                    );
+
+            // Create ExpertMatch
+            com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch expertMatch =
+                    new com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch(
+                            context.expertId(),
+                            context.name(),
+                            context.email(),
+                            context.seniority(),
+                            language,
+                            skillMatch,
+                            matchedSkills,
+                            relevantProjects,
+                            experience,
+                            relevanceScore,
+                            null // Availability not available in ExpertContext
+                    );
+
+            expertMatches.add(expertMatch);
+        }
+
+        return expertMatches;
     }
 }
 

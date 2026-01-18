@@ -1221,6 +1221,63 @@ class QueryControllerIT extends BaseIntegrationTest {
 
     @Test
     void testProcessQuery_ExecutionTraceIncludesToolCallStructure() throws Exception {
+        // Test that execution trace includes tool call structure
+        // This verifies that tool calls (like getRetrievedExperts) appear in Execution Trace
+        String requestBody = """
+                {
+                    "query": "Looking for experts in Java and Spring Boot",
+                    "chatId": "%s",
+                    "options": {
+                        "includeExecutionTrace": true
+                    }
+                }
+                """.formatted(validChatId);
+
+        mockMvc.perform(post("/api/v1/query")
+                        .header("X-User-Id", TEST_USER_ID)
+                        .contentType(APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.executionTrace").exists())
+                .andExpect(jsonPath("$.executionTrace.steps").isArray())
+                .andExpect(jsonPath("$.executionTrace.steps[0].name").exists())
+                .andExpect(jsonPath("$.executionTrace.steps[0].service").exists())
+                .andExpect(jsonPath("$.executionTrace.steps[0].method").exists())
+                .andExpect(jsonPath("$.executionTrace.steps[0].status").exists());
+    }
+
+    @Test
+    void testProcessQuery_ToolCallsInExecutionTrace() throws Exception {
+        // Test that tool calls (getRetrievedExperts) appear in Execution Trace
+        // This verifies the RAG pattern tool calling integration
+        String requestBody = """
+                {
+                    "query": "Looking for experts in Java and Spring Boot",
+                    "chatId": "%s",
+                    "options": {
+                        "includeExecutionTrace": true
+                    }
+                }
+                """.formatted(validChatId);
+
+        mockMvc.perform(post("/api/v1/query")
+                        .header("X-User-Id", TEST_USER_ID)
+                        .contentType(APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.executionTrace").exists())
+                .andExpect(jsonPath("$.executionTrace.steps").isArray())
+                // Verify that tool call steps exist (if LLM calls getRetrievedExperts)
+                // Note: Tool calls may or may not appear depending on LLM behavior
+                // The important thing is that the structure supports tool calls
+                .andExpect(jsonPath("$.executionTrace.steps[?(@.toolCall)]").exists())
+                // Verify tool call structure if present
+                .andExpect(jsonPath("$.executionTrace.steps[?(@.toolCall.toolName)]").exists())
+                .andExpect(jsonPath("$.executionTrace.steps[?(@.toolCall.toolType)]").exists());
+    }
+
+    @Test
+    void testProcessQuery_ExecutionTraceIncludesToolCallStructure_Original() throws Exception {
         // Test that Execution Trace includes tool call structure when enabled
         // Note: Actual tool calls may not occur with mocked LLMs, but structure should be present
         String requestBody = """

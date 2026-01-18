@@ -23,6 +23,18 @@ import org.springframework.context.event.EventListener;
  * Enables dynamic tool discovery using PgVector-based semantic search.
  * <p>
  * This configuration is only active when expertmatch.tools.search.enabled=true.
+ * <p>
+ * <b>NOTE:</b> Tool Search Tool is currently DISABLED by default because:
+ * <ul>
+ *   <li>Incompatible with Spring AI 1.1.0 (ToolCallAdvisor is final, cannot be extended)</li>
+ *   <li>Conflicts with Agent Skills (both try to be @Primary ChatClient)</li>
+ *   <li>Requires Spring AI 2.0.0+ for full compatibility</li>
+ * </ul>
+ * Agent Skills are the recommended approach for Spring AI 1.1.0.
+ * <p>
+ * <b>IMPORTANT:</b> This configuration uses @ConditionalOnClass to prevent class loading
+ * when Tool Search classes are not available or incompatible. This avoids IncompatibleClassChangeError
+ * when Tool Search is disabled.
  */
 @Slf4j
 @Configuration
@@ -30,6 +42,9 @@ import org.springframework.context.event.EventListener;
         name = "expertmatch.tools.search.enabled",
         havingValue = "true",
         matchIfMissing = false
+)
+@org.springframework.boot.autoconfigure.condition.ConditionalOnClass(
+        name = "org.springaicommunity.tool.search.ToolSearchToolCallAdvisor"
 )
 public class ToolSearchConfiguration {
 

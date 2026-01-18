@@ -3,12 +3,15 @@ package com.berdachuk.expertmatch.llm.tools;
 import com.berdachuk.expertmatch.core.security.HeaderBasedUserContext;
 import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
 import com.berdachuk.expertmatch.employee.service.ExpertEnrichmentService;
+import com.berdachuk.expertmatch.llm.service.AnswerGenerationService;
 import com.berdachuk.expertmatch.query.domain.QueryParser;
 import com.berdachuk.expertmatch.query.domain.QueryRequest;
 import com.berdachuk.expertmatch.query.domain.QueryResponse;
+import com.berdachuk.expertmatch.query.service.ExpertContextHolder;
 import com.berdachuk.expertmatch.query.service.QueryService;
 import com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService;
 import com.berdachuk.expertmatch.workexperience.repository.WorkExperienceRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,6 +57,7 @@ class ExpertMatchToolsTest {
 
     @BeforeEach
     void setUp() {
+        ExpertContextHolder.clear(); // Ensure clean state
         expertMatchTools = new ExpertMatchTools(
                 queryService,
                 retrievalService,
@@ -63,6 +67,61 @@ class ExpertMatchToolsTest {
                 queryParser,
                 userContext
         );
+    }
+
+    @AfterEach
+    void tearDown() {
+        ExpertContextHolder.clear(); // Clean up after each test
+    }
+
+    @Test
+    void testGetRetrievedExperts() {
+        // Arrange
+        List<AnswerGenerationService.ExpertContext> contexts = List.of(
+                new AnswerGenerationService.ExpertContext(
+                        "expert1",
+                        "John Doe",
+                        "john@example.com",
+                        "A4",
+                        List.of("Java", "Spring"),
+                        List.of("Project1"),
+                        Map.of("matchScore", 0.9, "relevanceScore", 0.85)
+                ),
+                new AnswerGenerationService.ExpertContext(
+                        "expert2",
+                        "Jane Smith",
+                        "jane@example.com",
+                        "A3",
+                        List.of("Python", "Django"),
+                        List.of("Project2"),
+                        Map.of("matchScore", 0.8, "relevanceScore", 0.75)
+                )
+        );
+        ExpertContextHolder.set(contexts);
+
+        // Act
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> result = expertMatchTools.getRetrievedExperts();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("expert1", result.get(0).id());
+        assertEquals("John Doe", result.get(0).name());
+        assertEquals("expert2", result.get(1).id());
+        assertEquals("Jane Smith", result.get(1).name());
+    }
+
+    @Test
+    void testGetRetrievedExpertsEmpty() {
+        // Arrange - no contexts set
+        ExpertContextHolder.clear();
+
+        // Act
+        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> result = expertMatchTools.getRetrievedExperts();
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -97,6 +156,34 @@ class ExpertMatchToolsTest {
         assertNotNull(result);
         assertEquals(expectedResponse, result);
         verify(queryService).processQuery(any(QueryRequest.class), eq(chatId), eq(userId));
+    }
+
+    @Test
+    void testExpertQueryPreventsRecursion() {
+        // Arrange - simulate that we're already processing a query
+        List<AnswerGenerationService.ExpertContext> contexts = List.of(
+                new AnswerGenerationService.ExpertContext(
+                        "expert1",
+                        "John Doe",
+                        null,
+                        null,
+                        List.of(),
+                        List.of(),
+                        Map.of()
+                )
+        );
+        ExpertContextHolder.set(contexts);
+
+        String query = "Find experts";
+        String chatId = "chat-123";
+
+        // Act & Assert
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+            expertMatchTools.expertQuery(query, chatId);
+        });
+
+        assertTrue(exception.getMessage().contains("Cannot call expertQuery tool while already processing a query"));
+        verifyNoInteractions(queryService);
     }
 
     @Test

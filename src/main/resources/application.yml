@@ -342,7 +342,7 @@ expertmatch:
       model: ${LLM_MODEL:}  # Use same model as chat (optional override)
   tools:
     search:
-      enabled: ${EXPERTMATCH_TOOLS_SEARCH_ENABLED:false}  # Enable Tool Search Tool (Phase 2)
+      enabled: ${EXPERTMATCH_TOOLS_SEARCH_ENABLED:false}  # Disabled: Incompatible with Spring AI 1.1.0 (ToolCallAdvisor is final) and conflicts with Agent Skills
       strategy: ${EXPERTMATCH_TOOLS_SEARCH_STRATEGY:pgvector}  # pgvector, lucene, regex
       max-results: ${EXPERTMATCH_TOOLS_SEARCH_MAX_RESULTS:5}  # Maximum tools to return per search
   skills:

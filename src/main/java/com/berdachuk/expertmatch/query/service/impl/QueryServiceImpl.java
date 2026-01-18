@@ -11,6 +11,7 @@ import com.berdachuk.expertmatch.query.domain.QueryParser;
 import com.berdachuk.expertmatch.query.domain.QueryRequest;
 import com.berdachuk.expertmatch.query.domain.QueryResponse;
 import com.berdachuk.expertmatch.query.service.ExecutionTracer;
+import com.berdachuk.expertmatch.query.service.ExpertContextHolder;
 import com.berdachuk.expertmatch.query.service.QueryService;
 import com.berdachuk.expertmatch.retrieval.service.DeepResearchService;
 import com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService;
@@ -178,32 +179,43 @@ public class QueryServiceImpl implements QueryService {
                 tracer.endStep("Experts: " + experts.size(), "Contexts: " + expertContexts.size());
             }
 
-            // 8. Generate answer using LLM with enriched expert data and conversation context
-            // Support SGR patterns (Cascade or Cycle) if enabled
-            if (request.options().useCascadePattern() != null && request.options().useCascadePattern()) {
-                log.info("Generating answer using LLM with Cascade pattern...");
-            } else if (request.options().useCyclePattern() != null && request.options().useCyclePattern()) {
-                log.info("Generating answer using LLM with Cycle pattern...");
-            } else {
-                log.info("Generating answer using LLM...");
-            }
-            if (tracer != null) {
-                tracer.startStep("Generate Answer", "AnswerGenerationService", "generateAnswer");
-            }
-            String answer = generateAnswer(
-                    request.query(),
-                    expertContexts,
-                    parsedQuery.intent(),
-                    conversationHistory,
-                    request.options().useCascadePattern() != null && request.options().useCascadePattern(),
-                    request.options().useCyclePattern() != null && request.options().useCyclePattern(),
-                    tracer
-            );
-            log.info("Answer generation completed. Answer length: {}", answer != null ? answer.length() : 0);
-            if (tracer != null) {
-                // AnswerGenerationService tracks its own step, so we just track the overall step
-                tracer.endStep("Query: " + request.query() + ", Experts: " + expertContexts.size(),
-                        "Answer: " + (answer != null ? answer.length() : 0) + " characters");
+            // Store expert contexts in ThreadLocal for tool access
+            log.info("🔧 Storing {} expert contexts in ExpertContextHolder for tool access", expertContexts.size());
+            ExpertContextHolder.set(expertContexts);
+            String answer;
+            try {
+                // 8. Generate answer using LLM with enriched expert data and conversation context
+                // Support SGR patterns (Cascade or Cycle) if enabled
+                // Note: We pass null for expertContexts to force LLM to use getRetrievedExperts() tool
+                if (request.options().useCascadePattern() != null && request.options().useCascadePattern()) {
+                    log.info("Generating answer using LLM with Cascade pattern...");
+                } else if (request.options().useCyclePattern() != null && request.options().useCyclePattern()) {
+                    log.info("Generating answer using LLM with Cycle pattern...");
+                } else {
+                    log.info("Generating answer using LLM with tool calling...");
+                }
+                if (tracer != null) {
+                    tracer.startStep("Generate Answer", "AnswerGenerationService", "generateAnswer");
+                }
+                answer = generateAnswer(
+                        request.query(),
+                        null, // Don't pass expertContexts - LLM will use getRetrievedExperts() tool
+                        parsedQuery.intent(),
+                        conversationHistory,
+                        request.options().useCascadePattern() != null && request.options().useCascadePattern(),
+                        request.options().useCyclePattern() != null && request.options().useCyclePattern(),
+                        tracer
+                );
+                log.info("Answer generation completed. Answer length: {}", answer != null ? answer.length() : 0);
+                if (tracer != null) {
+                    // AnswerGenerationService tracks its own step, so we just track the overall step
+                    tracer.endStep("Query: " + request.query() + ", Experts: " + expertContexts.size(),
+                            "Answer: " + (answer != null ? answer.length() : 0) + " characters");
+                }
+            } finally {
+                // Clean up ThreadLocal after answer generation
+                log.info("🔧 Clearing ExpertContextHolder after answer generation");
+                ExpertContextHolder.clear();
             }
 
             // 9. Save assistant response to conversation history

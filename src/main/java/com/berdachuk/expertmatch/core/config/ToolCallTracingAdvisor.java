@@ -41,14 +41,14 @@ public class ToolCallTracingAdvisor implements CallAdvisor, StreamAdvisor {
     public ChatClientResponse adviseCall(ChatClientRequest chatClientRequest, CallAdvisorChain callAdvisorChain) {
         ExecutionTracer tracer = ExecutionTracer.getCurrent();
 
-        log.debug("ToolCallTracingAdvisor.adviseCall() called, tracer: {}", tracer != null ? "present" : "null");
+        log.info("ToolCallTracingAdvisor.adviseCall() called, tracer: {}", tracer != null ? "present" : "null");
 
         // Execute the chain to get the response
         ChatClientResponse chatClientResponse = callAdvisorChain.nextCall(chatClientRequest);
 
         // Process tool calls if tracing is enabled
         if (tracer != null) {
-            log.debug("Processing tool calls with tracer present");
+            log.info("Processing tool calls with tracer present");
             processToolCalls(chatClientResponse, tracer);
         } else {
             log.debug("No tracer present, skipping tool call processing");
@@ -141,7 +141,7 @@ public class ToolCallTracingAdvisor implements CallAdvisor, StreamAdvisor {
 
             // Check all results for tool calls
             // In Spring AI, tool calls can appear in any Generation's output (AssistantMessage)
-            log.debug("Processing ChatResponse for tool calls, ChatResponse class: {}", chatResponse.getClass().getName());
+            log.info("🔍 Processing ChatResponse for tool calls, ChatResponse class: {}", chatResponse.getClass().getName());
 
             try {
                 // Try getResults() first (returns List<Generation>)
@@ -153,22 +153,22 @@ public class ToolCallTracingAdvisor implements CallAdvisor, StreamAdvisor {
                         results != null ? results.size() : 0);
 
                 if (results != null && !results.isEmpty()) {
-                    log.debug("Checking {} results for tool calls", results.size());
+                    log.info("🔍 Checking {} results for tool calls", results.size());
                     for (int i = 0; i < results.size(); i++) {
                         Object result = results.get(i);
                         if (result == null) {
-                            log.debug("Result {} is null", i);
+                            log.warn("⚠️  Result {} is null", i);
                             continue;
                         }
 
-                        log.debug("Processing result {} of type {}", i, result.getClass().getName());
+                        log.info("🔍 Processing result {} of type {}", i, result.getClass().getName());
 
                         // Get output from result (AssistantMessage)
                         try {
                             java.lang.reflect.Method getOutputMethod = result.getClass().getMethod("getOutput");
                             Object output = getOutputMethod.invoke(result);
 
-                            log.debug("Result {} output: {} (type: {})", i, output != null ? "not null" : "null",
+                            log.info("🔍 Result {} output: {} (type: {})", i, output != null ? "not null" : "null",
                                     output != null ? output.getClass().getName() : "N/A");
 
                             if (output != null) {
@@ -176,11 +176,11 @@ public class ToolCallTracingAdvisor implements CallAdvisor, StreamAdvisor {
                                 processToolCallsFromMessage(output, tracer);
                             }
                         } catch (Exception e) {
-                            log.debug("Failed to get output from result {}: {}", i, e.getMessage());
+                            log.warn("⚠️  Failed to get output from result {}: {}", i, e.getMessage());
                         }
                     }
                 } else {
-                    log.debug("Results list is null or empty, trying getResult()");
+                    log.warn("⚠️  Results list is null or empty, trying getResult()");
                 }
 
                 // Also check the single result if getResults() doesn't work or returns empty
@@ -254,9 +254,9 @@ public class ToolCallTracingAdvisor implements CallAdvisor, StreamAdvisor {
             }
         } catch (NoSuchMethodException e) {
             // getToolCalls() method not available - this message doesn't have tool calls
-            log.debug("Message does not have getToolCalls() method: {}", message.getClass().getName());
+            log.info("Message does not have getToolCalls() method: {}", message.getClass().getName());
         } catch (Exception e) {
-            log.debug("Failed to get tool calls from message: {}", e.getMessage());
+            log.warn("Failed to get tool calls from message: {}", e.getMessage(), e);
         }
     }
 

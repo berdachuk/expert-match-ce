@@ -3,15 +3,16 @@ package com.berdachuk.expertmatch.query.service.impl;
 import com.berdachuk.expertmatch.chat.repository.ChatRepository;
 import com.berdachuk.expertmatch.chat.repository.ConversationHistoryRepository;
 import com.berdachuk.expertmatch.chat.service.ConversationHistoryManager;
+import com.berdachuk.expertmatch.core.domain.EntityExtractorTypes.ExtractedEntities;
 import com.berdachuk.expertmatch.core.domain.ExecutionTrace;
 import com.berdachuk.expertmatch.core.domain.ParsedQuery;
 import com.berdachuk.expertmatch.core.domain.QueryResponse;
+import com.berdachuk.expertmatch.core.service.EntityExtractor;
 import com.berdachuk.expertmatch.core.service.ExecutionTracer;
 import com.berdachuk.expertmatch.core.service.ExpertContextHolder;
 import com.berdachuk.expertmatch.core.util.IdGenerator;
 import com.berdachuk.expertmatch.employee.service.ExpertEnrichmentService;
 import com.berdachuk.expertmatch.llm.service.AnswerGenerationService;
-import com.berdachuk.expertmatch.query.domain.EntityExtractor;
 import com.berdachuk.expertmatch.query.domain.QueryParser;
 import com.berdachuk.expertmatch.query.service.QueryService;
 import com.berdachuk.expertmatch.retrieval.service.DeepResearchService;
@@ -121,7 +122,7 @@ public class QueryServiceImpl implements QueryService {
             if (tracer != null) {
                 tracer.startStep("Extract Entities", "EntityExtractor", "extract");
             }
-            EntityExtractor.ExtractedEntities entities = entityExtractor.extract(request.query(), tracer);
+            ExtractedEntities entities = entityExtractor.extract(request.query(), tracer);
             log.info("Entities extracted - Persons: {}, Organizations: {}, Technologies: {}, Projects: {}, Domains: {}",
                     entities.persons().size(), entities.organizations().size(), entities.technologies().size(),
                     entities.projects().size(), entities.domains().size());
@@ -437,7 +438,7 @@ public class QueryServiceImpl implements QueryService {
      * Builds response entities.
      */
     private List<QueryResponse.Entity> buildResponseEntities(
-            EntityExtractor.ExtractedEntities entities) {
+            ExtractedEntities entities) {
         List<QueryResponse.Entity> responseEntities = new ArrayList<>();
 
         // Convert extracted entities to response format

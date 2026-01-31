@@ -1,20 +1,18 @@
-# Local Development Configuration with Ollama
+# Local Development Configuration with OpenAI-Compatible Providers
 # This file is gitignored and should be customized for your local setup
 #
 # Configuration:
-# - LLM Inference: Local Ollama (http://localhost:11434)
-# - Embeddings: Local Ollama (http://localhost:11434)
-# - Reranking: Local Ollama (http://localhost:11434)
+# - LLM Inference: OpenAI-compatible provider (configure via CHAT_BASE_URL)
+# - Embeddings: OpenAI-compatible provider (configure via EMBEDDING_BASE_URL)
+# - Reranking: OpenAI-compatible provider (configure via RERANKING_BASE_URL)
 #
 # To use this configuration, run with: --spring.profiles.active=local
 # Or set: export SPRING_PROFILES_ACTIVE=local
 #
 # Prerequisites:
-# - Local Ollama running on port 11434 (default)
-# - Required models pulled:
-#   - LLM: qwen3:4b-instruct-2507-q4_K_M (or qwen3:30b-a3b-instruct-2507-q4_K_M)
-#   - Embedding: qwen3-embedding:8b (or qwen3-embedding:0.6b)
-#   - Reranking: dengcao/Qwen3-Reranker-8B:Q4_K_M
+# - OpenAI-compatible API endpoint (e.g., OpenAI, Azure OpenAI, or other compatible service)
+# - API keys configured via environment variables or this file
+# - Models available on your OpenAI-compatible provider
 
 CHAT_PROVIDER: openai
 CHAT_BASE_URL: http://localhost:11434
@@ -23,13 +21,16 @@ CHAT_BASE_URL: http://localhost:11434
 # - qwen3:30b-a3b-instruct-2507-q4_K_M (30.5B, alternative)
 # - qwen3:4b-instruct-2507-q4_K_M (4B, faster)
 CHAT_MODEL: devstral-small-2:24b-cloud
+CHAT_API_KEY: none
 
-# Embedding configuration - use remote API (same as chat)
+# Embedding configuration - OpenAI-compatible provider
 EMBEDDING_PROVIDER: openai
 EMBEDDING_BASE_URL: http://localhost:11434
 EMBEDDING_MODEL: qwen3-embedding:0.6b
+EMBEDDING_API_KEY: none
+EMBEDDING_DIMENSIONS: 1024
 
-# Reranking configuration - use remote API (same as chat)
+# Reranking configuration - OpenAI-compatible provider
 RERANKING_PROVIDER: openai
 RERANKING_BASE_URL: http://localhost:11434
 # Reranking can use a chat model - using the same model as chat for consistency
@@ -40,12 +41,24 @@ RERANKING_BASE_URL: http://localhost:11434
 RERANKING_MODEL: devstral-small-2:24b-cloud
 RERANKING_TEMPERATURE: 0.1
 
+INGEST_POSTGRES_HOST: localhost
+INGEST_POSTGRES_PORT: 5432
+INGEST_POSTGRES_DB: aist-tool-networking
+INGEST_POSTGRES_PASSWORD: your_password
+INGEST_POSTGRES_USER: Auto_EPM-ESP_srv-aist@epam.com
+
 # Enable HTTP request logging to debug LLM API calls
 logging:
   level:
     org.springframework.web.client.RestClient: DEBUG
     org.springframework.ai.openai.api.OpenAiApi: DEBUG
     org.springframework.http.client: DEBUG
+    # Enable logging for Spring AI ChatClient and tool calls (including Agent Skills)
+    org.springframework.ai.chat.client: DEBUG
+    org.springframework.ai.chat.client.advisor: DEBUG
+    # Enable logging for Agent Skills (Spring AI Agent Utils)
+    org.springaicommunity.agent.tools: DEBUG
+    org.springaicommunity.agent: DEBUG
 
 server:
   port: 8093
@@ -59,283 +72,4 @@ server:
   tomcat:
     connection-timeout: 300000  # 5 minutes
     keep-alive-timeout: 300000  # 5 minutes
-
-# OpenAPI/Swagger Configuration for Local Development
-springdoc:
-  api-docs:
-    path: /api/v1/openapi.json
-  swagger-ui:
-    path: /swagger-ui.html
-    enabled: true
-    # Point directly to our OpenAPI spec (disables Petstore default)
-    url: /api/v1/openapi.json
-    # Use relative URLs to avoid CORS issues
-    use-root-path: false
-    # Additional UI settings
-    default-model-expand-depth: 1
-    default-model-render-expand-depth: 3
-    try-it-out-enabled: true
-    operations-sorter: method
-    tags-sorter: alpha
-
-spring:
-  thymeleaf:
-    cache: false  # Disable template caching for development
-  # Increase database connection timeout for long-running queries
-  datasource:
-    hikari:
-      connection-timeout: 60000  # 60 seconds (increased from 30 seconds)
-      max-lifetime: 1800000  # 30 minutes
-      idle-timeout: 600000  # 10 minutes
-  # Spring AI auto-configuration exclusion
-  # Note: We ALWAYS use custom Java configuration (SpringAIConfig) to create ChatModel and EmbeddingModel beans
-  # with separate base URLs. All Spring AI auto-configurations are disabled.
-  autoconfigure:
-    exclude:
-      # Exclude ALL OpenAI auto-configurations
-      - org.springframework.ai.model.openai.autoconfigure.OpenAiAudioSpeechAutoConfiguration
-      - org.springframework.ai.model.openai.autoconfigure.OpenAiAudioTranscriptionAutoConfiguration
-      - org.springframework.ai.model.openai.autoconfigure.OpenAiImageAutoConfiguration
-      - org.springframework.ai.model.openai.autoconfigure.OpenAiImageModelAutoConfiguration
-      - org.springframework.ai.model.openai.autoconfigure.OpenAiModerationAutoConfiguration
-      - org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration
-      - org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration
-      # Exclude ALL Ollama auto-configurations
-      - org.springframework.ai.model.ollama.autoconfigure.OllamaChatAutoConfiguration
-      - org.springframework.ai.model.ollama.autoconfigure.OllamaEmbeddingAutoConfiguration
-      - org.springframework.ai.model.ollama.autoconfigure.OllamaApiAutoConfiguration
-
-  # Spring AI Configuration for Local Development
-  # Supports separate base URLs for chat, embedding, and reranking
-  # Each component can use different OpenAI-compatible services
-  # NOTE: Auto-configuration is DISABLED - all models are created via SpringAIConfig.java
-  ai:
-    # Disable Spring AI auto-configuration - we use custom configuration only
-    # Chat service configuration (OpenAI-compatible)
-    # NOTE: These properties are kept for reference but won't be used by auto-configuration
-    # They are used by SpringAIConfig.java custom configuration instead
-    # Base URL for chat/LLM inference
-    # Examples:
-    # - Local Ollama: http://localhost:11434
-    # - OpenAI: https://api.openai.com (default)
-    # - Azure OpenAI: https://YOUR_RESOURCE.openai.azure.com
-    # - Other compatible providers: https://api.provider.com/v1
-    # Override with: export CHAT_BASE_URL=http://your-chat-service.com
-    openai:
-      enabled: false
-      base-url: ${CHAT_BASE_URL:${OLLAMA_BASE_URL:http://localhost:11434}}
-      api-key: ${CHAT_API_KEY:${OLLAMA_API_KEY:ollama}}
-      chat:
-        options:
-          # Chat model options:
-          # - devstral-small-2:24b-cloud (24B, current default)
-          model: ${CHAT_MODEL:${OLLAMA_MODEL:devstral-small-2:24b-cloud}}
-          temperature: ${CHAT_TEMPERATURE:${OLLAMA_TEMPERATURE:0.7}}
-          # Max tokens for LLM output (recommended: 6000 for comprehensive expert recommendations)
-          # Handles 10 experts with detailed information, supports Cycle/Cascade patterns
-          # Can be overridden with: export CHAT_MAX_TOKENS=8000
-          max-tokens: ${CHAT_MAX_TOKENS:6000}
-      # Embedding configuration (will be overridden by custom Java config for separate base URL)
-      embedding:
-        options:
-          model: ${EMBEDDING_MODEL:${OLLAMA_EMBEDDING_MODEL:qwen3-embedding:8b}}
-          dimensions: ${EMBEDDING_DIMENSIONS:1024}
-
-    # Ollama Configuration (for reranking and fallback)
-    # NOTE: enabled: false is set below - these properties are kept for reference
-    # They are used by SpringAIConfig.java custom configuration instead
-    ollama:
-      enabled: false
-      # Base URL for Ollama reranking service
-      # Override with: export RERANKING_BASE_URL=http://your-reranking-service.com
-      # Note: Reranking uses native Ollama API, not OpenAI-compatible
-      # dengcao/Qwen3-Reranker-8B:Q4_K_M
-      base-url: ${RERANKING_BASE_URL:${OLLAMA_BASE_URL:http://localhost:11434}}
-      reranking:
-        options:
-          # Reranking model options:
-          # - devstral-small-2:24b-cloud (24B, current default)
-          model: ${OLLAMA_RERANKING_MODEL:devstral-small-2:24b-cloud}
-
-    # Custom configuration for separate base URLs and providers
-    # These properties are used by SpringAIConfig.java to create separate beans
-    # for chat, embedding, and reranking with different base URLs and providers
-    custom:
-      chat:
-        # Provider selection: 'ollama' or 'openai'
-        # Note: http://localhost:11434 uses native Ollama API format
-        # Therefore, use provider=ollama for this endpoint
-        provider: ${CHAT_PROVIDER:${LLM_PROVIDER:ollama}}
-        # Base URL for chat service
-        # IMPORTANT: For OpenAI-compatible APIs, do NOT include /v1 in the base URL
-        # Spring AI's OpenAiApi automatically adds /v1/chat/completions
-        # Default: http://localhost:11434 (native Ollama endpoint)
-        # Examples:
-        # - Native Ollama: http://localhost:11434
-        # - Local Ollama: http://localhost:11434 (use provider=ollama)
-        # - OpenAI: https://api.openai.com (without /v1)
-        # - OpenAI-compatible: https://qwen3-coder.berdaflex.com (without /v1)
-        base-url: ${CHAT_BASE_URL:${OLLAMA_BASE_URL:http://localhost:11434}}
-        # API key (not required for local Ollama, required for OpenAI)
-        api-key: ${CHAT_API_KEY:${OLLAMA_API_KEY:ollama}}
-        # Model name (available models from local Ollama installation)
-        # Available models:
-        # - devstral-small-2:24b-cloud (24B, current default)
-        # - qwen3:30b-a3b-instruct-2507-q4_K_M (30.5B, alternative)
-        # - qwen3:4b-instruct-2507-q4_K_M (4B, faster)
-        model: ${CHAT_MODEL:${OLLAMA_MODEL:devstral-small-2:24b-cloud}}
-        temperature: ${CHAT_TEMPERATURE:${OLLAMA_TEMPERATURE:0.7}}
-        # Max tokens for LLM output (recommended: 6000 for comprehensive expert recommendations)
-        # Handles 10 experts with detailed information, supports Cycle/Cascade patterns
-        # Can be overridden with: export CHAT_MAX_TOKENS=8000
-        max-tokens: ${CHAT_MAX_TOKENS:6000}
-      embedding:
-        # Provider selection: 'ollama' or 'openai' (default: 'ollama' for local profile)
-        provider: ${EMBEDDING_PROVIDER:ollama}
-        base-url: ${EMBEDDING_BASE_URL:${OLLAMA_BASE_URL:http://localhost:11434}}
-        api-key: ${EMBEDDING_API_KEY:${OLLAMA_API_KEY:ollama}}
-        model: ${EMBEDDING_MODEL:${OLLAMA_EMBEDDING_MODEL:qwen3-embedding:8b}}
-        dimensions: ${EMBEDDING_DIMENSIONS:1024}
-      reranking:
-        # Provider selection: 'ollama' or 'openai'
-        # IMPORTANT: For OpenAI-compatible APIs, do NOT include /v1 in the base URL
-        # Spring AI's OpenAiApi automatically adds /v1/chat/completions
-        provider: ${RERANKING_PROVIDER:${LLM_PROVIDER:openai}}
-        # Base URL for reranking service
-        # Default: http://localhost:11434 (native Ollama endpoint)
-        # Examples:
-        # - Native Ollama: http://localhost:11434 (use provider=ollama)
-        # - OpenAI: https://api.openai.com (without /v1)
-        # - OpenAI-compatible: https://qwen3-coder.berdaflex.com (without /v1)
-        base-url: ${RERANKING_BASE_URL:${OLLAMA_BASE_URL:http://localhost:11434}}
-        # API key (not required for local Ollama, required for OpenAI)
-        api-key: ${RERANKING_API_KEY:${OLLAMA_API_KEY:ollama}}
-        # Model name for reranking
-        # For Ollama: dengcao/Qwen3-Reranker-8B:Q4_K_M (dedicated reranking model)
-        # For OpenAI-compatible: Can use chat models
-        # Options:
-        # - devstral-small-2:24b-cloud (24B, current default)
-        # - qwen3:30b-a3b-instruct-2507-q4_K_M (30.5B, alternative)
-        # - qwen3:4b-instruct-2507-q4_K_M (4B, faster)
-        model: ${RERANKING_MODEL:${OLLAMA_RERANKING_MODEL:devstral-small-2:24b-cloud}}
-        # Reranking temperature (lower is better for reranking, default: 0.1)
-        temperature: ${RERANKING_TEMPERATURE:0.1}
-
-  # Security Configuration
-  #
-  # Authentication and authorization are handled by Spring Gateway.
-  # Spring Gateway validates JWT tokens and populates user information in HTTP headers:
-  # - X-User-Id: User identifier
-  # - X-User-Roles: Comma-separated list of roles (e.g., "ROLE_USER,ROLE_ADMIN")
-  # - X-User-Email: User email address
-  #
-  # For local development without Spring Gateway, headers may be missing.
-  # The service will fall back to "anonymous-user" if headers are not present.
-
-# Application-specific configuration
-expertmatch:
-  # API base URL for internal API client calls (WebController)
-  # Should match the server address and port for internal API calls
-  # Can be overridden via EXPERTMATCH_API_BASE_URL environment variable
-  api:
-    base-url: ${EXPERTMATCH_API_BASE_URL:http://localhost:8093}
-  # External system configuration
-  external:
-    # Person profile URL template for linking to external system expert profiles
-    # Use {externalId} placeholder for the expert's external ID
-    # Example: https://people.example.com/profile/{externalId}
-    person-profile-url-template: ${EXPERTMATCH_EXTERNAL_PERSON_PROFILE_URL_TEMPLATE:https://people.example.com/profile/{externalId}}
-  mcp:
-    server:
-      enabled: true  # Enable MCP server (ChatModel available via Ollama)
-  query:
-    enabled: true  # Enable query endpoints (LLM available via Ollama)
-  chat:
-    history:
-      # Maximum tokens for conversation history in context (default: 2000)
-      # Adjust based on model context window and prompt size
-      max-tokens: ${EXPERTMATCH_CHAT_HISTORY_MAX_TOKENS:2000}
-      # Maximum number of recent messages to include (default: 10)
-      max-messages: ${EXPERTMATCH_CHAT_HISTORY_MAX_MESSAGES:10}
-      # Maximum tokens for summarized context (default: 500)
-      max-summary-tokens: ${EXPERTMATCH_CHAT_HISTORY_MAX_SUMMARY_TOKENS:500}
-  retrieval:
-    reranking:
-      enabled: true
-      provider: ollama
-      # Use local Ollama for reranking
-      # Model name format: dengcao/Qwen3-Reranker-{SIZE}:{QUANTIZATION}
-      # Pull with: ollama pull dengcao/Qwen3-Reranker-8B:Q4_K_M
-      model: ${RERANKING_MODEL:dengcao/Qwen3-Reranker-8B:Q4_K_M}
-  ingestion:
-    constant-expansion:
-      enabled: true  # Enable LLM-based constant expansion for test data generation
-      # When enabled, ConstantExpansionService will expand domain-specific constants
-      # (technologies, tools, project types, etc.) using LLM at application startup.
-      # Expansion results are cached to avoid repeated LLM calls.
-      # Falls back to base constants if LLM is unavailable or fails.
-  tools:
-    search:
-      enabled: true  # Enable Tool Search Tool for dynamic tool discovery (34-64% token savings)
-      strategy: pgvector  # Use PgVector-based semantic search
-      max-results: 5  # Maximum tools to return per search
-
-# Configuration Notes:
-# - Separate providers and base URLs can be configured for chat, embedding, and reranking
-#   - Chat: export CHAT_PROVIDER=ollama|openai
-#          export CHAT_BASE_URL=http://your-chat-service.com
-#          export CHAT_MODEL=model-name
-#   - Embedding: export EMBEDDING_PROVIDER=ollama|openai
-#                export EMBEDDING_BASE_URL=http://your-embedding-service.com
-#                export EMBEDDING_MODEL=model-name
-#   - Reranking: export RERANKING_PROVIDER=ollama|openai
-#                export RERANKING_BASE_URL=http://your-reranking-service.com
-#                export RERANKING_MODEL=model-name
-# - Each service can use a different provider (Ollama or OpenAI-compatible)
-# - Default Chat: Uses http://localhost:11434 (native Ollama endpoint)
-#   - Provider: ollama (required - endpoint uses native Ollama API format)
-#   - Default model: qwen3:30b-a3b-instruct-2507-q4_K_M (30.5B parameters, better quality)
-#   - Alternative: qwen3:4b-instruct-2507-q4_K_M (4B parameters, faster)
-#   - Available models: Check local Ollama installation (ollama list)
-#   - Override with: export CHAT_MODEL=qwen3:4b-instruct-2507-q4_K_M
-#   - Note: This endpoint uses native Ollama API format
-# - Default Embedding/Reranking: Uses local Ollama on port 11434
-#   - Or use local Ollama for chat: export CHAT_PROVIDER=ollama
-#                                    export CHAT_BASE_URL=http://localhost:11434
-#   - Or use OpenAI: export CHAT_PROVIDER=openai
-#                    export CHAT_BASE_URL=https://api.openai.com
-#                    export CHAT_API_KEY=your-openai-key
-#                    export CHAT_MODEL=gpt-4
-#
-# - Embeddings: Uses EMBEDDING_BASE_URL (default: http://localhost:11434)
-#   - Recommended: qwen3-embedding:8b (1024 dimensions, best quality)
-#   - Alternative: qwen3-embedding:0.6b (1024 dimensions, faster, less memory)
-#   - Override with: export EMBEDDING_MODEL=qwen3-embedding:0.6b
-#   - Or use OpenAI: export EMBEDDING_BASE_URL=https://api.openai.com
-#                    export EMBEDDING_API_KEY=your-openai-key
-#                    export EMBEDDING_MODEL=text-embedding-3-large
-#
-# - Reranking: Uses RERANKING_BASE_URL (default: http://localhost:11434)
-#   - Model: dengcao/Qwen3-Reranker-8B:Q4_K_M (recommended)
-#   - Alternative: dengcao/Qwen3-Reranker-0.6B:Q8_0 (lightweight, 639MB)
-#   - Pull with: ollama pull dengcao/Qwen3-Reranker-8B:Q4_K_M
-#   - See docs/RERANKING_MODELS_REPORT.md for details
-#   - Note: Reranking uses native Ollama API (not OpenAI-compatible)
-#
-# Example: Use different providers and services for each component
-#   export CHAT_PROVIDER=openai
-#   export CHAT_BASE_URL=https://api.openai.com
-#   export CHAT_API_KEY=sk-...
-#   export CHAT_MODEL=gpt-4
-#   export EMBEDDING_PROVIDER=ollama
-#   export EMBEDDING_BASE_URL=http://localhost:11434
-#   export EMBEDDING_MODEL=qwen3-embedding:8b
-#   export RERANKING_PROVIDER=ollama
-#   export RERANKING_BASE_URL=http://localhost:11434
-#   export RERANKING_MODEL=dengcao/Qwen3-Reranker-8B:Q4_K_M
-#
-# Debug Profile:
-# - To enable verbose logging, activate the debug profile: --spring.profiles.active=local,debug
-# - Or set: export SPRING_PROFILES_ACTIVE=local,debug
-# - This will enable DEBUG and TRACE level logging for all components
 

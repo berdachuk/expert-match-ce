@@ -84,8 +84,8 @@ public record QueryOptions(
             false,        // includeExecutionTrace
             true,         // rerank
             false,        // deepResearch
-            true,         // useCyclePattern
-            true,         // useCascadePattern
+            false,        // useCyclePattern (disabled by default to avoid conflict with Cascade)
+            false,        // useCascadePattern (disabled by default to avoid conflict with Cycle)
             true,         // useRoutingPattern
             null,         // seniorityLevels
             null,         // languages
@@ -117,8 +117,8 @@ public record QueryOptions(
         private Boolean includeExecutionTrace = false;
         private Boolean rerank = true;
         private Boolean deepResearch = false;
-        private Boolean useCyclePattern = true;
-        private Boolean useCascadePattern = true;
+        private Boolean useCyclePattern = false;  // disabled by default to avoid conflict with Cascade
+        private Boolean useCascadePattern = false; // disabled by default to avoid conflict with Cycle
         private Boolean useRoutingPattern = true;
         private List<String> seniorityLevels;
         private List<String> languages;

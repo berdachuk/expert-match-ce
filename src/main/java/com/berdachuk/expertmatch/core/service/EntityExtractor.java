@@ -37,7 +37,6 @@ public class EntityExtractor {
     private final PromptTemplate organizationExtractionPromptTemplate;
     private final PromptTemplate technologyEntityExtractionPromptTemplate;
     private final PromptTemplate projectExtractionPromptTemplate;
-    private final IdGenerator idGenerator;
 
     public EntityExtractor(
             @Lazy ChatClient chatClient,
@@ -48,8 +47,7 @@ public class EntityExtractor {
             @Qualifier("personExtractionPromptTemplate") PromptTemplate personExtractionPromptTemplate,
             @Qualifier("organizationExtractionPromptTemplate") PromptTemplate organizationExtractionPromptTemplate,
             @Qualifier("technologyEntityExtractionPromptTemplate") PromptTemplate technologyEntityExtractionPromptTemplate,
-            @Qualifier("projectExtractionPromptTemplate") PromptTemplate projectExtractionPromptTemplate,
-            IdGenerator idGenerator) {
+            @Qualifier("projectExtractionPromptTemplate") PromptTemplate projectExtractionPromptTemplate) {
         this.chatClient = chatClient;
         this.chatModel = chatModel;
         this.objectMapper = objectMapper;
@@ -59,7 +57,6 @@ public class EntityExtractor {
         this.organizationExtractionPromptTemplate = organizationExtractionPromptTemplate;
         this.technologyEntityExtractionPromptTemplate = technologyEntityExtractionPromptTemplate;
         this.projectExtractionPromptTemplate = projectExtractionPromptTemplate;
-        this.idGenerator = idGenerator;
     }
 
     /**
@@ -402,7 +399,7 @@ public class EntityExtractor {
 
                     // Generate ID if not provided
                     if (id == null || id.isEmpty()) {
-                        id = idGenerator.generateId();
+                        id = IdGenerator.generateId();
                     }
 
                     if (type != null && name != null && id != null) {

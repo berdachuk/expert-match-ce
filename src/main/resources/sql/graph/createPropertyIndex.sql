@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS {indexName} ON ag_catalog.{tableName} USING gin ((properties jsonb_path_ops))

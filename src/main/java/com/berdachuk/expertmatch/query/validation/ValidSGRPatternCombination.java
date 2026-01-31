@@ -12,7 +12,7 @@ import java.lang.annotation.*;
  * - Routing pattern can be used with either Cascade or Cycle
  */
 @Documented
-@Constraint(validatedBy = SGRPatternCombinationValidator.class)
+@Constraint(validatedBy = com.berdachuk.expertmatch.core.validation.impl.SGRPatternCombinationValidator.class)
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidSGRPatternCombination {

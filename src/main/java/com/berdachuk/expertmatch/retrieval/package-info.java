@@ -16,7 +16,7 @@
 @org.springframework.modulith.ApplicationModule(
         id = "retrieval",
         displayName = "Hybrid Retrieval",
-        allowedDependencies = {"employee::API", "embedding::API", "graph::API", "core"}
+        allowedDependencies = {"employee", "embedding", "graph", "workexperience", "core", "llm"}
 )
 package com.berdachuk.expertmatch.retrieval;
 

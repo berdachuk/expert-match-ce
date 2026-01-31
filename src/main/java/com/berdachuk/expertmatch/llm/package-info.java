@@ -10,11 +10,15 @@
  * Exposes:
  * - LLMService (service layer)
  * - SGR patterns (service layer)
+ * - LLM Tools (tools package for AI agent integration)
+ * <p>
+ * Note: The tools package provides Spring AI tool annotations that can be called by LLMs.
+ * These tools orchestrate across multiple domain modules to accomplish complex tasks.
  */
 @org.springframework.modulith.ApplicationModule(
         id = "llm",
         displayName = "LLM Orchestration",
-        allowedDependencies = {"retrieval::API", "core"}
+        allowedDependencies = {"core", "query", "employee", "workexperience", "embedding", "graph", "chat"}
 )
 package com.berdachuk.expertmatch.llm;
 

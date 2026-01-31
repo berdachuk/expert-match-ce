@@ -1,7 +1,9 @@
 package com.berdachuk.expertmatch.query.domain;
 
+import com.berdachuk.expertmatch.core.domain.ExecutionTrace;
+import com.berdachuk.expertmatch.core.domain.ParsedQuery;
+import com.berdachuk.expertmatch.core.service.ExecutionTracer;
 import com.berdachuk.expertmatch.llm.sgr.SGRPatternConfig;
-import com.berdachuk.expertmatch.query.service.ExecutionTracer;
 import com.berdachuk.expertmatch.query.service.ModelInfoExtractor;
 import com.berdachuk.expertmatch.query.service.TokenUsageExtractor;
 import com.berdachuk.expertmatch.query.sgr.QueryClassification;
@@ -183,7 +185,7 @@ public class QueryParser {
 
             if (tracer != null) {
                 String modelInfo = ModelInfoExtractor.extractModelInfo(chatModel, environment);
-                com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
+                ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
                 tracer.endStepWithLLM("Query: " + query, "Skills: " + skills.size(), modelInfo, tokenUsage);
             }
 
@@ -290,7 +292,7 @@ public class QueryParser {
 
             if (tracer != null) {
                 String modelInfo = ModelInfoExtractor.extractModelInfo(chatModel, environment);
-                com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
+                ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
                 tracer.endStepWithLLM("Query: " + query, "Seniority: " + seniority.size(), modelInfo, tokenUsage);
             }
 
@@ -377,7 +379,7 @@ public class QueryParser {
 
             if (tracer != null) {
                 String modelInfo = ModelInfoExtractor.extractModelInfo(chatModel, environment);
-                com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
+                ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
                 tracer.endStepWithLLM("Query: " + query, "Language: " + (language != null ? language : "none"), modelInfo, tokenUsage);
             }
 
@@ -506,7 +508,7 @@ public class QueryParser {
 
             if (tracer != null) {
                 String modelInfo = ModelInfoExtractor.extractModelInfo(chatModel, environment);
-                com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
+                ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
                 tracer.endStepWithLLM("Query: " + query, "Technologies: " + technologies.size(), modelInfo, tokenUsage);
             }
 
@@ -570,19 +572,6 @@ public class QueryParser {
             }
         }
         return jsonText;
-    }
-
-    /**
-     * Parsed query result.
-     */
-    public record ParsedQuery(
-            String originalQuery,
-            List<String> skills,
-            List<String> seniorityLevels,
-            String language,
-            String intent,
-            List<String> technologies
-    ) {
     }
 }
 

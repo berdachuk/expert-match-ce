@@ -1,5 +1,6 @@
 package com.berdachuk.expertmatch.query.service;
 
+import com.berdachuk.expertmatch.core.service.ExpertContextHolder;
 import com.berdachuk.expertmatch.llm.service.AnswerGenerationService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package com.berdachuk.expertmatch.query.domain;
+package com.berdachuk.expertmatch.core.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -53,7 +53,7 @@ public record QueryResponse(
 
         @Schema(description = "Step-by-step execution trace (only included if includeExecutionTrace=true)")
         @JsonProperty("executionTrace")
-        com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionTraceData executionTrace
+        ExecutionTrace.ExecutionTraceData executionTrace
 ) {
     /**
      * Expert match information.
@@ -158,4 +158,3 @@ public record QueryResponse(
     ) {
     }
 }
-

@@ -2,9 +2,10 @@ package com.berdachuk.expertmatch.query.rest;
 
 import com.berdachuk.expertmatch.chat.service.ChatService;
 import com.berdachuk.expertmatch.core.api.ApiMapper;
+import com.berdachuk.expertmatch.core.domain.QueryRequest;
+import com.berdachuk.expertmatch.core.domain.QueryResponse;
 import com.berdachuk.expertmatch.core.security.HeaderBasedUserContext;
 import com.berdachuk.expertmatch.core.util.ValidationUtils;
-import com.berdachuk.expertmatch.query.domain.QueryRequest;
 import com.berdachuk.expertmatch.query.service.QueryService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
@@ -111,7 +112,7 @@ public class QueryStreamController {
                 // Process query (this will internally handle all stages)
                 // For now, we'll process synchronously and emit events
                 // In a more advanced implementation, we could make QueryService support callbacks
-                com.berdachuk.expertmatch.query.domain.QueryResponse domainResponse =
+                QueryResponse domainResponse =
                         queryService.processQuery(domainRequest, chatId, userId);
 
                 sendEvent(emitter, "retrieving", "Retrieval in progress", null);

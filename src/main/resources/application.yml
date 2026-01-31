@@ -58,6 +58,14 @@ spring:
   # - X-User-Roles: Comma-separated list of roles (e.g., "ROLE_USER,ROLE_ADMIN")
   # - X-User-Email: User email address
 
+  # Spring Modulith Configuration
+  modulith:
+    # Exclude generated API code from module detection
+    # The api module contains generated OpenAPI client code in target/generated-sources
+    # and should not be treated as a separate module by Spring Modulith
+    additional-packages:
+      - "!com.berdachuk.expertmatch.api"  # Exclude generated api module
+
   # Spring AI Configuration
   # NOTE: Auto-configuration is DISABLED for ALL profiles - all models are created via SpringAIConfig.java
   # You can configure different providers for different tasks:

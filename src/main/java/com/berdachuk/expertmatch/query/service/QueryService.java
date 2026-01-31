@@ -1,7 +1,7 @@
 package com.berdachuk.expertmatch.query.service;
 
-import com.berdachuk.expertmatch.query.domain.QueryRequest;
-import com.berdachuk.expertmatch.query.domain.QueryResponse;
+import com.berdachuk.expertmatch.core.domain.QueryRequest;
+import com.berdachuk.expertmatch.core.domain.QueryResponse;
 
 
 /**

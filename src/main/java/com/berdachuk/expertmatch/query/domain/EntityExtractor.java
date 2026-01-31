@@ -1,6 +1,7 @@
 package com.berdachuk.expertmatch.query.domain;
 
-import com.berdachuk.expertmatch.query.service.ExecutionTracer;
+import com.berdachuk.expertmatch.core.domain.ExecutionTrace;
+import com.berdachuk.expertmatch.core.service.ExecutionTracer;
 import com.berdachuk.expertmatch.query.service.ModelInfoExtractor;
 import com.berdachuk.expertmatch.query.service.TokenUsageExtractor;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -119,7 +120,7 @@ public class EntityExtractor {
 
             if (tracer != null) {
                 String modelInfo = ModelInfoExtractor.extractModelInfo(chatModel, environment);
-                com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
+                ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
                 tracer.endStepWithLLM("Query: " + query, "Persons: " + entities.size(), modelInfo, tokenUsage);
             }
 
@@ -168,7 +169,7 @@ public class EntityExtractor {
 
             if (tracer != null) {
                 String modelInfo = ModelInfoExtractor.extractModelInfo(chatModel, environment);
-                com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
+                ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
                 tracer.endStepWithLLM("Query: " + query, "Organizations: " + entities.size(), modelInfo, tokenUsage);
             }
 
@@ -217,7 +218,7 @@ public class EntityExtractor {
 
             if (tracer != null) {
                 String modelInfo = ModelInfoExtractor.extractModelInfo(chatModel, environment);
-                com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
+                ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
                 tracer.endStepWithLLM("Query: " + query, "Technologies: " + entities.size(), modelInfo, tokenUsage);
             }
 
@@ -266,7 +267,7 @@ public class EntityExtractor {
 
             if (tracer != null) {
                 String modelInfo = ModelInfoExtractor.extractModelInfo(chatModel, environment);
-                com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
+                ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
                 tracer.endStepWithLLM("Query: " + query, "Projects: " + entities.size(), modelInfo, tokenUsage);
             }
 
@@ -315,7 +316,7 @@ public class EntityExtractor {
 
             if (tracer != null) {
                 String modelInfo = ModelInfoExtractor.extractModelInfo(chatModel, environment);
-                com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
+                ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
                 tracer.endStepWithLLM("Query: " + query, "Domains: " + entities.size(), modelInfo, tokenUsage);
             }
 

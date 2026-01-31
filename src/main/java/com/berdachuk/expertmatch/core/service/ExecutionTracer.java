@@ -1,5 +1,6 @@
-package com.berdachuk.expertmatch.query.service;
+package com.berdachuk.expertmatch.core.service;
 
+import com.berdachuk.expertmatch.core.domain.ExecutionTrace;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -9,7 +10,6 @@ import java.util.Map;
 
 /**
  * Utility class to track execution steps for query processing.
- * Thread-safe for single-threaded use within a single request.
  */
 @Slf4j
 public class ExecutionTracer {
@@ -18,7 +18,7 @@ public class ExecutionTracer {
      * Allows advisors to access the tracer without passing it as a parameter.
      */
     private static final ThreadLocal<ExecutionTracer> currentTracer = new ThreadLocal<>();
-    private final List<com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep> steps = new ArrayList<>();
+    private final List<ExecutionTrace.ExecutionStep> steps = new ArrayList<>();
     private final Map<String, StepContext> activeSteps = new HashMap<>();
     private final long startTime = System.currentTimeMillis();
 
@@ -77,7 +77,7 @@ public class ExecutionTracer {
      * @param llmModel      LLM model name (null if no LLM)
      * @param tokenUsage    Token usage (null if not available)
      */
-    public void endStepWithLLM(String inputSummary, String outputSummary, String llmModel, com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage tokenUsage) {
+    public void endStepWithLLM(String inputSummary, String outputSummary, String llmModel, ExecutionTrace.TokenUsage tokenUsage) {
         // Find the most recently started step (simple approach - use last entry)
         if (activeSteps.isEmpty()) {
             log.warn("Attempted to end step but no active step found");
@@ -94,7 +94,7 @@ public class ExecutionTracer {
 
         if (context != null && lastKey != null) {
             long duration = System.currentTimeMillis() - context.startTime;
-            com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep step = new com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep(
+            ExecutionTrace.ExecutionStep step = new ExecutionTrace.ExecutionStep(
                     context.name,
                     context.service,
                     context.method,
@@ -125,7 +125,7 @@ public class ExecutionTracer {
         StepContext context = activeSteps.remove(key);
         long duration = context != null ? System.currentTimeMillis() - context.startTime : 0;
 
-        com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep step = new com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep(
+        ExecutionTrace.ExecutionStep step = new ExecutionTrace.ExecutionStep(
                 name,
                 service,
                 method,
@@ -147,7 +147,7 @@ public class ExecutionTracer {
      * @param reason Reason for skipping
      */
     public void skipStep(String name, String reason) {
-        com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep step = new com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep(
+        ExecutionTrace.ExecutionStep step = new ExecutionTrace.ExecutionStep(
                 name,
                 null,
                 null,
@@ -174,8 +174,8 @@ public class ExecutionTracer {
      */
     public void recordToolCall(String toolName, String toolType, String parameters,
                                String response, String skillName, long durationMs) {
-        com.berdachuk.expertmatch.query.domain.ExecutionTrace.ToolCallInfo toolCallInfo =
-                new com.berdachuk.expertmatch.query.domain.ExecutionTrace.ToolCallInfo(
+        ExecutionTrace.ToolCallInfo toolCallInfo =
+                new ExecutionTrace.ToolCallInfo(
                         toolName,
                         toolType,
                         parameters,
@@ -183,8 +183,8 @@ public class ExecutionTracer {
                         skillName
                 );
 
-        com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep step =
-                new com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep(
+        ExecutionTrace.ExecutionStep step =
+                new ExecutionTrace.ExecutionStep(
                         "Tool Call: " + toolName,
                         "ChatClient",
                         "toolCall",
@@ -211,8 +211,8 @@ public class ExecutionTracer {
      */
     public void recordToolCallFailure(String toolName, String toolType, String parameters,
                                       String error, String skillName, long durationMs) {
-        com.berdachuk.expertmatch.query.domain.ExecutionTrace.ToolCallInfo toolCallInfo =
-                new com.berdachuk.expertmatch.query.domain.ExecutionTrace.ToolCallInfo(
+        ExecutionTrace.ToolCallInfo toolCallInfo =
+                new ExecutionTrace.ToolCallInfo(
                         toolName,
                         toolType,
                         parameters,
@@ -220,8 +220,8 @@ public class ExecutionTracer {
                         skillName
                 );
 
-        com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep step =
-                new com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep(
+        ExecutionTrace.ExecutionStep step =
+                new ExecutionTrace.ExecutionStep(
                         "Tool Call: " + toolName,
                         "ChatClient",
                         "toolCall",
@@ -241,18 +241,18 @@ public class ExecutionTracer {
      *
      * @return ExecutionTrace with all steps and aggregated information
      */
-    public com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionTraceData buildTrace() {
+    public ExecutionTrace.ExecutionTraceData buildTrace() {
         long totalDuration = System.currentTimeMillis() - startTime;
 
         // Aggregate token usage across all LLM steps
-        com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage totalTokenUsage = null;
-        for (com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep step : steps) {
+        ExecutionTrace.TokenUsage totalTokenUsage = null;
+        for (ExecutionTrace.ExecutionStep step : steps) {
             if (step.tokenUsage() != null) {
-                totalTokenUsage = com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage.sum(totalTokenUsage, step.tokenUsage());
+                totalTokenUsage = ExecutionTrace.TokenUsage.sum(totalTokenUsage, step.tokenUsage());
             }
         }
 
-        return new com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionTraceData(
+        return new ExecutionTrace.ExecutionTraceData(
                 new ArrayList<>(steps),
                 totalDuration,
                 totalTokenUsage
@@ -265,4 +265,3 @@ public class ExecutionTracer {
     private record StepContext(String name, String service, String method, long startTime) {
     }
 }
-

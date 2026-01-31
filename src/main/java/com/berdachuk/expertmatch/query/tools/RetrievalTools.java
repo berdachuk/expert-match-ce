@@ -1,4 +1,4 @@
-package com.berdachuk.expertmatch.llm.tools;
+package com.berdachuk.expertmatch.query.tools;
 
 import com.berdachuk.expertmatch.embedding.service.EmbeddingService;
 import com.berdachuk.expertmatch.retrieval.service.GraphSearchService;
@@ -75,4 +75,3 @@ public class RetrievalTools {
     }
 
 }
-

@@ -1,6 +1,7 @@
 package com.berdachuk.expertmatch.query.service;
 
-import com.berdachuk.expertmatch.query.domain.ExecutionTrace;
+import com.berdachuk.expertmatch.core.domain.ExecutionTrace;
+import com.berdachuk.expertmatch.core.service.ExecutionTracer;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

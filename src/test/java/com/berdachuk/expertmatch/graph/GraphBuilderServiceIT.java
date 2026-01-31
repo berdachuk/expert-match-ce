@@ -1,6 +1,8 @@
 package com.berdachuk.expertmatch.graph;
 
 import com.berdachuk.expertmatch.core.util.IdGenerator;
+import com.berdachuk.expertmatch.graph.domain.ExpertCustomerRelationship;
+import com.berdachuk.expertmatch.graph.domain.ProjectCustomerRelationship;
 import com.berdachuk.expertmatch.graph.service.GraphBuilderService;
 import com.berdachuk.expertmatch.graph.service.GraphService;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
@@ -513,10 +515,10 @@ class GraphBuilderServiceIT extends BaseIntegrationTest {
         graphBuilderService.createCustomerVertex(customer2, CUSTOMER_AMAZON);
 
         // Create batch of expert-customer relationships
-        List<GraphBuilderService.ExpertCustomerRelationship> relationships = new ArrayList<>();
-        relationships.add(new GraphBuilderService.ExpertCustomerRelationship(expert1, customer1));
-        relationships.add(new GraphBuilderService.ExpertCustomerRelationship(expert2, customer1));
-        relationships.add(new GraphBuilderService.ExpertCustomerRelationship(expert1, customer2));
+        List<ExpertCustomerRelationship> relationships = new ArrayList<>();
+        relationships.add(new ExpertCustomerRelationship(expert1, customer1));
+        relationships.add(new ExpertCustomerRelationship(expert2, customer1));
+        relationships.add(new ExpertCustomerRelationship(expert1, customer2));
 
         // Execute batch creation
         assertDoesNotThrow(() -> {
@@ -561,10 +563,10 @@ class GraphBuilderServiceIT extends BaseIntegrationTest {
         graphBuilderService.createCustomerVertex(customer1, CUSTOMER_MICROSOFT);
 
         // Create batch with duplicate relationships
-        List<GraphBuilderService.ExpertCustomerRelationship> relationships = new ArrayList<>();
-        relationships.add(new GraphBuilderService.ExpertCustomerRelationship(expert1, customer1));
-        relationships.add(new GraphBuilderService.ExpertCustomerRelationship(expert1, customer1)); // Duplicate
-        relationships.add(new GraphBuilderService.ExpertCustomerRelationship(expert1, customer1)); // Duplicate
+        List<ExpertCustomerRelationship> relationships = new ArrayList<>();
+        relationships.add(new ExpertCustomerRelationship(expert1, customer1));
+        relationships.add(new ExpertCustomerRelationship(expert1, customer1)); // Duplicate
+        relationships.add(new ExpertCustomerRelationship(expert1, customer1)); // Duplicate
 
         // Execute batch creation - should handle duplicates gracefully
         assertDoesNotThrow(() -> {
@@ -673,10 +675,10 @@ class GraphBuilderServiceIT extends BaseIntegrationTest {
         graphBuilderService.createCustomerVertex(customer2, CUSTOMER_AMAZON);
 
         // Create batch of project-customer relationships
-        List<GraphBuilderService.ProjectCustomerRelationship> relationships = new ArrayList<>();
-        relationships.add(new GraphBuilderService.ProjectCustomerRelationship(project1, customer1));
-        relationships.add(new GraphBuilderService.ProjectCustomerRelationship(project2, customer1));
-        relationships.add(new GraphBuilderService.ProjectCustomerRelationship(project1, customer2));
+        List<ProjectCustomerRelationship> relationships = new ArrayList<>();
+        relationships.add(new ProjectCustomerRelationship(project1, customer1));
+        relationships.add(new ProjectCustomerRelationship(project2, customer1));
+        relationships.add(new ProjectCustomerRelationship(project1, customer2));
 
         // Execute batch creation
         assertDoesNotThrow(() -> {

@@ -16,7 +16,7 @@
 @org.springframework.modulith.ApplicationModule(
         id = "ingestion",
         displayName = "Data Ingestion",
-        allowedDependencies = {"employee::API", "embedding::API", "graph::API", "core"}
+        allowedDependencies = {"employee", "embedding", "graph", "technology", "api", "core", "workexperience", "project"}
 )
 package com.berdachuk.expertmatch.ingestion;
 

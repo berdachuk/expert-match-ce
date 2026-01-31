@@ -1,8 +1,8 @@
 package com.berdachuk.expertmatch.core.config;
 
 import com.berdachuk.expertmatch.llm.tools.ChatManagementTools;
-import com.berdachuk.expertmatch.llm.tools.ExpertMatchTools;
-import com.berdachuk.expertmatch.llm.tools.RetrievalTools;
+import com.berdachuk.expertmatch.query.tools.ExpertMatchTools;
+import com.berdachuk.expertmatch.query.tools.RetrievalTools;
 import lombok.extern.slf4j.Slf4j;
 import org.springaicommunity.agent.tools.FileSystemTools;
 import org.springaicommunity.agent.tools.SkillsTool;

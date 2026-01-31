@@ -3,11 +3,12 @@ package com.berdachuk.expertmatch.query.rest;
 import com.berdachuk.expertmatch.api.QueryApi;
 import com.berdachuk.expertmatch.chat.service.ChatService;
 import com.berdachuk.expertmatch.core.api.ApiMapper;
+import com.berdachuk.expertmatch.core.domain.QueryRequest;
+import com.berdachuk.expertmatch.core.domain.QueryResponse;
 import com.berdachuk.expertmatch.core.exception.ResourceNotFoundException;
 import com.berdachuk.expertmatch.core.exception.ValidationException;
 import com.berdachuk.expertmatch.core.security.HeaderBasedUserContext;
 import com.berdachuk.expertmatch.core.util.ValidationUtils;
-import com.berdachuk.expertmatch.query.domain.QueryRequest;
 import com.berdachuk.expertmatch.query.service.QueryExamplesService;
 import com.berdachuk.expertmatch.query.service.QueryService;
 import jakarta.validation.ConstraintViolation;
@@ -97,7 +98,7 @@ public class QueryController implements QueryApi {
         }
 
         // Process query using domain model
-        com.berdachuk.expertmatch.query.domain.QueryResponse domainResponse =
+        QueryResponse domainResponse =
                 queryService.processQuery(domainRequest, chatId, userId);
 
         // Convert domain model to API model

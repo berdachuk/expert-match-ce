@@ -1,13 +1,13 @@
-package com.berdachuk.expertmatch.llm.tools;
+package com.berdachuk.expertmatch.llm.tools.impl;
 
-import com.berdachuk.expertmatch.core.repository.sql.InjectSql;
 import com.berdachuk.expertmatch.embedding.service.EmbeddingService;
+import com.berdachuk.expertmatch.llm.tools.ToolMetadataService;
+import com.berdachuk.expertmatch.llm.tools.repository.ToolMetadataRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Method;
@@ -27,22 +27,16 @@ import java.util.Map;
 public class ToolMetadataServiceImpl implements ToolMetadataService {
     private static final int DATABASE_EMBEDDING_DIMENSION = 1536;
 
-    private final NamedParameterJdbcTemplate namedJdbcTemplate;
+    private final ToolMetadataRepository repository;
     private final EmbeddingService embeddingService;
     private final ObjectMapper objectMapper;
 
-    @InjectSql("/sql/toolmetadata/deleteByToolClass.sql")
-    private String deleteByToolClassSql;
-
-    @InjectSql("/sql/toolmetadata/insertToolMetadata.sql")
-    private String insertToolMetadataSql;
-
     public ToolMetadataServiceImpl(
-            NamedParameterJdbcTemplate namedJdbcTemplate,
+            ToolMetadataRepository repository,
             EmbeddingService embeddingService,
             ObjectMapper objectMapper
     ) {
-        this.namedJdbcTemplate = namedJdbcTemplate;
+        this.repository = repository;
         this.embeddingService = embeddingService;
         this.objectMapper = objectMapper;
     }
@@ -98,21 +92,19 @@ public class ToolMetadataServiceImpl implements ToolMetadataService {
             parametersJson = "{}";
         }
 
-        // Store in database
-        Map<String, Object> params = new HashMap<>();
-        params.put("id", generateToolId(toolClass, toolName));
-        params.put("toolName", toolName);
-        params.put("description", description);
-        params.put("toolClass", toolClass);
-        params.put("methodName", method.getName());
-        params.put("parameters", parametersJson);
-        params.put("embedding", vectorString);
-        params.put("embeddingDimension", embeddingDimension);
-        // Convert Instant to Timestamp for PostgreSQL
-        params.put("now", java.sql.Timestamp.from(Instant.now()));
-
+        // Call repository for data access
         try {
-            namedJdbcTemplate.update(insertToolMetadataSql, params);
+            repository.insertToolMetadata(
+                    generateToolId(toolClass, toolName),
+                    toolName,
+                    description,
+                    toolClass,
+                    method.getName(),
+                    parametersJson,
+                    vectorString,
+                    embeddingDimension,
+                    java.sql.Timestamp.from(Instant.now())
+            );
             log.debug("Indexed tool: {} from class {}", toolName, toolClass);
         } catch (Exception e) {
             log.error("Failed to index tool {}: {}", toolName, e.getMessage(), e);
@@ -211,13 +203,10 @@ public class ToolMetadataServiceImpl implements ToolMetadataService {
         Class<?> clazz = toolComponent.getClass();
         String toolClass = clazz.getName();
 
-        // Delete existing tools from this class
-        Map<String, Object> deleteParams = new HashMap<>();
-        deleteParams.put("toolClass", toolClass);
-        namedJdbcTemplate.update(deleteByToolClassSql, deleteParams);
+        // Call repository for data access
+        repository.deleteByToolClass(toolClass);
 
         // Re-index
         indexTools(toolComponent);
     }
 }
-

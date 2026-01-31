@@ -1,12 +1,11 @@
-package com.berdachuk.expertmatch.query.service;
+package com.berdachuk.expertmatch.core.service;
 
 import com.berdachuk.expertmatch.llm.service.AnswerGenerationService;
 
 import java.util.List;
 
 /**
- * ThreadLocal-based holder for expert contexts during query processing.
- * Allows tools to access expert data without passing through AnswerGenerationService.
+ * ThreadLocal holder for expert contexts during query processing.
  */
 public class ExpertContextHolder {
 

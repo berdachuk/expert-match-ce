@@ -1,11 +1,11 @@
 package com.berdachuk.expertmatch.retrieval.service.impl;
 
+import com.berdachuk.expertmatch.core.domain.*;
+import com.berdachuk.expertmatch.core.service.ExecutionTracer;
+import com.berdachuk.expertmatch.core.service.ModelInfoExtractor;
+import com.berdachuk.expertmatch.core.service.TokenUsageExtractor;
 import com.berdachuk.expertmatch.employee.service.ExpertEnrichmentService;
 import com.berdachuk.expertmatch.llm.service.AnswerGenerationService;
-import com.berdachuk.expertmatch.query.domain.QueryRequest;
-import com.berdachuk.expertmatch.query.service.ExecutionTracer;
-import com.berdachuk.expertmatch.query.service.ModelInfoExtractor;
-import com.berdachuk.expertmatch.query.service.TokenUsageExtractor;
 import com.berdachuk.expertmatch.retrieval.domain.GapAnalysis;
 import com.berdachuk.expertmatch.retrieval.service.DeepResearchService;
 import com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService;
@@ -72,7 +72,7 @@ public class DeepResearchServiceImpl implements DeepResearchService {
     @Override
     public HybridRetrievalService.RetrievalResult performDeepResearch(
             QueryRequest request,
-            com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery) {
+            ParsedQuery parsedQuery) {
         return performDeepResearch(request, parsedQuery, null);
     }
 
@@ -82,7 +82,7 @@ public class DeepResearchServiceImpl implements DeepResearchService {
     @Override
     public HybridRetrievalService.RetrievalResult performDeepResearch(
             QueryRequest request,
-            com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery,
+            ParsedQuery parsedQuery,
             ExecutionTracer tracer) {
 
         log.info("🔬 Starting deep research for query: '{}'", request.query());
@@ -108,7 +108,12 @@ public class DeepResearchServiceImpl implements DeepResearchService {
         if (tracer != null) {
             tracer.startStep("Enrich Experts for Gap Analysis", "ExpertEnrichmentService", "enrichExperts");
         }
-        List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> initialExperts = enrichmentService.enrichExperts(initialResult, parsedQuery);
+        // Pass expert IDs with scores instead of RetrievalResult
+        Map<String, Double> expertIdsWithScores = new HashMap<>();
+        for (String expertId : initialResult.expertIds()) {
+            expertIdsWithScores.put(expertId, initialResult.relevanceScores().getOrDefault(expertId, 0.0));
+        }
+        List<QueryResponse.ExpertMatch> initialExperts = enrichmentService.enrichExperts(expertIdsWithScores, parsedQuery);
         List<AnswerGenerationService.ExpertContext> expertContexts = buildExpertContexts(initialExperts, initialResult);
         log.info("Expert enrichment completed: {} experts enriched", initialExperts.size());
         if (tracer != null) {
@@ -146,23 +151,24 @@ public class DeepResearchServiceImpl implements DeepResearchService {
                 tracer.startStep("Expanded Retrieval " + (i + 1), "HybridRetrievalService", "retrieve");
             }
             try {
+                QueryOptions.Builder optionsBuilder = QueryOptions.builder()
+                        .maxResults(request.options().maxResults())
+                        .minConfidence(request.options().minConfidence())
+                        .includeSources(request.options().includeSources())
+                        .includeEntities(request.options().includeEntities())
+                        .rerank(request.options().rerank())
+                        .deepResearch(false) // Don't recurse deep research
+                        .useCascadePattern(request.options().useCascadePattern())
+                        .useRoutingPattern(request.options().useRoutingPattern())
+                        .useCyclePattern(request.options().useCyclePattern())
+                        .includeExecutionTrace(request.options().includeExecutionTrace());
+
                 QueryRequest expandedRequest = new QueryRequest(
                         refinedQuery,
                         request.chatId(),
-                        new com.berdachuk.expertmatch.query.domain.QueryRequest.QueryOptions(
-                                request.options().maxResults(),
-                                request.options().minConfidence(),
-                                request.options().includeSources(),
-                                request.options().includeEntities(),
-                                request.options().rerank(),
-                                false, // Don't recurse deep research
-                                request.options().useCascadePattern(),
-                                request.options().useRoutingPattern(),
-                                request.options().useCyclePattern(),
-                                request.options().includeExecutionTrace()
-                        )
+                        optionsBuilder.build()
                 );
-                com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery expandedParsedQuery = new com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery(refinedQuery, List.of(), List.of(), null, "expert_search", List.of());
+                ParsedQuery expandedParsedQuery = new ParsedQuery(refinedQuery, List.of(), List.of(), null, "expert_search", List.of());
                 HybridRetrievalService.RetrievalResult expandedResult =
                         retrievalService.retrieve(expandedRequest, expandedParsedQuery, tracer);
                 expandedResults.add(expandedResult);
@@ -242,7 +248,7 @@ public class DeepResearchServiceImpl implements DeepResearchService {
 
             if (tracer != null) {
                 String modelInfo = ModelInfoExtractor.extractModelInfo(chatModel, environment);
-                com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
+                ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
                 tracer.endStepWithLLM("Query: " + query + ", Experts: " + expertContexts.size(),
                         "Needs expansion: " + gapAnalysis.needsExpansion() + ", Gaps: " + gapAnalysis.identifiedGaps().size(),
                         modelInfo, tokenUsage);
@@ -378,7 +384,7 @@ public class DeepResearchServiceImpl implements DeepResearchService {
 
             if (tracer != null) {
                 String modelInfo = ModelInfoExtractor.extractModelInfo(chatModel, environment);
-                com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
+                ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
                 tracer.endStepWithLLM("Query: " + originalQuery + ", Gaps: " + gapAnalysis.identifiedGaps().size(),
                         "Refined queries: " + refinedQueries.size(),
                         modelInfo, tokenUsage);
@@ -517,12 +523,12 @@ public class DeepResearchServiceImpl implements DeepResearchService {
      * Builds expert contexts from enriched experts (similar to QueryService.buildExpertContexts).
      */
     private List<AnswerGenerationService.ExpertContext> buildExpertContexts(
-            List<com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch> experts,
+            List<QueryResponse.ExpertMatch> experts,
             HybridRetrievalService.RetrievalResult retrievalResult) {
 
         List<AnswerGenerationService.ExpertContext> contexts = new ArrayList<>();
 
-        for (com.berdachuk.expertmatch.query.domain.QueryResponse.ExpertMatch expert : experts) {
+        for (QueryResponse.ExpertMatch expert : experts) {
             // Extract skills from matched skills
             List<String> skills = new ArrayList<>();
             if (expert.matchedSkills() != null) {
@@ -537,7 +543,7 @@ public class DeepResearchServiceImpl implements DeepResearchService {
             // Extract project names from relevant projects
             List<String> projects = expert.relevantProjects() != null
                     ? expert.relevantProjects().stream()
-                    .map(com.berdachuk.expertmatch.query.domain.QueryResponse.RelevantProject::name)
+                    .map(QueryResponse.RelevantProject::name)
                     .filter(name -> name != null && !name.isEmpty())
                     .toList()
                     : List.of();

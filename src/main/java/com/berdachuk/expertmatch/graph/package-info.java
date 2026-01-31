@@ -9,6 +9,11 @@
  * Exposes:
  * - GraphService (service layer)
  * - GraphSearchService (service layer)
+ * - GraphBuilderService (service layer)
+ * <p>
+ * Internal packages:
+ * - repository: Data access layer for graph building
+ * - domain: Domain entities and value objects
  */
 @org.springframework.modulith.ApplicationModule(
         id = "graph",

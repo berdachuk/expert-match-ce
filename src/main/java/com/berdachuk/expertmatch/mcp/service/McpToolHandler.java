@@ -1,9 +1,9 @@
 package com.berdachuk.expertmatch.mcp.service;
 
 import com.berdachuk.expertmatch.llm.tools.ChatManagementTools;
-import com.berdachuk.expertmatch.llm.tools.ExpertMatchTools;
-import com.berdachuk.expertmatch.llm.tools.RetrievalTools;
 import com.berdachuk.expertmatch.mcp.model.McpTool;
+import com.berdachuk.expertmatch.query.tools.ExpertMatchTools;
+import com.berdachuk.expertmatch.query.tools.RetrievalTools;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;

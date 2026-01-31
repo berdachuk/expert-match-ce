@@ -36,4 +36,18 @@ public interface GraphService {
      * @return true if the graph exists, false otherwise
      */
     boolean graphExists();
+
+    /**
+     * Creates the Apache AGE graph if it doesn't exist.
+     * This is an administrative operation that calls ag_catalog.create_graph().
+     * If the graph already exists, this method does nothing.
+     */
+    void createGraph();
+
+    /**
+     * Creates graph indexes for better query performance.
+     * Creates GIN indexes on the properties JSONB column of vertex tables.
+     * This method safely handles cases where tables don't exist yet.
+     */
+    void createGraphIndexes();
 }

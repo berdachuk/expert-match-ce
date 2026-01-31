@@ -115,6 +115,23 @@ docker build -f docker/Dockerfile.test -t expertmatch-postgres-test:latest .
 
 Currently no specific linting tools configured beyond Maven compiler checks.
 
+## Spring Modulith Architecture
+
+1. **Always Follow Modulith Best Practices**: This project uses Spring Modulith for modular architecture - always follow
+   Modulith rules and best practices when writing code
+2. **Module Boundaries**: Each module is defined by a `package-info.java` file with
+   `@org.springframework.modulith.ApplicationModule` annotation
+3. **Core Module Intentional Sharing**: The core module contains shared infrastructure intentionally used across all
+   modules - this is an intentional design choice, not a violation
+4. **Declare Module Dependencies**: Always explicitly declare module dependencies in `package-info.java` using
+   `@ApplicationModule(allowedDependencies = {...})` annotation
+5. **Dependency Declaration Syntax**: Declare dependencies using module names only (e.g., "core", "employee") without
+   sub-package qualifiers like "::"
+6. **Cross-module Dependencies**: Minimize cross-module dependencies and avoid circular dependencies between modules
+7. **Service Orchestration**: Orchestration services like `QueryService` and `RetrievalService` may
+   legitimately depend on multiple domain modules to coordinate complex workflows
+8. **Module Access Verification**: The ModulithVerificationTest should pass and verify module structure compliance
+
 ## Code Style Guidelines
 
 ### General Principles
@@ -293,16 +310,48 @@ Currently no specific linting tools configured beyond Maven compiler checks.
 
 ## AI Provider Configuration
 
+### OpenAI-Compatible Providers Only
+
+**CRITICAL**: The application uses **OpenAI-compatible providers only**. Ollama is excluded from the project.
+
 ### Component-Specific Configuration
 
-The application supports configuring different AI providers (Ollama or OpenAI) for chat, embedding, and reranking
+The application supports configuring different OpenAI-compatible providers for chat, embedding, and reranking
 independently:
 
-- **Chat**: `CHAT_PROVIDER`, `CHAT_BASE_URL`, `CHAT_API_KEY`, `CHAT_MODEL`, `CHAT_TEMPERATURE`
-- **Embedding**: `EMBEDDING_PROVIDER`, `EMBEDDING_BASE_URL`, `EMBEDDING_API_KEY`, `EMBEDDING_MODEL`,
+- **Chat**: `CHAT_PROVIDER` (must be `openai`), `CHAT_BASE_URL`, `CHAT_API_KEY`, `CHAT_MODEL`, `CHAT_TEMPERATURE`
+- **Embedding**: `EMBEDDING_PROVIDER` (must be `openai`), `EMBEDDING_BASE_URL`, `EMBEDDING_API_KEY`, `EMBEDDING_MODEL`,
   `EMBEDDING_DIMENSIONS`
-- **Reranking**: `RERANKING_PROVIDER`, `RERANKING_BASE_URL`, `RERANKING_API_KEY`, `RERANKING_MODEL`,
+- **Reranking**: `RERANKING_PROVIDER` (must be `openai`), `RERANKING_BASE_URL`, `RERANKING_API_KEY`, `RERANKING_MODEL`,
   `RERANKING_TEMPERATURE`
+
+### Default Configuration
+
+- **Chat**: `openai` provider, `https://api.openai.com`, `gpt-4`
+- **Embedding**: `openai` provider, `https://api.openai.com`, `text-embedding-3-large` (1536 dimensions)
+- **Reranking**: `openai` provider, `https://api.openai.com`, `gpt-4` (uses chat models for semantic reranking)
+
+### Base URL Format
+
+**IMPORTANT**: For OpenAI-compatible APIs, do **NOT** include `/v1` in the base URL. Spring AI's `OpenAiApi`
+automatically adds `/v1/chat/completions` or `/v1/embeddings`.
+
+**Valid Examples**:
+
+- `https://api.openai.com` (OpenAI)
+- `https://YOUR_RESOURCE.openai.azure.com` (Azure OpenAI)
+- `https://api.provider.com` (Other OpenAI-compatible service)
+
+**Invalid Examples**:
+
+- `https://api.openai.com/v1` (includes /v1)
+- `http://localhost:11434` (Ollama endpoint)
+
+### Supported Providers
+
+- **OpenAI**: `https://api.openai.com`
+- **Azure OpenAI**: `https://YOUR_RESOURCE.openai.azure.com`
+- **Other OpenAI-compatible services**: Any service that implements OpenAI API format
 
 ## Prompt Management
 
@@ -366,11 +415,13 @@ Skills are organized in directories under `.claude/skills/`:
 
 The application supports multiple profiles:
 
-- `local` - Local development with Ollama
-- `dev` - Development with remote AI providers
+- `local` - Local development with OpenAI-compatible providers
+- `dev` - Development with remote AI providers (OpenAI-compatible)
 - `test` - Testing environment
 - `staging` - Staging environment
 - `prod` - Production environment
+
+**Note**: All profiles use OpenAI-compatible providers only. Ollama is excluded from the project.
 
 ### Database Migrations
 

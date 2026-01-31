@@ -1,5 +1,10 @@
 package com.berdachuk.expertmatch.graph.service;
 
+import com.berdachuk.expertmatch.graph.domain.ExpertCustomerRelationship;
+import com.berdachuk.expertmatch.graph.domain.ParticipationRelationship;
+import com.berdachuk.expertmatch.graph.domain.ProjectCustomerRelationship;
+import com.berdachuk.expertmatch.graph.domain.ProjectTechnologyRelationship;
+
 import java.util.List;
 
 /**
@@ -105,28 +110,4 @@ public interface GraphBuilderService {
      * @param technologyName The name of the technology
      */
     void createUsesRelationship(String projectId, String technologyName);
-
-    /**
-     * Participation relationship.
-     */
-    record ParticipationRelationship(String expertId, String projectId, String role) {
-    }
-
-    /**
-     * Project-technology relationship.
-     */
-    record ProjectTechnologyRelationship(String projectId, String technologyName) {
-    }
-
-    /**
-     * Expert-customer relationship.
-     */
-    record ExpertCustomerRelationship(String expertId, String customerId) {
-    }
-
-    /**
-     * Project-customer relationship.
-     */
-    record ProjectCustomerRelationship(String projectId, String customerId) {
-    }
 }

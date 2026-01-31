@@ -1,8 +1,9 @@
 package com.berdachuk.expertmatch.integration;
 
 import com.berdachuk.expertmatch.chat.service.ChatService;
-import com.berdachuk.expertmatch.query.domain.QueryRequest;
-import com.berdachuk.expertmatch.query.domain.QueryResponse;
+import com.berdachuk.expertmatch.core.domain.QueryOptions;
+import com.berdachuk.expertmatch.core.domain.QueryRequest;
+import com.berdachuk.expertmatch.core.domain.QueryResponse;
 import com.berdachuk.expertmatch.query.service.QueryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,10 +61,21 @@ class QueryServiceIT extends BaseIntegrationTest {
 
     @Test
     void testProcessQuery() {
+        QueryOptions options = QueryOptions.builder()
+                .maxResults(10)
+                .minConfidence(0.7)
+                .includeSkills(true)
+                .includeProjects(true)
+                .includeExperience(true)
+                .deepResearch(false)
+                .useCascadePattern(false)
+                .useCyclePattern(false)
+                .build();
+
         QueryRequest request = new QueryRequest(
                 "Looking for experts in Java and Spring Boot",
                 null,
-                new com.berdachuk.expertmatch.query.domain.QueryRequest.QueryOptions(10, 0.7, true, true, true, false, false, false, false, false)
+                options
         );
 
         QueryResponse response = queryService.processQuery(request, chatId, userId);
@@ -81,10 +93,21 @@ class QueryServiceIT extends BaseIntegrationTest {
 
     @Test
     void testProcessQueryWithOptions() {
+        QueryOptions options = QueryOptions.builder()
+                .maxResults(5)
+                .minConfidence(0.8)
+                .includeSkills(true)
+                .includeProjects(true)
+                .includeExperience(true)
+                .deepResearch(false)
+                .useCascadePattern(false)
+                .useCyclePattern(false)
+                .build();
+
         QueryRequest request = new QueryRequest(
                 "Need a team for a banking app",
                 null,
-                new com.berdachuk.expertmatch.query.domain.QueryRequest.QueryOptions(5, 0.8, true, true, true, false, false, false, false, false)
+                options
         );
 
         QueryResponse response = queryService.processQuery(request, chatId, userId);
@@ -108,10 +131,21 @@ class QueryServiceIT extends BaseIntegrationTest {
     void testProcessQueryWithCascadePattern() {
         // Test Cascade pattern with single expert (domain model directly)
         // Note: useCascadePattern is not yet in API model, so we test via domain model
+        QueryOptions options = QueryOptions.builder()
+                .maxResults(1)
+                .minConfidence(0.7)
+                .includeSkills(true)
+                .includeProjects(true)
+                .includeExperience(true)
+                .deepResearch(false)
+                .useCascadePattern(true)
+                .useCyclePattern(false)
+                .build();
+
         QueryRequest request = new QueryRequest(
                 "Looking for Java expert",
                 null,
-                new com.berdachuk.expertmatch.query.domain.QueryRequest.QueryOptions(1, 0.7, true, true, true, false, true, false, false, false)
+                options
         );
 
         QueryResponse response = queryService.processQuery(request, chatId, userId);
@@ -131,10 +165,21 @@ class QueryServiceIT extends BaseIntegrationTest {
     void testProcessQueryWithCyclePattern() {
         // Test Cycle pattern with multiple experts (domain model directly)
         // Note: useCyclePattern is not yet in API model, so we test via domain model
+        QueryOptions options = QueryOptions.builder()
+                .maxResults(5)
+                .minConfidence(0.7)
+                .includeSkills(true)
+                .includeProjects(true)
+                .includeExperience(true)
+                .deepResearch(false)
+                .useCascadePattern(false)
+                .useCyclePattern(true)
+                .build();
+
         QueryRequest request = new QueryRequest(
                 "Looking for Java experts",
                 null,
-                new com.berdachuk.expertmatch.query.domain.QueryRequest.QueryOptions(5, 0.7, true, true, true, false, false, false, true, false)
+                options
         );
 
         QueryResponse response = queryService.processQuery(request, chatId, userId);

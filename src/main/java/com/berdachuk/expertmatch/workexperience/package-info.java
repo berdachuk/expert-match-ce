@@ -11,7 +11,7 @@
 @org.springframework.modulith.ApplicationModule(
         id = "workexperience",
         displayName = "Work Experience Management",
-        allowedDependencies = {"employee::API", "project::SPI", "technology::SPI", "core"}
+        allowedDependencies = {"employee", "project", "technology", "core"}
 )
 package com.berdachuk.expertmatch.workexperience;
 

@@ -1,6 +1,6 @@
 package com.berdachuk.expertmatch.core.config;
 
-import com.berdachuk.expertmatch.query.service.ExecutionTracer;
+import com.berdachuk.expertmatch.core.service.ExecutionTracer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClientRequest;

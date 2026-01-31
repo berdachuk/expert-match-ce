@@ -2,6 +2,7 @@ package com.berdachuk.expertmatch.query.sgr;
 
 import com.berdachuk.expertmatch.llm.sgr.SGRPatternConfig;
 import com.berdachuk.expertmatch.llm.sgr.StructuredOutputHelper;
+import com.berdachuk.expertmatch.query.sgr.impl.QueryClassificationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

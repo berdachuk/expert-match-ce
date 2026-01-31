@@ -1,12 +1,14 @@
-package com.berdachuk.expertmatch.llm.service;
+package com.berdachuk.expertmatch.llm.service.impl;
 
+import com.berdachuk.expertmatch.core.domain.ExecutionTrace;
+import com.berdachuk.expertmatch.core.service.ExecutionTracer;
+import com.berdachuk.expertmatch.core.service.ExpertContextHolder;
+import com.berdachuk.expertmatch.core.service.ModelInfoExtractor;
+import com.berdachuk.expertmatch.core.service.TokenUsageExtractor;
+import com.berdachuk.expertmatch.llm.service.AnswerGenerationService;
 import com.berdachuk.expertmatch.llm.sgr.CyclePatternService;
 import com.berdachuk.expertmatch.llm.sgr.ExpertEvaluation;
 import com.berdachuk.expertmatch.llm.sgr.ExpertEvaluationService;
-import com.berdachuk.expertmatch.query.service.ExecutionTracer;
-import com.berdachuk.expertmatch.query.service.ExpertContextHolder;
-import com.berdachuk.expertmatch.query.service.ModelInfoExtractor;
-import com.berdachuk.expertmatch.query.service.TokenUsageExtractor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
@@ -227,7 +229,7 @@ public class AnswerGenerationServiceImpl implements AnswerGenerationService {
         }
         if (tracer != null) {
             String modelInfo = ModelInfoExtractor.extractModelInfo(chatModel, environment);
-            com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
+            ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
             tracer.endStepWithLLM("Query: " + query + ", Experts: " + (expertContexts != null ? expertContexts.size() : 0),
                     "Answer: " + (answer != null ? answer.length() : 0) + " characters",
                     modelInfo, tokenUsage);

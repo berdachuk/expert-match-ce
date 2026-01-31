@@ -1,6 +1,6 @@
 package com.berdachuk.expertmatch.core.config;
 
-import com.berdachuk.expertmatch.llm.tools.ExpertMatchTools;
+import com.berdachuk.expertmatch.query.tools.ExpertMatchTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

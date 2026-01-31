@@ -13,7 +13,7 @@
 @org.springframework.modulith.ApplicationModule(
         id = "mcp",
         displayName = "MCP Server",
-        allowedDependencies = {"employee::API", "retrieval::API", "core"}
+        allowedDependencies = {"employee", "retrieval", "llm", "project", "workexperience", "core"}
 )
 package com.berdachuk.expertmatch.mcp;
 

@@ -1,7 +1,7 @@
 package com.berdachuk.expertmatch.core.config;
 
+import com.berdachuk.expertmatch.core.service.ExecutionTracer;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
-import com.berdachuk.expertmatch.query.service.ExecutionTracer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

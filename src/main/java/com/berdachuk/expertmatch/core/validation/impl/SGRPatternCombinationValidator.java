@@ -1,16 +1,15 @@
-package com.berdachuk.expertmatch.query.validation;
+package com.berdachuk.expertmatch.core.validation.impl;
 
-import com.berdachuk.expertmatch.query.domain.QueryRequest;
+import com.berdachuk.expertmatch.core.domain.QueryOptions;
+import com.berdachuk.expertmatch.core.domain.QueryRequest;
+import com.berdachuk.expertmatch.core.validation.ValidSGRPatternCombination;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
- * Validates SGR pattern combinations in com.berdachuk.expertmatch.query.domain.QueryRequest.QueryOptions.
+ * Validates SGR pattern combinations in QueryOptions.
  * <p>
- * Rules:
- * - Cascade and Cycle patterns are mutually exclusive
- * (Cascade requires exactly 1 expert, Cycle requires >1 expert)
- * - Routing pattern can be used with either Cascade or Cycle
+ * Cascade and Cycle patterns are mutually exclusive.
  */
 public class SGRPatternCombinationValidator implements ConstraintValidator<ValidSGRPatternCombination, QueryRequest> {
 
@@ -25,7 +24,7 @@ public class SGRPatternCombinationValidator implements ConstraintValidator<Valid
             return true; // Let other validators handle null checks
         }
 
-        com.berdachuk.expertmatch.query.domain.QueryRequest.QueryOptions options = queryRequest.options();
+        QueryOptions options = queryRequest.options();
         Boolean useCascade = options.useCascadePattern();
         Boolean useCycle = options.useCyclePattern();
 
@@ -49,4 +48,3 @@ public class SGRPatternCombinationValidator implements ConstraintValidator<Valid
         return true;
     }
 }
-

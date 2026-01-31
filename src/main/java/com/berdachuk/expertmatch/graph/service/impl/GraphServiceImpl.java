@@ -1,11 +1,11 @@
-package com.berdachuk.expertmatch.graph.service;
+package com.berdachuk.expertmatch.graph.service.impl;
 
 import com.berdachuk.expertmatch.core.exception.RetrievalException;
+import com.berdachuk.expertmatch.graph.repository.GraphRepository;
+import com.berdachuk.expertmatch.graph.service.GraphService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,12 +26,12 @@ import java.util.Map;
 @Service
 public class GraphServiceImpl implements GraphService {
     private static final String GRAPH_NAME = "expertmatch_graph";
-    private final NamedParameterJdbcTemplate namedJdbcTemplate;
     private final JdbcTemplate jdbcTemplate;
+    private final GraphRepository graphRepository;
 
-    public GraphServiceImpl(NamedParameterJdbcTemplate namedJdbcTemplate) {
-        this.namedJdbcTemplate = namedJdbcTemplate;
-        this.jdbcTemplate = namedJdbcTemplate.getJdbcTemplate();
+    public GraphServiceImpl(JdbcTemplate jdbcTemplate, GraphRepository graphRepository) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.graphRepository = graphRepository;
     }
 
     /**
@@ -297,29 +297,43 @@ public class GraphServiceImpl implements GraphService {
     )
     @Override
     public boolean graphExists() {
-        try {
-            // Use a simple query in a separate transaction
-            // This prevents aborting the main transaction if AGE is not available
-            String sql = """
-                    SELECT COUNT(*) 
-                    FROM ag_catalog.ag_graph 
-                    WHERE name = :graphName
-                    """;
+        return graphRepository.graphExists(GRAPH_NAME);
+    }
 
-            Map<String, Object> params = new HashMap<>();
-            params.put("graphName", GRAPH_NAME);
+    /**
+     * Creates the Apache AGE graph if it doesn't exist.
+     * This is an administrative operation that calls ag_catalog.create_graph().
+     * If the graph already exists, this method does nothing.
+     */
+    @Transactional
+    @Override
+    public void createGraph() {
+        graphRepository.createGraph(GRAPH_NAME);
+    }
 
-            Integer count = namedJdbcTemplate.queryForObject(sql, params, Integer.class);
-            return count != null && count > 0;
-        } catch (DataAccessException e) {
-            // Apache AGE not available, schema doesn't exist
-            log.debug("Graph check failed (AGE may not be available): {}", e.getMessage());
-            return false;
-        } catch (Exception e) {
-            // Any other exception - log and return false
-            log.debug("Graph check failed with unexpected error: {}", e.getMessage());
-            return false;
+    /**
+     * Creates graph indexes for better query performance.
+     * Creates GIN indexes on the properties JSONB column of vertex tables.
+     * This method safely handles cases where tables don't exist yet.
+     */
+    @Transactional
+    @Override
+    public void createGraphIndexes() {
+        String graphName = GRAPH_NAME;
+
+        // Check if tables exist
+        if (!graphRepository.vertexTableExists(graphName, "Expert")) {
+            log.debug("Graph tables do not exist yet, skipping index creation");
+            return;
         }
+
+        // Create indexes on properties JSONB column
+        graphRepository.createPropertyIndex(graphName, "Expert", "idx_" + graphName + "_expert_props");
+        graphRepository.createPropertyIndex(graphName, "Project", "idx_" + graphName + "_project_props");
+        graphRepository.createPropertyIndex(graphName, "Technology", "idx_" + graphName + "_technology_props");
+        graphRepository.createPropertyIndex(graphName, "Customer", "idx_" + graphName + "_customer_props");
+
+        log.debug("Graph indexes created successfully");
     }
 }
 

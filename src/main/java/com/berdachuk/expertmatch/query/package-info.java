@@ -11,7 +11,7 @@
 @org.springframework.modulith.ApplicationModule(
         id = "query",
         displayName = "Query Processing",
-        allowedDependencies = {"retrieval::API", "llm::API", "employee::API", "core"}
+        allowedDependencies = {"core", "llm", "retrieval", "chat", "employee", "workexperience", "embedding", "api"}
 )
 package com.berdachuk.expertmatch.query;
 

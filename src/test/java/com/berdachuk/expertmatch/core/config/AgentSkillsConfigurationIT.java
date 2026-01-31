@@ -2,8 +2,8 @@ package com.berdachuk.expertmatch.core.config;
 
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
 import com.berdachuk.expertmatch.llm.tools.ChatManagementTools;
-import com.berdachuk.expertmatch.llm.tools.ExpertMatchTools;
-import com.berdachuk.expertmatch.llm.tools.RetrievalTools;
+import com.berdachuk.expertmatch.query.tools.ExpertMatchTools;
+import com.berdachuk.expertmatch.query.tools.RetrievalTools;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

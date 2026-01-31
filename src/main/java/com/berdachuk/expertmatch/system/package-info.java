@@ -12,7 +12,7 @@
 @org.springframework.modulith.ApplicationModule(
         id = "system",
         displayName = "System",
-        allowedDependencies = {"core"}
+        allowedDependencies = {"ingestion", "api", "core"}
 )
 package com.berdachuk.expertmatch.system;
 

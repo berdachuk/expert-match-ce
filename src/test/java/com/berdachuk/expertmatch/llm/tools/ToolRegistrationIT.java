@@ -4,6 +4,8 @@ import com.berdachuk.expertmatch.core.config.TestAIConfig;
 import com.berdachuk.expertmatch.core.config.TestSecurityConfig;
 import com.berdachuk.expertmatch.core.config.ToolConfiguration;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
+import com.berdachuk.expertmatch.query.tools.ExpertMatchTools;
+import com.berdachuk.expertmatch.query.tools.RetrievalTools;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

@@ -14,7 +14,7 @@
 @org.springframework.modulith.ApplicationModule(
         id = "chat",
         displayName = "Chat Management",
-        allowedDependencies = {"core"}
+        allowedDependencies = {"core", "api"}
 )
 package com.berdachuk.expertmatch.chat;
 

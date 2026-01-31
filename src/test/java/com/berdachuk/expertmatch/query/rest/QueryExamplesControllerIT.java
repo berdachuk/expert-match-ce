@@ -1,4 +1,4 @@
-package com.berdachuk.expertmatch.query.service;
+package com.berdachuk.expertmatch.query.rest;
 
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.Test;

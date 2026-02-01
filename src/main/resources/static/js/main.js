@@ -89,6 +89,21 @@ function updateUserDisplay() {
 }
 
 function initializeUserSelector() {
+    // Sync URL ?user=admin with localStorage: redirect so server renders isAdmin and admin menu correctly
+    const currentUser = getCurrentUser();
+    const url = new URL(window.location.href);
+    const urlUser = url.searchParams.get('user');
+    if (currentUser.roles.includes('ROLE_ADMIN') && urlUser !== 'admin') {
+        url.searchParams.set('user', 'admin');
+        window.location.replace(url.toString());
+        return;
+    }
+    if (!currentUser.roles.includes('ROLE_ADMIN') && urlUser === 'admin') {
+        url.searchParams.delete('user');
+        window.location.replace(url.toString());
+        return;
+    }
+
     const menu = document.getElementById('userSelectorMenu');
     if (!menu) {
         return;

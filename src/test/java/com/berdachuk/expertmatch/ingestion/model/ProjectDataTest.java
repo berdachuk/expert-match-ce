@@ -17,6 +17,7 @@ class ProjectDataTest {
         ProjectData data = new ProjectData(
                 "PRJ-001",
                 "Project Name",
+                null,
                 "Customer Name",
                 "Company Name",
                 "Developer",
@@ -25,7 +26,8 @@ class ProjectDataTest {
                 List.of("Java", "Spring"),
                 "Responsibilities",
                 "Technology",
-                "Summary"
+                "Summary",
+                null
         );
         assertTrue(data.isValid());
     }
@@ -35,6 +37,7 @@ class ProjectDataTest {
         ProjectData data = new ProjectData(
                 "PRJ-001",
                 null,
+                null,
                 "Customer Name",
                 "Company Name",
                 "Developer",
@@ -43,7 +46,8 @@ class ProjectDataTest {
                 List.of("Java"),
                 "Responsibilities",
                 "Technology",
-                "Summary"
+                "Summary",
+                null
         );
         assertFalse(data.isValid());
     }
@@ -53,6 +57,7 @@ class ProjectDataTest {
         ProjectData data = new ProjectData(
                 "PRJ-001",
                 "   ",
+                null,
                 "Customer Name",
                 "Company Name",
                 "Developer",
@@ -61,7 +66,8 @@ class ProjectDataTest {
                 List.of("Java"),
                 "Responsibilities",
                 "Technology",
-                "Summary"
+                "Summary",
+                null
         );
         assertFalse(data.isValid());
     }
@@ -71,6 +77,7 @@ class ProjectDataTest {
         ProjectData data = new ProjectData(
                 "PRJ-001",
                 "Project Name",
+                null,
                 "Customer Name",
                 "Company Name",
                 "Developer",
@@ -79,7 +86,8 @@ class ProjectDataTest {
                 List.of("Java"),
                 "Responsibilities",
                 "Technology",
-                "Summary"
+                "Summary",
+                null
         );
         assertFalse(data.isValid());
     }
@@ -89,6 +97,7 @@ class ProjectDataTest {
         ProjectData data = new ProjectData(
                 "PRJ-001",
                 "Project Name",
+                null,
                 "Customer Name",
                 "Company Name",
                 "Developer",
@@ -97,7 +106,8 @@ class ProjectDataTest {
                 List.of("Java"),
                 "Responsibilities",
                 "Technology",
-                "Summary"
+                "Summary",
+                null
         );
         assertFalse(data.isValid());
     }
@@ -107,6 +117,7 @@ class ProjectDataTest {
         ProjectData original = new ProjectData(
                 "PRJ-001",
                 "Project Name",
+                null,
                 "Customer Name",
                 "Company Name",
                 "Developer",
@@ -115,7 +126,8 @@ class ProjectDataTest {
                 List.of("Java"),
                 "Responsibilities",
                 "Technology",
-                "Summary"
+                "Summary",
+                null
         );
         ProjectData withDefaults = original.withDefaults();
         assertEquals(original.projectCode(), withDefaults.projectCode());
@@ -127,6 +139,7 @@ class ProjectDataTest {
         ProjectData original = new ProjectData(
                 null,
                 "My Awesome Project",
+                null,
                 "Customer Name",
                 "Company Name",
                 "Developer",
@@ -135,7 +148,8 @@ class ProjectDataTest {
                 List.of("Java"),
                 "Responsibilities",
                 "Technology",
-                "Summary"
+                "Summary",
+                null
         );
         ProjectData withDefaults = original.withDefaults();
         assertNotNull(withDefaults.projectCode());
@@ -151,6 +165,7 @@ class ProjectDataTest {
         ProjectData original = new ProjectData(
                 "PRJ-001",
                 "Project Name",
+                null,
                 "Customer Name",
                 "Company Name",
                 "Developer",
@@ -159,7 +174,8 @@ class ProjectDataTest {
                 List.of("Java"),
                 "Responsibilities",
                 "Technology",
-                "Summary"
+                "Summary",
+                null
         );
         ProjectData withDefaults = original.withDefaults();
         assertNotNull(withDefaults.endDate());
@@ -171,6 +187,7 @@ class ProjectDataTest {
         ProjectData original = new ProjectData(
                 "PRJ-001",
                 "Project Name",
+                null,
                 "Customer Name",
                 "Company Name",
                 "Developer",
@@ -179,7 +196,8 @@ class ProjectDataTest {
                 null,
                 "Responsibilities",
                 "Technology",
-                "Summary"
+                "Summary",
+                null
         );
         ProjectData withDefaults = original.withDefaults();
         assertNotNull(withDefaults.technologies());
@@ -192,6 +210,7 @@ class ProjectDataTest {
                 "PRJ-001",
                 "Project Name",
                 null,
+                null,
                 "Company Name",
                 "Developer",
                 "2023-01-01",
@@ -199,7 +218,8 @@ class ProjectDataTest {
                 List.of("Java"),
                 "Responsibilities",
                 "Technology",
-                "Summary"
+                "Summary",
+                null
         );
         ProjectData withDefaults = original.withDefaults();
         assertEquals("Unknown Customer", withDefaults.customerName());
@@ -210,6 +230,7 @@ class ProjectDataTest {
         ProjectData original = new ProjectData(
                 "PRJ-001",
                 "Project Name",
+                null,
                 "Customer Name",
                 null,
                 "Developer",
@@ -218,7 +239,8 @@ class ProjectDataTest {
                 List.of("Java"),
                 "Responsibilities",
                 "Technology",
-                "Summary"
+                "Summary",
+                null
         );
         ProjectData withDefaults = original.withDefaults();
         assertEquals("Customer Name", withDefaults.companyName());
@@ -229,6 +251,7 @@ class ProjectDataTest {
         ProjectData original = new ProjectData(
                 "PRJ-001",
                 "Project Name",
+                null,
                 "Customer Name",
                 "Company Name",
                 null,
@@ -237,7 +260,8 @@ class ProjectDataTest {
                 List.of("Java"),
                 "Responsibilities",
                 "Technology",
-                "Summary"
+                "Summary",
+                null
         );
         ProjectData withDefaults = original.withDefaults();
         assertEquals("Developer", withDefaults.role());
@@ -248,6 +272,7 @@ class ProjectDataTest {
         ProjectData original = new ProjectData(
                 "PRJ-001",
                 "Project Name",
+                null,
                 "Customer Name",
                 "Company Name",
                 "Developer",
@@ -256,7 +281,8 @@ class ProjectDataTest {
                 List.of("Java"),
                 "Responsibilities",
                 null,
-                "Summary"
+                "Summary",
+                null
         );
         ProjectData withDefaults = original.withDefaults();
         assertEquals("Technology", withDefaults.industry());
@@ -267,6 +293,7 @@ class ProjectDataTest {
         ProjectData original = new ProjectData(
                 "PRJ-001",
                 "Project Name",
+                null,
                 "Customer Name",
                 "Company Name",
                 "Developer",
@@ -275,7 +302,8 @@ class ProjectDataTest {
                 List.of("Java"),
                 null,
                 "Technology",
-                "Summary"
+                "Summary",
+                null
         );
         ProjectData withDefaults = original.withDefaults();
         assertEquals("", withDefaults.responsibilities());
@@ -286,6 +314,7 @@ class ProjectDataTest {
         ProjectData original = new ProjectData(
                 "PRJ-001",
                 "Project Name",
+                null,
                 "Customer Name",
                 "Company Name",
                 "Developer",
@@ -294,6 +323,7 @@ class ProjectDataTest {
                 List.of("Java"),
                 "Responsibilities",
                 "Technology",
+                null,
                 null
         );
         ProjectData withDefaults = original.withDefaults();

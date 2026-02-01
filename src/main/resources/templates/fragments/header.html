@@ -2,6 +2,28 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 <th:block th:fragment="header">
+    <script th:inline="javascript">
+        (function () {
+            try {
+                var stored = window.localStorage && window.localStorage.getItem('expertmatch-selected-user');
+                if (!stored) return;
+                var user = JSON.parse(stored);
+                var isAdmin = user.roles && user.roles.indexOf('ROLE_ADMIN') !== -1;
+                var url = new URL(window.location.href);
+                var urlUser = url.searchParams.get('user');
+                if (isAdmin && urlUser !== 'admin') {
+                    url.searchParams.set('user', 'admin');
+                    window.location.replace(url.toString());
+                    return;
+                }
+                if (!isAdmin && urlUser === 'admin') {
+                    url.searchParams.delete('user');
+                    window.location.replace(url.toString());
+                }
+            } catch (e) {
+            }
+        })();
+    </script>
     <nav class="navbar navbar-dark py-2 px-4" style="background-color: var(--uui-neutral-80, #262626);">
         <div class="container-fluid">
             <div class="d-flex align-items-center gap-4">
@@ -26,6 +48,12 @@
                 <a th:if="${isAdmin}" class="text-white text-decoration-none"
                    th:classappend="${currentPage == 'test-data'} ? 'fw-bold'"
                    th:href="@{/admin/test-data}">Test data</a>
+                <a class="text-white text-decoration-none" th:classappend="${currentPage == 'ingest'} ? 'fw-bold'"
+                   th:href="@{/admin/ingest}"
+                   th:if="${isAdmin}">Ingest</a>
+                <a class="text-white text-decoration-none" th:classappend="${currentPage == 'visual-graph'} ? 'fw-bold'"
+                   th:href="@{/admin/visual-graph}"
+                   th:if="${isAdmin}">Graph</a>
                 <div class="dropdown">
                     <button aria-expanded="false" class="btn btn-outline-light btn-sm dropdown-toggle"
                             data-bs-toggle="dropdown"
@@ -40,7 +68,6 @@
         </div>
     </nav>
 </th:block>
-</body>
 </body>
 </html>
 

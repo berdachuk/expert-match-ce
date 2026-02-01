@@ -126,15 +126,41 @@ public class StartupLoggingConfiguration {
         log.info("=================================================================");
     }
 
+    private static String maskPasswordInUrl(String url) {
+        if (url == null || !url.contains("?")) {
+            return url;
+        }
+        if (url.matches(".*[?&]password=[^&]*.*")) {
+            return url.replaceAll("([?&]password=)[^&]*", "$1****");
+        }
+        return url;
+    }
+
     /**
-     * Log database configuration information.
+     * Log database configuration: target (primary) and external ingestion DB.
      */
     private void logDatabaseInformation() {
-        log.debug("Database Configuration:");
-        String dbUrl = environment.getProperty("spring.datasource.url", "not configured");
-        String dbUsername = environment.getProperty("spring.datasource.username", "not configured");
-        log.debug("  URL: {}", dbUrl);
-        log.debug("  Username: {}", dbUsername);
+        log.info("Database Configuration:");
+
+        String targetUrl = environment.getProperty("spring.datasource.url", "not configured");
+        String targetUser = environment.getProperty("spring.datasource.username", "not configured");
+        String maskedTargetUrl = maskPasswordInUrl(targetUrl);
+        log.info("  Target (primary) - URL: {}, Username: {}", maskedTargetUrl, targetUser);
+        log.info("  Target used by: test-data-generator (clear, embeddings), ingest (ProfileProcessor), GET /api/v1/test-data/stats");
+
+        boolean externalEnabled = "true".equalsIgnoreCase(
+                environment.getProperty("expertmatch.ingestion.external-database.enabled", "false"));
+        if (externalEnabled) {
+            String extHost = environment.getProperty("expertmatch.ingestion.external-database.host", "not set");
+            String extPort = environment.getProperty("expertmatch.ingestion.external-database.port", "5432");
+            String extDb = environment.getProperty("expertmatch.ingestion.external-database.database", "not set");
+            String extSchema = environment.getProperty("expertmatch.ingestion.external-database.schema", "work_experience");
+            String extUser = environment.getProperty("expertmatch.ingestion.external-database.username", "not set");
+            log.info("  External (ingestion source) - Host: {}, Port: {}, Database: {}, Schema: {}, Username: {}",
+                    extHost, extPort, extDb, extSchema, extUser);
+        } else {
+            log.info("  External (ingestion source): disabled");
+        }
     }
 
     /**

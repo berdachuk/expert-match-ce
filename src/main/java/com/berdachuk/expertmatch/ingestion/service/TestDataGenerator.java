@@ -18,6 +18,7 @@ import net.datafaker.Faker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -452,10 +453,11 @@ public class TestDataGenerator {
     }
 
     /**
-     * Clears all test data from the database.
-     * This includes work experience, employees, projects, and technologies.
-     * Note: This is a destructive operation and should be used with caution.
+     * Clears all test data from the database in a single transaction.
+     * Order: work_experience (FK to employee), employees, projects, technologies.
+     * On failure all deletes roll back.
      */
+    @Transactional
     public void clearTestData() {
         log.info("Clearing all test data...");
 

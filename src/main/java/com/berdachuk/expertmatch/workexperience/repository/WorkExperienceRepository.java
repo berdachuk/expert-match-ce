@@ -5,6 +5,7 @@ import com.berdachuk.expertmatch.workexperience.domain.WorkExperience;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 
 /**
@@ -56,6 +57,17 @@ public interface WorkExperienceRepository {
      * @return true if work experience exists, false otherwise
      */
     boolean exists(String employeeId, String projectName, LocalDate startDate);
+
+    /**
+     * Finds the work experience ID by employee, project name, and start date.
+     * Used to overwrite existing records when ingesting history of changes.
+     *
+     * @param employeeId  Employee ID
+     * @param projectName Project name
+     * @param startDate   Start date
+     * @return Optional with existing work experience ID if found, empty otherwise
+     */
+    Optional<String> findIdByEmployeeIdAndProjectNameAndStartDate(String employeeId, String projectName, LocalDate startDate);
 
     /**
      * Finds work experience records that don't have embeddings.

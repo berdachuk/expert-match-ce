@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Tracks progress of test data generation (data + embeddings + graph).
+ * Tracks progress of data generation (data + embeddings + graph).
  */
 @Data
-public class TestDataGenerationProgress {
+public class DataGenerationProgress {
 
     private String jobId;
     private String status; // "running", "completed", "error", "cancelled"
@@ -23,7 +23,7 @@ public class TestDataGenerationProgress {
     private volatile boolean cancelled = false;
     private List<TraceEntry> traceEntries = new ArrayList<>();
 
-    public TestDataGenerationProgress(String jobId) {
+    public DataGenerationProgress(String jobId) {
         this.jobId = jobId;
         this.status = "running";
         this.progress = 0;
@@ -33,12 +33,17 @@ public class TestDataGenerationProgress {
 
     /**
      * Update progress and add a trace entry.
+     * While status is "running", progress is capped at 99; only complete() sets 100.
      */
     public void updateProgress(int progress, String currentStep, String message) {
-        this.progress = Math.min(100, Math.max(0, progress));
+        int capped = Math.min(100, Math.max(0, progress));
+        if ("running".equals(this.status) && capped >= 100) {
+            capped = 99;
+        }
+        this.progress = capped;
         this.currentStep = currentStep;
         this.message = message;
-        addTraceEntry("INFO", currentStep, message, progress);
+        addTraceEntry("INFO", currentStep, message, this.progress);
     }
 
     /**

@@ -94,15 +94,8 @@ public class GraphServiceImpl implements GraphService {
         }
 
         try {
-            // Build SQL with 2 parameters (graph name and query string)
-            // Apache AGE cypher function signature: ag_catalog.cypher(graph_name name, query_string cstring, params agtype)
-            // The third parameter (params) has a default of NULL, so we omit it
-            // Use dollar-quoted string for Cypher query to handle special characters
-            // Explicitly use ag_catalog.cypher() and ag_catalog.agtype to ensure they are found
-            String sql = String.format(
-                    "SELECT * FROM ag_catalog.cypher('%s'::name, $%s$%s$%s$::cstring) AS t(result ag_catalog.agtype)",
-                    GRAPH_NAME, dollarTag, finalQuery, dollarTag
-            );
+            // Build SQL with correct column count from RETURN clause (single "result" or c0, c1, c2, ...)
+            String sql = buildCypherSql(finalQuery, dollarTag);
 
             // Execute LOAD 'age' and Cypher query on the same connection
             // This ensures AGE is loaded for the session that executes the query
@@ -224,6 +217,78 @@ public class GraphServiceImpl implements GraphService {
         }
 
         return result;
+    }
+
+    /**
+     * Builds SQL for Cypher execution with correct column count from RETURN clause.
+     * Single-expression RETURN uses "result"; multi-column uses c0, c1, c2, ...
+     */
+    private String buildCypherSql(String finalQuery, String dollarTag) {
+        String upperQuery = finalQuery.trim().toUpperCase();
+        int returnIndex = upperQuery.indexOf("RETURN");
+        if (returnIndex < 0) {
+            return String.format(
+                    "SELECT * FROM ag_catalog.cypher('%s'::name, $%s$%s$%s$::cstring) AS t(result ag_catalog.agtype)",
+                    GRAPH_NAME, dollarTag, finalQuery, dollarTag
+            );
+        }
+        String afterReturn = finalQuery.substring(returnIndex + 6).trim();
+        int commaCount = countCommasInReturnClause(afterReturn);
+        if (commaCount == 0) {
+            return String.format(
+                    "SELECT * FROM ag_catalog.cypher('%s'::name, $%s$%s$%s$::cstring) AS t(result ag_catalog.agtype)",
+                    GRAPH_NAME, dollarTag, finalQuery, dollarTag
+            );
+        }
+        int columnCount = commaCount + 1;
+        StringBuilder columnDefs = new StringBuilder();
+        for (int i = 0; i < columnCount; i++) {
+            if (i > 0) {
+                columnDefs.append(", ");
+            }
+            columnDefs.append("c").append(i).append(" ag_catalog.agtype");
+        }
+        return String.format(
+                "SELECT * FROM ag_catalog.cypher('%s'::name, $%s$%s$%s$::cstring) AS t(%s)",
+                GRAPH_NAME, dollarTag, finalQuery, dollarTag, columnDefs
+        );
+    }
+
+    /**
+     * Counts top-level commas in RETURN clause to determine column count.
+     */
+    private int countCommasInReturnClause(String returnClause) {
+        int commaCount = 0;
+        int parenDepth = 0;
+        int bracketDepth = 0;
+        boolean inString = false;
+        char stringDelimiter = '\0';
+        for (int i = 0; i < returnClause.length(); i++) {
+            char c = returnClause.charAt(i);
+            if (!inString && (c == '\'' || c == '"')) {
+                inString = true;
+                stringDelimiter = c;
+            } else if (inString && c == stringDelimiter) {
+                if (i == 0 || returnClause.charAt(i - 1) != '\\') {
+                    inString = false;
+                }
+            }
+            if (!inString && parenDepth == 0 && bracketDepth == 0 && c == ',') {
+                commaCount++;
+            }
+            if (!inString) {
+                if (c == '(') {
+                    parenDepth++;
+                } else if (c == ')') {
+                    parenDepth--;
+                } else if (c == '[') {
+                    bracketDepth++;
+                } else if (c == ']') {
+                    bracketDepth--;
+                }
+            }
+        }
+        return commaCount;
     }
 
     /**

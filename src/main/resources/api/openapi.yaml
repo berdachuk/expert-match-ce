@@ -826,6 +826,67 @@ components:
           items:
             $ref: '#/components/schemas/TraceEntry'
 
+    IngestionAsyncJobResponse:
+      type: object
+      required:
+        - jobId
+        - status
+      properties:
+        jobId:
+          type: string
+          description: Job ID for progress polling
+        status:
+          type: string
+          example: started
+        message:
+          type: string
+        batchSize:
+          type: integer
+          description: Batch size used for ingestion
+        cleared:
+          type: boolean
+          description: Whether existing data was cleared first
+
+    IngestionJobSummary:
+      type: object
+      description: Summary of an ingestion job for list view
+      properties:
+        jobId:
+          type: string
+          description: Job identifier
+        status:
+          type: string
+          enum: [ running, completed, error, cancelled ]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        currentStep:
+          type: string
+        message:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+          nullable: true
+        errorMessage:
+          type: string
+          nullable: true
+
+    IngestionJobListResponse:
+      type: object
+      required:
+        - jobs
+      properties:
+        jobs:
+          type: array
+          description: List of ingestion jobs (newest first)
+          items:
+            $ref: '#/components/schemas/IngestionJobSummary'
+
     IngestionResult:
       type: object
       required:
@@ -1118,6 +1179,129 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error during ingestion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ingestion/database/async:
+    post:
+      tags:
+        - Ingest
+      summary: Start async ingestion from external database
+      description: |
+        Starts async ingestion from external database, then generates embeddings and builds graph.
+        Returns a job ID for progress polling via GET /ingestion/progress/{jobId}.
+        Requires external database ingestion to be enabled. Admin only.
+      operationId: startIngestionFromDatabaseAsync
+      parameters:
+        - name: batchSize
+          in: query
+          description: Batch size for processing records. Defaults to 1000.
+          required: false
+          schema:
+            type: integer
+            default: 1000
+            minimum: 1
+        - name: clear
+          in: query
+          description: Clear existing data before ingestion.
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Ingestion job started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionAsyncJobResponse'
+        '400':
+          description: External database ingestion is not enabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions (Admin only)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ingestion/jobs:
+    get:
+      tags:
+        - Ingest
+      summary: List ingestion jobs with status
+      description: Returns list of ingestion jobs (async database ingest) with status. Newest first.
+      operationId: listIngestionJobs
+      responses:
+        '200':
+          description: List of ingestion jobs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionJobListResponse'
+
+  /ingestion/progress/{jobId}:
+    get:
+      tags:
+        - Ingest
+      summary: Get ingestion job progress
+      description: Returns progress for an async ingestion job.
+      operationId: getIngestionProgress
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Progress and trace entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressResponse'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ingestion/cancel/{jobId}:
+    post:
+      tags:
+        - Ingest
+      summary: Cancel ingestion job
+      description: Cancels a running ingestion job.
+      operationId: cancelIngestionJob
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Job cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Job cannot be cancelled (not found or already finished)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Job not found
           content:
             application/json:
               schema:
@@ -1903,12 +2087,12 @@ paths:
         - Test Data
       summary: Clear all test data
       description: |
-        Clears all test data (employees, work experiences, projects, technologies).
+        Clears all test data (employees, work experiences, projects, technologies) and all Apache AGE graph data.
         Requires ADMIN role.
       operationId: clearTestData
       responses:
         '200':
-          description: Test data cleared successfully
+          description: Test data and graph cleared successfully
           content:
             application/json:
               schema:

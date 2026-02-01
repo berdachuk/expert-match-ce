@@ -2,6 +2,7 @@ package com.berdachuk.expertmatch;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.util.TimeZone;
 
@@ -12,6 +13,7 @@ import java.util.TimeZone;
  * that matches project requirements with qualified experts.
  */
 @SpringBootApplication
+@EnableAsync
 public class ExpertMatchApplication {
 
     public static void main(String[] args) {

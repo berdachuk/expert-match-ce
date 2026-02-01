@@ -3,6 +3,7 @@ package com.berdachuk.expertmatch.workexperience.repository.impl;
 import com.berdachuk.expertmatch.core.repository.sql.InjectSql;
 import com.berdachuk.expertmatch.workexperience.domain.WorkExperience;
 import com.berdachuk.expertmatch.workexperience.repository.WorkExperienceRepository;
+import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -11,10 +12,7 @@ import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Repository for work experience data access.
@@ -38,6 +36,9 @@ public class WorkExperienceRepositoryImpl implements WorkExperienceRepository {
 
     @InjectSql("/sql/workexperience/exists.sql")
     private String existsSql;
+
+    @InjectSql("/sql/workexperience/findIdByEmployeeIdAndProjectNameAndStartDate.sql")
+    private String findIdByEmployeeIdAndProjectNameAndStartDateSql;
 
     @InjectSql("/sql/workexperience/findWithoutEmbeddings.sql")
     private String findWithoutEmbeddingsSql;
@@ -187,6 +188,7 @@ public class WorkExperienceRepositoryImpl implements WorkExperienceRepository {
         params.put("id", workExperience.id());
         params.put("employeeId", workExperience.employeeId());
         params.put("projectId", workExperience.projectId());
+        params.put("customerId", workExperience.customerId());
         params.put("projectName", workExperience.projectName());
         params.put("projectSummary", workExperience.projectSummary());
         params.put("role", workExperience.role());
@@ -221,6 +223,18 @@ public class WorkExperienceRepositoryImpl implements WorkExperienceRepository {
 
         List<String> results = namedJdbcTemplate.query(existsSql, params, (rs, rowNum) -> rs.getString("id"));
         return !results.isEmpty();
+    }
+
+    @Override
+    public Optional<String> findIdByEmployeeIdAndProjectNameAndStartDate(String employeeId, String projectName, LocalDate startDate) {
+        Map<String, Object> params = Map.of(
+                "employeeId", employeeId,
+                "projectName", projectName,
+                "startDate", startDate
+        );
+        List<String> results = namedJdbcTemplate.query(findIdByEmployeeIdAndProjectNameAndStartDateSql, params,
+                (rs, rowNum) -> rs.getString("id"));
+        return Optional.ofNullable(DataAccessUtils.uniqueResult(results));
     }
 
     /**

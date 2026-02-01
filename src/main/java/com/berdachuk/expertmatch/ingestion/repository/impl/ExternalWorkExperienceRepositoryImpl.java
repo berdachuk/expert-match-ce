@@ -83,9 +83,11 @@ public class ExternalWorkExperienceRepositoryImpl implements ExternalWorkExperie
 
     /**
      * Gets the schema name for table references.
+     * Treats null or empty as unset and defaults to work_experience.
      */
     private String getSchema() {
-        return properties.getSchema() != null ? properties.getSchema() : "work_experience";
+        String s = properties.getSchema();
+        return (s != null && !s.isEmpty()) ? s : "work_experience";
     }
 
     @Override
@@ -137,7 +139,7 @@ public class ExternalWorkExperienceRepositoryImpl implements ExternalWorkExperie
                     for (int i = 1; i <= columnCount; i++) {
                         String columnName = rs.getMetaData().getColumnName(i);
                         Object value = rs.getObject(i);
-                        row.put(columnName, value);
+                        row.put(columnName != null ? columnName.toLowerCase() : "col_" + i, value);
                     }
                     results.add(row);
                 }
@@ -179,7 +181,7 @@ public class ExternalWorkExperienceRepositoryImpl implements ExternalWorkExperie
                     for (int i = 1; i <= columnCount; i++) {
                         String columnName = rs.getMetaData().getColumnName(i);
                         Object value = rs.getObject(i);
-                        row.put(columnName, value);
+                        row.put(columnName != null ? columnName.toLowerCase() : "col_" + i, value);
                     }
                     results.add(row);
                 }
@@ -190,10 +192,9 @@ public class ExternalWorkExperienceRepositoryImpl implements ExternalWorkExperie
         } catch (SQLException e) {
             log.error("Failed to execute findFromOffset query: {}. SQLState: {}, ErrorCode: {}, Message: {}",
                     sql, e.getSQLState(), e.getErrorCode(), e.getMessage(), e);
-            throw new RuntimeException("Failed to execute findFromOffset query", e);
+            throw new RuntimeException("Failed to execute findFromOffset query: " + e.getMessage(), e);
         } catch (Exception e) {
             log.error("Failed to execute findFromOffset query: {}. Error: {}", sql, e.getMessage(), e);
-            // Log the underlying SQLException details
             Throwable cause = e.getCause();
             while (cause != null) {
                 if (cause instanceof SQLException sqlEx) {
@@ -202,7 +203,8 @@ public class ExternalWorkExperienceRepositoryImpl implements ExternalWorkExperie
                 }
                 cause = cause.getCause();
             }
-            throw new RuntimeException("Failed to execute findFromOffset query", e);
+            String msg = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+            throw new RuntimeException("Failed to execute findFromOffset query: " + msg, e);
         }
     }
 }

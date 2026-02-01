@@ -87,7 +87,7 @@
                                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                                     <h6 class="mb-0 text-white">Logs</h6>
                                     <button class="btn btn-sm btn-outline-light" id="toggleTraceButton" type="button">
-                                        <span id="toggleTraceIcon">&#9660;</span> <span id="toggleTraceText">Collapse</span>
+                                        <span id="toggleTraceText">Collapse</span>
                                     </button>
                                 </div>
                                 <div class="card-body p-0" id="traceContent"
@@ -424,7 +424,7 @@
         if (clearForm) {
             clearForm.addEventListener('submit', function (e) {
                 e.preventDefault();
-                if (!confirm('Are you sure you want to clear all test data? This will delete employees, work experiences, projects, and technologies. This action cannot be undone.')) return;
+                if (!confirm('Are you sure you want to clear all test data? This will delete employees, work experiences, projects, technologies, and all graph data. This action cannot be undone.')) return;
                 clearSuccessAlert.classList.add('d-none');
                 clearErrorAlert.classList.add('d-none');
                 clearButton.disabled = true;
@@ -436,7 +436,7 @@
                         return r.json();
                     })
                     .then(() => {
-                        clearSuccessAlert.textContent = 'Test data cleared successfully';
+                        clearSuccessAlert.textContent = 'Test data and graph cleared successfully';
                         clearSuccessAlert.classList.remove('d-none');
                         loadStatistics();
                     })

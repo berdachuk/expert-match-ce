@@ -121,6 +121,7 @@ class ProfileProcessorTest {
         ProjectData project = new ProjectData(
                 "PRJ-001",
                 "Project Name",
+                null,
                 "Customer Name",
                 "Company Name",
                 "Developer",
@@ -129,13 +130,15 @@ class ProfileProcessorTest {
                 List.of("Java", "Spring"),
                 "Responsibilities",
                 "Technology",
-                "Summary"
+                "Summary",
+                null
         );
         EmployeeProfile profile = new EmployeeProfile(employee, "Summary", List.of(project));
 
         when(employeeRepository.createOrUpdate(any())).thenReturn("4000741400013306668");
         when(projectRepository.findIdByName(anyString())).thenReturn(java.util.Optional.empty());
-        when(workExperienceRepository.exists(anyString(), anyString(), any())).thenReturn(false);
+        when(workExperienceRepository.findIdByEmployeeIdAndProjectNameAndStartDate(anyString(), anyString(), any()))
+                .thenReturn(java.util.Optional.empty());
         when(projectRepository.createOrUpdate(any())).thenReturn("PRJ-001");
         when(workExperienceRepository.createOrUpdate(any(), anyString())).thenReturn("workexp-001");
 
@@ -144,6 +147,47 @@ class ProfileProcessorTest {
         assertTrue(result.success());
         assertEquals(1, result.projectsProcessed());
         assertEquals(0, result.projectsSkipped());
+    }
+
+    @Test
+    void testProcessProfile_ExistingWorkExperience_ShouldOverwrite() {
+        EmployeeData employee = new EmployeeData(
+                "4000741400013306668",
+                "John Doe",
+                "john.doe@example.com",
+                "B1",
+                "B2",
+                "available"
+        );
+        ProjectData project = new ProjectData(
+                "PRJ-001",
+                "Project Name",
+                null,
+                "Customer Name",
+                "Company Name",
+                "Developer",
+                "2023-01-01",
+                "2023-12-31",
+                List.of("Java", "Spring"),
+                "Responsibilities",
+                "Technology",
+                "Summary",
+                null
+        );
+        EmployeeProfile profile = new EmployeeProfile(employee, "Summary", List.of(project));
+
+        when(employeeRepository.createOrUpdate(any())).thenReturn("4000741400013306668");
+        when(projectRepository.findIdByName(anyString())).thenReturn(java.util.Optional.of("PRJ-001"));
+        when(workExperienceRepository.findIdByEmployeeIdAndProjectNameAndStartDate(anyString(), anyString(), any()))
+                .thenReturn(java.util.Optional.of("existing-workexp-id"));
+        when(workExperienceRepository.createOrUpdate(any(), anyString())).thenReturn("existing-workexp-id");
+
+        ProcessingResult result = processor.processProfile(profile, new HashMap<>());
+
+        assertTrue(result.success());
+        assertEquals(1, result.projectsProcessed());
+        assertEquals(0, result.projectsSkipped());
+        verify(workExperienceRepository).createOrUpdate(any(), anyString());
     }
 
     @Test
@@ -203,6 +247,7 @@ class ProfileProcessorTest {
         ProjectData invalidProject = new ProjectData(
                 "PRJ-001",
                 null, // Missing required field
+                null,
                 "Customer Name",
                 "Company Name",
                 "Developer",
@@ -211,7 +256,8 @@ class ProfileProcessorTest {
                 List.of("Java"),
                 "Responsibilities",
                 "Technology",
-                "Summary"
+                "Summary",
+                null
         );
         EmployeeProfile profile = new EmployeeProfile(employee, "Summary", List.of(invalidProject));
 

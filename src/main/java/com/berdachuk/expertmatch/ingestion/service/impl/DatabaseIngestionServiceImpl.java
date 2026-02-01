@@ -3,6 +3,7 @@ package com.berdachuk.expertmatch.ingestion.service.impl;
 import com.berdachuk.expertmatch.ingestion.model.*;
 import com.berdachuk.expertmatch.ingestion.repository.ExternalWorkExperienceRepository;
 import com.berdachuk.expertmatch.ingestion.service.DatabaseIngestionService;
+import com.berdachuk.expertmatch.ingestion.service.IngestProgressCallback;
 import com.berdachuk.expertmatch.ingestion.service.ProfileProcessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -50,88 +52,38 @@ public class DatabaseIngestionServiceImpl implements DatabaseIngestionService {
         return ingestFromOffset(0L, batchSize);
     }
 
-    @Override
-    @Transactional
-    public IngestionResult ingestFromOffset(long fromOffset, int batchSize) {
-        log.info("Starting ingestion from external database from offset: {}, batch size: {}", fromOffset, batchSize);
-
-        List<ProcessingResult> results = new ArrayList<>();
-        int totalProcessed = 0;
-        int successCount = 0;
-        int errorCount = 0;
-        long currentOffset = fromOffset;
-
-        // Load existing projects for lookup optimization
-        Map<String, String> existingProjects = new HashMap<>();
-
-        while (true) {
-            List<Map<String, Object>> records = externalWorkExperienceRepository.findFromOffset(currentOffset, batchSize);
-            log.info("Retrieved {} records from external database starting from offset {}", records.size(), currentOffset);
-            if (records.isEmpty()) {
-                log.info("No more records found, stopping ingestion");
-                break;
-            }
-
-            log.info("Processing batch of {} records starting from offset {}", records.size(), currentOffset);
-
-            // Group records by employee
-            Map<String, List<Map<String, Object>>> recordsByEmployee = groupByEmployee(records);
-            log.info("Grouped {} records into {} employee groups", records.size(), recordsByEmployee.size());
-            if (recordsByEmployee.isEmpty() && !records.isEmpty()) {
-                Map<String, Object> sampleRecord = records.get(0);
-                log.warn("No employee IDs found in records. Sample record keys: {}",
-                        sampleRecord.keySet());
-                // Log actual employee and entity structures for debugging
-                Object employeeObj = sampleRecord.get("employee");
-                Object entityObj = sampleRecord.get("entity");
-                log.warn("Sample employee object type: {}, value: {}",
-                        employeeObj != null ? employeeObj.getClass().getSimpleName() : "null",
-                        employeeObj instanceof Map ? ((Map<?, ?>) employeeObj).keySet() : employeeObj);
-                log.warn("Sample entity object type: {}, value: {}",
-                        entityObj != null ? entityObj.getClass().getSimpleName() : "null",
-                        entityObj instanceof Map ? ((Map<?, ?>) entityObj).keySet() : entityObj);
-            }
-
-            for (Map.Entry<String, List<Map<String, Object>>> entry : recordsByEmployee.entrySet()) {
-                String employeeId = entry.getKey();
-                List<Map<String, Object>> employeeRecords = entry.getValue();
-
-                try {
-                    EmployeeProfile profile = convertToEmployeeProfile(employeeRecords);
-                    // Don't apply defaults when ingesting from external database - use only real data
-                    ProcessingResult result = profileProcessor.processProfile(profile, existingProjects, false);
-                    results.add(result);
-
-                    if (result.success()) {
-                        successCount++;
-                    } else {
-                        errorCount++;
-                    }
-                    totalProcessed++;
-                } catch (Exception e) {
-                    log.error("Failed to process employee {}: {}", employeeId, e.getMessage(), e);
-                    errorCount++;
-                    totalProcessed++;
-                    results.add(ProcessingResult.failure(employeeId, "unknown", e.getMessage()));
-                }
-            }
-
-            // Update offset to the last message_offset in this batch
-            if (!records.isEmpty()) {
-                Map<String, Object> lastRecord = records.get(records.size() - 1);
-                Object lastOffset = lastRecord.get("message_offset");
-                if (lastOffset instanceof Number) {
-                    currentOffset = ((Number) lastOffset).longValue() + 1;
-                } else {
-                    break; // Cannot determine next offset
-                }
-            } else {
-                break;
+    private static LocalDate firstNonNull(LocalDate... values) {
+        for (LocalDate v : values) {
+            if (v != null) {
+                return v;
             }
         }
+        return null;
+    }
 
-        log.info("Completed ingestion: total={}, success={}, errors={}", totalProcessed, successCount, errorCount);
-        return IngestionResult.of(totalProcessed, successCount, errorCount, results, "external-database");
+    private static String firstNonBlank(String... values) {
+        for (String v : values) {
+            if (v != null && !v.isBlank()) {
+                return v;
+            }
+        }
+        return null;
+    }
+
+    private static boolean hasSqlException(Throwable t) {
+        for (Throwable x = t; x != null; x = x.getCause()) {
+            if (x instanceof SQLException) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    @Transactional
+    public IngestionResult ingestAll(int batchSize, IngestProgressCallback callback) {
+        log.info("Starting ingestion from external database with batch size: {}, progress callback: {}", batchSize, callback != null);
+        return doIngestFromOffset(0L, batchSize, callback);
     }
 
     /**
@@ -152,46 +104,74 @@ public class DatabaseIngestionServiceImpl implements DatabaseIngestionService {
         return grouped;
     }
 
-    /**
-     * Extracts employee ID from database record.
-     * Handles both Map and PGobject (PostgreSQL JSONB) types.
-     */
-    @SuppressWarnings("unchecked")
-    private String extractEmployeeId(Map<String, Object> record) {
-        try {
-            Object employeeObj = record.get("employee");
-            if (employeeObj == null) {
-                return null;
-            }
+    @Override
+    @Transactional
+    public IngestionResult ingestFromOffset(long fromOffset, int batchSize) {
+        return doIngestFromOffset(fromOffset, batchSize, null);
+    }
 
-            Map<String, Object> employee = null;
-
-            // Handle PGobject (PostgreSQL JSONB type)
-            if (employeeObj.getClass().getName().equals("org.postgresql.util.PGobject")) {
-                try {
-                    String jsonValue = (String) employeeObj.getClass().getMethod("getValue").invoke(employeeObj);
-                    if (jsonValue != null && !jsonValue.isEmpty()) {
-                        employee = objectMapper.readValue(jsonValue, Map.class);
-                    }
-                } catch (Exception e) {
-                    log.debug("Failed to parse PGobject employee: {}", e.getMessage());
-                }
-            }
-            // Handle Map type (already parsed JSON)
-            else if (employeeObj instanceof Map) {
-                employee = (Map<String, Object>) employeeObj;
-            }
-
-            if (employee != null) {
-                Object id = employee.get("id");
-                if (id != null) {
-                    return id.toString();
-                }
-            }
-        } catch (Exception e) {
-            log.warn("Failed to extract employee ID from record: {}", e.getMessage());
+    @Override
+    @Transactional
+    public IngestionBatchResult ingestOneBatch(long fromOffset, int batchSize, IngestProgressCallback callback) {
+        List<Map<String, Object>> records = externalWorkExperienceRepository.findFromOffset(fromOffset, batchSize);
+        if (records.isEmpty()) {
+            return new IngestionBatchResult(0, 0, 0, fromOffset, false);
         }
-        return null;
+        log.info("Processing batch of {} records starting from offset {}", records.size(), fromOffset);
+
+        Map<String, String> existingProjects = new HashMap<>();
+        int processedInBatch = 0;
+        int successCount = 0;
+        int errorCount = 0;
+
+        Map<String, List<Map<String, Object>>> recordsByEmployee = groupByEmployee(records);
+        if (recordsByEmployee.isEmpty() && !records.isEmpty()) {
+            Map<String, Object> sampleRecord = records.get(0);
+            String sampleKeys = sampleRecord.keySet().toString();
+            log.warn("No employee IDs found in records. Sample record keys: {}", sampleKeys);
+            throw new IllegalStateException(
+                    "No employee IDs could be extracted from " + records.size() + " records. "
+                            + "Expected column 'employee' (or employee_data, employee_json) JSONB with 'id' or 'employee_id'. "
+                            + "Sample record keys: " + sampleKeys);
+        }
+
+        for (Map.Entry<String, List<Map<String, Object>>> entry : recordsByEmployee.entrySet()) {
+            String employeeId = entry.getKey();
+            List<Map<String, Object>> employeeRecords = entry.getValue();
+            try {
+                EmployeeProfile profile = convertToEmployeeProfile(employeeRecords);
+                ProcessingResult result = profileProcessor.processProfile(profile, existingProjects, false);
+                if (result.success()) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                }
+                processedInBatch++;
+            } catch (Exception e) {
+                if (hasSqlException(e)) {
+                    throw new IllegalStateException(
+                            "Database error while processing employee " + employeeId + ": " + e.getMessage(), e);
+                }
+                log.error("Failed to process employee {}: {}", employeeId, e.getMessage(), e);
+                errorCount++;
+                processedInBatch++;
+            }
+        }
+
+        if (callback != null) {
+            callback.onBatchProgress(processedInBatch, 0, "Processed " + processedInBatch + " employees");
+        }
+
+        long nextOffset = fromOffset;
+        boolean hasMore = false;
+        Map<String, Object> lastRecord = records.get(records.size() - 1);
+        Object lastOffset = lastRecord.get("message_offset");
+        if (lastOffset instanceof Number) {
+            nextOffset = ((Number) lastOffset).longValue() + 1;
+            hasMore = (records.size() >= batchSize);
+        }
+
+        return new IngestionBatchResult(processedInBatch, successCount, errorCount, nextOffset, hasMore);
     }
 
     /**
@@ -217,53 +197,151 @@ public class DatabaseIngestionServiceImpl implements DatabaseIngestionService {
         return new EmployeeProfile(employee, null, projects);
     }
 
+    @Transactional
+    protected IngestionResult doIngestFromOffset(long fromOffset, int batchSize, IngestProgressCallback callback) {
+        log.info("Starting ingestion from external database from offset: {}, batch size: {}", fromOffset, batchSize);
+
+        List<ProcessingResult> results = new ArrayList<>();
+        int totalProcessed = 0;
+        int successCount = 0;
+        int errorCount = 0;
+        long currentOffset = fromOffset;
+        int batchIndex = 0;
+
+        // Load existing projects for lookup optimization
+        Map<String, String> existingProjects = new HashMap<>();
+
+        while (true) {
+            List<Map<String, Object>> records = externalWorkExperienceRepository.findFromOffset(currentOffset, batchSize);
+            log.info("Retrieved {} records from external database starting from offset {}", records.size(), currentOffset);
+            if (records.isEmpty()) {
+                log.info("No more records found, stopping ingestion");
+                break;
+            }
+
+            log.info("Processing batch of {} records starting from offset {}", records.size(), currentOffset);
+
+            // Group records by employee
+            Map<String, List<Map<String, Object>>> recordsByEmployee = groupByEmployee(records);
+            log.info("Grouped {} records into {} employee groups", records.size(), recordsByEmployee.size());
+            if (recordsByEmployee.isEmpty() && !records.isEmpty()) {
+                Map<String, Object> sampleRecord = records.get(0);
+                String sampleKeys = sampleRecord.keySet().toString();
+                log.warn("No employee IDs found in records. Sample record keys: {}", sampleKeys);
+                throw new IllegalStateException(
+                        "No employee IDs could be extracted from " + records.size() + " records. "
+                                + "Expected column 'employee' (or employee_data, employee_json) JSONB with 'id' or 'employee_id'. "
+                                + "Sample record keys: " + sampleKeys);
+            }
+
+            for (Map.Entry<String, List<Map<String, Object>>> entry : recordsByEmployee.entrySet()) {
+                String employeeId = entry.getKey();
+                List<Map<String, Object>> employeeRecords = entry.getValue();
+
+                try {
+                    EmployeeProfile profile = convertToEmployeeProfile(employeeRecords);
+                    // Don't apply defaults when ingesting from external database - use only real data
+                    ProcessingResult result = profileProcessor.processProfile(profile, existingProjects, false);
+                    results.add(result);
+
+                    if (result.success()) {
+                        successCount++;
+                    } else {
+                        errorCount++;
+                    }
+                    totalProcessed++;
+                } catch (Exception e) {
+                    if (hasSqlException(e)) {
+                        throw new IllegalStateException(
+                                "Database error while processing employee " + employeeId + ": " + e.getMessage(), e);
+                    }
+                    log.error("Failed to process employee {}: {}", employeeId, e.getMessage(), e);
+                    errorCount++;
+                    totalProcessed++;
+                    results.add(ProcessingResult.failure(employeeId, "unknown", e.getMessage()));
+                }
+            }
+
+            if (callback != null) {
+                callback.onBatchProgress(totalProcessed, batchIndex, "Processed " + totalProcessed + " employees");
+            }
+            batchIndex++;
+
+            // Update offset to the last message_offset in this batch
+            if (!records.isEmpty()) {
+                Map<String, Object> lastRecord = records.get(records.size() - 1);
+                Object lastOffset = lastRecord.get("message_offset");
+                if (lastOffset instanceof Number) {
+                    currentOffset = ((Number) lastOffset).longValue() + 1;
+                } else {
+                    break; // Cannot determine next offset
+                }
+            } else {
+                break;
+            }
+        }
+
+        log.info("Completed ingestion: total={}, success={}, errors={}", totalProcessed, successCount, errorCount);
+        return IngestionResult.of(totalProcessed, successCount, errorCount, results, "external-database");
+    }
+
+    /**
+     * Extracts employee ID from database record.
+     * Handles both Map and PGobject (PostgreSQL JSONB) types.
+     * Tries keys: employee, employee_data, employee_json; and id, employee_id inside the object.
+     */
+    @SuppressWarnings("unchecked")
+    private String extractEmployeeId(Map<String, Object> record) {
+        for (String employeeKey : List.of("employee", "employee_data", "employee_json")) {
+            Object employeeObj = record.get(employeeKey);
+            if (employeeObj == null) {
+                continue;
+            }
+
+            Map<String, Object> employee = parseEmployeeObject(employeeObj);
+            if (employee != null) {
+                for (String idKey : List.of("id", "employee_id")) {
+                    Object id = employee.get(idKey);
+                    if (id != null) {
+                        return id.toString();
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private Map<String, Object> parseEmployeeObject(Object employeeObj) {
+        return parseJsonObject(employeeObj);
+    }
+
     /**
      * Extracts employee map from database record.
-     * Handles both Map and PGobject (PostgreSQL JSONB) types.
+     * Tries keys: employee, employee_data, employee_json.
      */
     @SuppressWarnings("unchecked")
     private Map<String, Object> extractEmployeeMap(Map<String, Object> record) {
-        Object employeeObj = record.get("employee");
-        if (employeeObj == null) {
-            throw new IllegalArgumentException("Cannot extract employee data from record: employee field is null");
-        }
-
-        Map<String, Object> employee = null;
-
-        // Handle PGobject (PostgreSQL JSONB type)
-        if (employeeObj.getClass().getName().equals("org.postgresql.util.PGobject")) {
-            try {
-                String jsonValue = (String) employeeObj.getClass().getMethod("getValue").invoke(employeeObj);
-                if (jsonValue != null && !jsonValue.isEmpty()) {
-                    employee = objectMapper.readValue(jsonValue, Map.class);
-                }
-            } catch (Exception e) {
-                log.warn("Failed to parse PGobject employee: {}", e.getMessage());
+        for (String employeeKey : List.of("employee", "employee_data", "employee_json")) {
+            Object employeeObj = record.get(employeeKey);
+            Map<String, Object> employee = parseEmployeeObject(employeeObj);
+            if (employee != null && !employee.isEmpty()) {
+                return employee;
             }
         }
-        // Handle Map type (already parsed JSON)
-        else if (employeeObj instanceof Map) {
-            employee = (Map<String, Object>) employeeObj;
-        }
-
-        if (employee != null && !employee.isEmpty()) {
-            return employee;
-        }
-
-        // No fallback - employee field is required and always present in the database
-        throw new IllegalArgumentException("Cannot extract employee data from record: employee field is missing or empty");
+        throw new IllegalArgumentException("Cannot extract employee data from record: no employee field found. Record keys: " + record.keySet());
     }
 
     /**
      * Converts employee map to EmployeeData.
+     * Tries snake_case and camelCase keys for compatibility with different external schemas.
      */
     private EmployeeData convertToEmployeeData(Map<String, Object> employeeMap) {
-        String id = extractString(employeeMap, "id");
+        String id = extractString(employeeMap, "id") != null ? extractString(employeeMap, "id") : extractString(employeeMap, "employee_id");
         String name = extractString(employeeMap, "name");
         String email = extractString(employeeMap, "email");
         String seniority = extractString(employeeMap, "seniority");
-        String languageEnglish = extractString(employeeMap, "language_english");
-        String availabilityStatus = extractString(employeeMap, "availability_status");
+        String languageEnglish = extractString(employeeMap, "language_english") != null ? extractString(employeeMap, "language_english") : extractString(employeeMap, "languageEnglish");
+        String availabilityStatus = extractString(employeeMap, "availability_status") != null ? extractString(employeeMap, "availability_status") : extractString(employeeMap, "availabilityStatus");
 
         return new EmployeeData(id, name, email, seniority, languageEnglish, availabilityStatus);
     }
@@ -274,83 +352,78 @@ public class DatabaseIngestionServiceImpl implements DatabaseIngestionService {
     @SuppressWarnings("unchecked")
     private ProjectData convertToProjectData(Map<String, Object> record) {
         try {
-            // Extract project info
+            // Extract project info (support snake_case and camelCase from external DB)
             Map<String, Object> projectMap = extractProjectMap(record);
-            String projectName = extractString(projectMap, "name");
+            String projectName = firstNonBlank(
+                    extractString(projectMap, "name"),
+                    extractString(projectMap, "projectName"),
+                    extractString(record, "project"),
+                    extractString(record, "project_description"),
+                    extractString(record, "project_name"));
             if (projectName == null || projectName.isBlank()) {
-                projectName = extractString(record, "project_description");
-            }
-            if (projectName == null || projectName.isBlank()) {
-                log.warn("Skipping record with missing project name");
+                log.warn("Skipping record with missing project name. Record keys: {}", record.keySet());
                 return null;
             }
 
-            // Extract dates
-            LocalDate startDate = extractDate(record, "start_date");
-            LocalDate endDate = extractDate(record, "end_date");
+            // Extract dates (support start_date, startDate, etc.)
+            LocalDate startDate = firstNonNull(
+                    extractDate(record, "start_date"),
+                    extractDate(record, "startDate"));
+            LocalDate endDate = firstNonNull(
+                    extractDate(record, "end_date"),
+                    extractDate(record, "endDate"));
             if (startDate == null) {
-                log.warn("Skipping record with missing start_date");
+                log.warn("Skipping record with missing start_date. Record keys: {}", record.keySet());
                 return null;
             }
 
-            // Extract other fields
-            String customerName = extractString(record, "customer_name");
+            // Extract customer from JSONB (customer, customer_data, customer_json) and top-level columns
+            Map<String, Object> customerMap = extractCustomerMap(record);
+            String customerId = firstNonBlank(
+                    extractString(customerMap, "id"),
+                    extractString(customerMap, "customer_id"));
+            String customerName = firstNonBlank(
+                    extractString(customerMap, "name"),
+                    extractString(customerMap, "customerName"),
+                    extractString(record, "customer_name"),
+                    extractString(record, "customer"));
+            String customerDescription = extractString(record, "customer_description");
+            String industry = firstNonBlank(
+                    extractString(customerMap, "industry"),
+                    extractString(record, "industry"),
+                    extractString(record, "customer_description"));
+
+            // Extract other fields (try multiple column names for role/position)
             String companyName = extractString(record, "company");
-            String role = extractString(record, "position");
+            String role = firstNonBlank(
+                    extractString(record, "position"),
+                    extractString(record, "role"));
             String projectSummary = extractString(record, "project_description");
             String responsibilities = extractString(record, "participation");
-            String industry = extractString(record, "customer_description");
 
             // Extract technologies
             List<String> technologies = extractTechnologies(record);
 
+            String endDateStr = endDate != null ? endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) : null;
             return new ProjectData(
                     null, // projectCode
                     projectName,
+                    customerId,
                     customerName,
                     companyName,
                     role,
                     startDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                    endDate != null ? endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) : null,
+                    endDateStr,
                     technologies,
                     responsibilities,
                     industry,
-                    projectSummary
+                    projectSummary,
+                    customerDescription
             );
         } catch (Exception e) {
             log.warn("Failed to convert record to ProjectData: {}", e.getMessage());
             return null;
         }
-    }
-
-    /**
-     * Extracts project map from database record.
-     * Handles both Map and PGobject (PostgreSQL JSONB) types.
-     */
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> extractProjectMap(Map<String, Object> record) {
-        Object projectObj = record.get("project");
-        if (projectObj == null) {
-            return new HashMap<>();
-        }
-
-        // Handle PGobject (PostgreSQL JSONB type)
-        if (projectObj.getClass().getName().equals("org.postgresql.util.PGobject")) {
-            try {
-                String jsonValue = (String) projectObj.getClass().getMethod("getValue").invoke(projectObj);
-                if (jsonValue != null && !jsonValue.isEmpty()) {
-                    return objectMapper.readValue(jsonValue, Map.class);
-                }
-            } catch (Exception e) {
-                log.debug("Failed to parse PGobject project: {}", e.getMessage());
-            }
-        }
-        // Handle Map type (already parsed JSON)
-        else if (projectObj instanceof Map) {
-            return (Map<String, Object>) projectObj;
-        }
-
-        return new HashMap<>();
     }
 
     /**
@@ -384,6 +457,75 @@ public class DatabaseIngestionServiceImpl implements DatabaseIngestionService {
     }
 
     /**
+     * Extracts project map from database record.
+     * Tries keys: project, project_data, project_json. Handles Map and PGobject (PostgreSQL JSONB).
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> extractProjectMap(Map<String, Object> record) {
+        for (String projectKey : List.of("project", "project_data", "project_json")) {
+            Object projectObj = record.get(projectKey);
+            if (projectObj == null) {
+                continue;
+            }
+            Map<String, Object> parsed = parseJsonObject(projectObj);
+            if (parsed != null && !parsed.isEmpty()) {
+                return parsed;
+            }
+        }
+        return new HashMap<>();
+    }
+
+    /**
+     * Extracts customer map from database record.
+     * Tries keys: customer, customer_data, customer_json. Handles Map and PGobject (PostgreSQL JSONB).
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> extractCustomerMap(Map<String, Object> record) {
+        for (String customerKey : List.of("customer", "customer_data", "customer_json")) {
+            Object customerObj = record.get(customerKey);
+            if (customerObj == null) {
+                continue;
+            }
+            Map<String, Object> parsed = parseJsonObject(customerObj);
+            if (parsed != null && !parsed.isEmpty()) {
+                return parsed;
+            }
+        }
+        return new HashMap<>();
+    }
+
+    /**
+     * Extracts string value from map.
+     */
+    private String extractString(Map<String, Object> map, String key) {
+        Object value = map.get(key);
+        if (value == null) {
+            return null;
+        }
+        return value.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> parseJsonObject(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        try {
+            if (obj.getClass().getName().equals("org.postgresql.util.PGobject")) {
+                String jsonValue = (String) obj.getClass().getMethod("getValue").invoke(obj);
+                if (jsonValue != null && !jsonValue.isEmpty()) {
+                    return objectMapper.readValue(jsonValue, Map.class);
+                }
+            } else if (obj instanceof Map) {
+                return (Map<String, Object>) obj;
+            }
+        } catch (Exception e) {
+            log.debug("Failed to parse JSON object: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
      * Extracts date from record field.
      */
     private LocalDate extractDate(Map<String, Object> record, String fieldName) {
@@ -397,24 +539,20 @@ public class DatabaseIngestionServiceImpl implements DatabaseIngestionService {
         if (value instanceof java.sql.Date) {
             return ((java.sql.Date) value).toLocalDate();
         }
+        if (value instanceof java.sql.Timestamp) {
+            return ((java.sql.Timestamp) value).toLocalDateTime().toLocalDate();
+        }
         if (value instanceof String) {
             try {
-                return LocalDate.parse((String) value);
+                String s = (String) value;
+                if (s.length() > 10) {
+                    s = s.substring(0, 10);
+                }
+                return LocalDate.parse(s);
             } catch (Exception e) {
                 log.warn("Failed to parse date from field {}: {}", fieldName, value);
             }
         }
         return null;
-    }
-
-    /**
-     * Extracts string value from map.
-     */
-    private String extractString(Map<String, Object> map, String key) {
-        Object value = map.get(key);
-        if (value == null) {
-            return null;
-        }
-        return value.toString();
     }
 }

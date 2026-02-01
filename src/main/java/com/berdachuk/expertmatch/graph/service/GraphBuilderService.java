@@ -12,6 +12,12 @@ import java.util.List;
  */
 public interface GraphBuilderService {
     /**
+     * Clears all vertices and edges from the Apache AGE graph.
+     * Use before rebuilding or when clearing test data so the graph reflects current relational data only.
+     */
+    void clearGraph();
+
+    /**
      * Builds the complete graph from database data.
      * Creates all vertices (experts, projects, technologies, domains, customers) and relationships.
      */

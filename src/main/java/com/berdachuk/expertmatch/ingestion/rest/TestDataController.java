@@ -1,16 +1,10 @@
 package com.berdachuk.expertmatch.ingestion.rest;
 
 import com.berdachuk.expertmatch.api.TestDataApi;
-import com.berdachuk.expertmatch.api.model.AsyncJobResponse;
-import com.berdachuk.expertmatch.api.model.ProgressResponse;
-import com.berdachuk.expertmatch.api.model.SuccessResponse;
-import com.berdachuk.expertmatch.api.model.TestDataSizeOption;
-import com.berdachuk.expertmatch.api.model.TestDataSizeResponse;
-import com.berdachuk.expertmatch.api.model.TestDataStatsResponse;
-import com.berdachuk.expertmatch.api.model.TraceEntry;
+import com.berdachuk.expertmatch.api.model.*;
 import com.berdachuk.expertmatch.graph.service.GraphBuilderService;
-import com.berdachuk.expertmatch.ingestion.service.TestDataGenerationProgress;
-import com.berdachuk.expertmatch.ingestion.service.TestDataGenerationProgressService;
+import com.berdachuk.expertmatch.ingestion.service.DataGenerationProgress;
+import com.berdachuk.expertmatch.ingestion.service.DataGenerationProgressService;
 import com.berdachuk.expertmatch.ingestion.service.TestDataGenerator;
 import com.berdachuk.expertmatch.ingestion.service.TestDataStatisticsService;
 import lombok.extern.slf4j.Slf4j;
@@ -41,13 +35,13 @@ public class TestDataController implements TestDataApi {
 
     private final TestDataGenerator testDataGenerator;
     private final GraphBuilderService graphBuilderService;
-    private final TestDataGenerationProgressService progressService;
+    private final DataGenerationProgressService progressService;
     private final TestDataStatisticsService testDataStatisticsService;
 
     public TestDataController(
             TestDataGenerator testDataGenerator,
             GraphBuilderService graphBuilderService,
-            TestDataGenerationProgressService progressService,
+            DataGenerationProgressService progressService,
             TestDataStatisticsService testDataStatisticsService) {
         this.testDataGenerator = testDataGenerator;
         this.graphBuilderService = graphBuilderService;
@@ -201,7 +195,7 @@ public class TestDataController implements TestDataApi {
                     "Invalid size. Must be one of: tiny, small, medium, large, huge. Got: " + sizeParam);
         }
         String jobId = UUID.randomUUID().toString();
-        TestDataGenerationProgress progress = progressService.createProgress(jobId);
+        DataGenerationProgress progress = progressService.createProgress(jobId);
         progress.addTraceEntry("INFO", "Start", "Test data generation started (size: " + sizeParam + ", clear: " + clearExisting + ")", 0);
 
         CompletableFuture.runAsync(() -> {
@@ -239,7 +233,7 @@ public class TestDataController implements TestDataApi {
 
     @Override
     public ResponseEntity<ProgressResponse> getTestDataProgress(String jobId) {
-        TestDataGenerationProgress progress = progressService.getProgress(jobId);
+        DataGenerationProgress progress = progressService.getProgress(jobId);
         if (progress == null) {
             return ResponseEntity.notFound().build();
         }
@@ -254,7 +248,7 @@ public class TestDataController implements TestDataApi {
                 .errorMessage(progress.getErrorMessage());
         if (progress.getTraceEntries() != null) {
             List<TraceEntry> trace = new ArrayList<>();
-            for (TestDataGenerationProgress.TraceEntry e : progress.getTraceEntries()) {
+            for (DataGenerationProgress.TraceEntry e : progress.getTraceEntries()) {
                 TraceEntry te = new TraceEntry()
                         .timestamp(e.getTimestamp() != null ? e.getTimestamp().atOffset(ZoneOffset.UTC) : null)
                         .level(e.getLevel() != null ? TraceEntry.LevelEnum.fromValue(e.getLevel()) : null)
@@ -273,7 +267,7 @@ public class TestDataController implements TestDataApi {
         log.info("POST /api/v1/test-data/cancel/{}", jobId);
         boolean cancelled = progressService.cancelJob(jobId);
         if (!cancelled) {
-            TestDataGenerationProgress progress = progressService.getProgress(jobId);
+            DataGenerationProgress progress = progressService.getProgress(jobId);
             if (progress == null) {
                 return ResponseEntity.notFound().build();
             }
@@ -290,10 +284,11 @@ public class TestDataController implements TestDataApi {
     public ResponseEntity<SuccessResponse> clearTestData() {
         log.info("POST /api/v1/test-data/clear");
         try {
+            graphBuilderService.clearGraph();
             testDataGenerator.clearTestData();
             return ResponseEntity.ok(new SuccessResponse()
                     .success(true)
-                    .message("Test data cleared successfully"));
+                    .message("Test data and graph cleared successfully"));
         } catch (Exception e) {
             log.error("Failed to clear test data", e);
             throw new com.berdachuk.expertmatch.core.exception.ValidationException(

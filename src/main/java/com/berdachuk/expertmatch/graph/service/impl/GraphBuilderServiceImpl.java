@@ -7,6 +7,8 @@ import com.berdachuk.expertmatch.graph.service.GraphBuilderService;
 import com.berdachuk.expertmatch.graph.service.GraphService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +34,35 @@ public class GraphBuilderServiceImpl implements GraphBuilderService {
     }
 
     /**
+     * Clears all vertices and edges from the Apache AGE graph.
+     * Uses REQUIRES_NEW so the clear commits in its own transaction even when called from clearTestData.
+     * Deletes in a single Cypher call; if that fails (e.g. timeout), retries by deleting edges first then nodes.
+     */
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void clearGraph() {
+        if (!graphService.graphExists()) {
+            log.debug("Graph does not exist, nothing to clear");
+            return;
+        }
+        log.info("Clearing graph data...");
+        try {
+            graphService.executeCypher("MATCH (n) DETACH DELETE n", new HashMap<>());
+            log.info("Graph cleared successfully");
+        } catch (Exception e) {
+            log.warn("Single-query clear failed ({}), trying edges then nodes: {}", e.getMessage(), e.getClass().getSimpleName());
+            try {
+                graphService.executeCypher("MATCH ()-[r]->() DELETE r", new HashMap<>());
+                graphService.executeCypher("MATCH (n) DELETE n", new HashMap<>());
+                log.info("Graph cleared successfully (edges then nodes)");
+            } catch (Exception e2) {
+                log.error("Could not clear graph", e2);
+                throw new RuntimeException("Failed to clear graph", e2);
+            }
+        }
+    }
+
+    /**
      * Builds graph from existing database data.
      * Creates vertices and edges for experts, projects, technologies, etc.
      */
@@ -46,6 +77,8 @@ public class GraphBuilderServiceImpl implements GraphBuilderService {
             log.info("Creating graph structure...");
             graphService.createGraph();
             log.info("Graph structure created");
+        } else {
+            clearGraph();
         }
 
         // Clear project ID map for fresh build

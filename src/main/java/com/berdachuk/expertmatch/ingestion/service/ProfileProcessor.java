@@ -140,18 +140,14 @@ public class ProfileProcessor {
     }
 
     /**
-     * Processes a single project and creates work experience record.
+     * Processes a single project and creates or overwrites work experience record.
+     * When ingesting from Kafka history, existing records are updated so new data overwrites old.
      */
     private void processProject(String employeeId, ProjectData project, Map<String, String> existingProjects) {
-        // Check if work experience already exists
         LocalDate startDate = LocalDate.parse(project.startDate());
-        if (workExperienceRepository.exists(employeeId, project.projectName(), startDate)) {
-            log.debug("Work experience already exists for {} at {} starting {}, skipping",
-                    employeeId, project.projectName(), startDate);
-            return;
-        }
-
-        String workExpId = IdGenerator.generateId();
+        String workExpId = workExperienceRepository
+                .findIdByEmployeeIdAndProjectNameAndStartDate(employeeId, project.projectName(), startDate)
+                .orElse(IdGenerator.generateId());
 
         // Find or create project
         String projectId = findOrCreateProject(project, existingProjects);
@@ -159,8 +155,10 @@ public class ProfileProcessor {
         // Build metadata
         String metadataJson = buildMetadataJson(project);
 
-        // Convert LocalDate to Instant for WorkExperience domain entity
-        LocalDate endDate = LocalDate.parse(project.endDate());
+        // Convert LocalDate to Instant for WorkExperience domain entity (endDate null = ongoing, use startDate)
+        LocalDate endDate = project.endDate() != null && !project.endDate().isBlank()
+                ? LocalDate.parse(project.endDate())
+                : startDate;
         Instant startInstant = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
         Instant endInstant = endDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
 
@@ -168,7 +166,7 @@ public class ProfileProcessor {
                 workExpId,
                 employeeId,
                 projectId,
-                null, // customerId
+                project.customerId(),
                 project.projectName(),
                 project.customerName(),
                 project.industry(),
@@ -181,7 +179,7 @@ public class ProfileProcessor {
         );
 
         workExperienceRepository.createOrUpdate(workExperience, metadataJson);
-        log.debug("Created work experience for employee {} at project {}", employeeId, project.projectName());
+        log.debug("Created/updated work experience for employee {} at project {}", employeeId, project.projectName());
     }
 
     /**
@@ -239,14 +237,16 @@ public class ProfileProcessor {
         try {
             Map<String, Object> metadata = new HashMap<>();
 
-            // Build tools and technologies references
-            String toolsText = String.join(", ", project.technologies());
+            // Build tools and technologies references (null-safe for external ingest)
+            List<String> technologies = project.technologies() != null ? project.technologies() : List.of();
+            String toolsText = String.join(", ", technologies);
             List<Map<String, Object>> toolsRef = generateToolsRef(toolsText);
-            List<Map<String, Object>> technologiesRef = generateTechnologiesRef(project.technologies());
+            List<Map<String, Object>> technologiesRef = generateTechnologiesRef(technologies);
 
-            // Parse role (may contain multiple roles separated by comma)
-            String[] roleParts = project.role().split(",\\s*");
-            String primaryRole = roleParts[0].trim();
+            // Parse role (may contain multiple roles separated by comma); null-safe for external ingest
+            String roleStr = project.role() != null ? project.role() : "";
+            String[] roleParts = roleStr.split(",\\s*");
+            String primaryRole = roleParts.length > 0 && !roleParts[0].trim().isEmpty() ? roleParts[0].trim() : "Developer";
             List<String> extraRoles = roleParts.length > 1
                     ? Arrays.asList(Arrays.copyOfRange(roleParts, 1, roleParts.length))
                     : new ArrayList<>();
@@ -255,10 +255,12 @@ public class ProfileProcessor {
             Map<String, Object> primaryProjectRole = generatePrimaryProjectRole(primaryRole);
             List<Map<String, Object>> extraProjectRoles = generateExtraProjectRoles(extraRoles);
             List<Map<String, Object>> allProjectRoles = generateAllProjectRoles(primaryRole, extraRoles);
-            String customerDescription = generateCustomerDescription(project.customerName());
-            String participation = generateParticipation(primaryRole, project.technologies());
+            String customerDescription = project.customerDescription() != null && !project.customerDescription().isBlank()
+                    ? project.customerDescription()
+                    : generateCustomerDescription(project.customerName() != null ? project.customerName() : "");
+            String participation = generateParticipation(primaryRole, technologies);
 
-            metadata.put("company", project.companyName());
+            metadata.put("company", project.companyName() != null ? project.companyName() : "");
             metadata.put("company_url", "");
             metadata.put("is_company_berdachuk", false);
             metadata.put("team", "Development Team");
@@ -266,13 +268,13 @@ public class ProfileProcessor {
             metadata.put("tools_ref", toolsRef);
             metadata.put("technologies_ref", technologiesRef);
             metadata.put("customer_description", customerDescription);
-            metadata.put("position", project.role());
+            metadata.put("position", project.role() != null ? project.role() : "");
             metadata.put("project_role", projectRole);
             metadata.put("primary_project_role", primaryProjectRole);
             metadata.put("extra_project_roles", extraProjectRoles);
             metadata.put("all_project_roles", allProjectRoles);
             metadata.put("participation", participation);
-            metadata.put("project_description", project.projectSummary());
+            metadata.put("project_description", project.projectSummary() != null ? project.projectSummary() : "");
 
             return objectMapper.writeValueAsString(metadata);
         } catch (Exception e) {

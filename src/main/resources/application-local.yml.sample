@@ -73,3 +73,13 @@ server:
     connection-timeout: 300000  # 5 minutes
     keep-alive-timeout: 300000  # 5 minutes
 
+  ingestion:
+    constant-expansion:
+      enabled: false  # Disable LLM constant expansion by default (enable in local/dev profiles)
+      # When enabled, ConstantExpansionService expands domain-specific constants
+      # (technologies, tools, project types, etc.) using LLM at application startup.
+      # Expansion results are cached to avoid repeated LLM calls.
+      # Falls back to base constants if LLM is unavailable or fails.
+    external-database:
+      # External database configuration for work experience ingestion
+      enabled: ${EXPERTMATCH_INGESTION_EXTERNAL_DB_ENABLED:false}

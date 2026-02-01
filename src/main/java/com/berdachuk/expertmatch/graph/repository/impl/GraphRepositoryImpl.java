@@ -5,7 +5,10 @@ import com.berdachuk.expertmatch.graph.repository.GraphRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.stereotype.Repository;
+
+import java.sql.PreparedStatement;
 
 /**
  * Repository implementation for Apache AGE graph administrative operations.
@@ -50,7 +53,11 @@ public class GraphRepositoryImpl implements GraphRepository {
     @Override
     public void createGraph(String graphName) {
         try {
-            jdbcTemplate.execute(createGraphSql);
+            jdbcTemplate.execute(createGraphSql, (PreparedStatementCallback<Object>) ps -> {
+                ps.setString(1, graphName);
+                ps.execute();
+                return null;
+            });
             log.info("Graph '{}' created successfully", graphName);
         } catch (Exception e) {
             String message = e.getMessage();

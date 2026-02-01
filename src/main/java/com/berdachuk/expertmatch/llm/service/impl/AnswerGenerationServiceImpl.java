@@ -227,6 +227,16 @@ public class AnswerGenerationServiceImpl implements AnswerGenerationService {
             log.warn("Blank answer text from LLM, returning empty answer");
             return "";
         }
+        // Safeguard: if the LLM returned raw tool_calls JSON (e.g. ChatClient had no tools),
+        // do not show that to the user
+        if (answer.contains("\"tool_calls\"") && answer.contains("getRetrievedExperts")) {
+            log.warn("LLM returned tool_calls JSON instead of answer text. ChatClient may lack ExpertMatch tools.");
+            if (tracer != null) {
+                tracer.failStep("Generate Answer (RAG)", "AnswerGenerationService", "generateAnswer",
+                        "LLM returned tool_calls; ensure ChatClient has getRetrievedExperts tool");
+            }
+            return "Unable to generate the answer. Please try again or contact support if the issue persists.";
+        }
         if (tracer != null) {
             String modelInfo = ModelInfoExtractor.extractModelInfo(chatModel, environment);
             ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);

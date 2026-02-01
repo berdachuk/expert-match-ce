@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Instant;
 import java.util.List;
@@ -50,6 +51,20 @@ public class GlobalExceptionHandler {
         }
 
         return ResponseEntity.status(status).body(error);
+    }
+
+    /**
+     * Handles Spring 6.1+ no resource found (no handler matched the request).
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "NOT_FOUND",
+                ex.getMessage(),
+                Instant.now()
+        );
+        log.warn("No handler found for request: {} {}", ex.getHttpMethod(), ex.getResourcePath());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     /**

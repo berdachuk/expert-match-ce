@@ -117,8 +117,13 @@ function initializeUserSelector() {
 
         button.addEventListener('click', function () {
             setCurrentUser(user);
-            // Reload page to apply new user context
-            window.location.reload();
+            const url = new URL(window.location.href);
+            if (user.roles.includes('ROLE_ADMIN')) {
+                url.searchParams.set('user', 'admin');
+            } else {
+                url.searchParams.delete('user');
+            }
+            window.location.href = url.toString();
         });
 
         li.appendChild(button);

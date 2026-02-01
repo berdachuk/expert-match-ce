@@ -38,6 +38,9 @@ public class TechnologyRepositoryImpl implements TechnologyRepository {
     @InjectSql("/sql/technology/findAll.sql")
     private String findAllSql;
 
+    @InjectSql("/sql/technology/count.sql")
+    private String countSql;
+
     @InjectSql("/sql/technology/deleteAll.sql")
     private String deleteAllSql;
 
@@ -134,6 +137,15 @@ public class TechnologyRepositoryImpl implements TechnologyRepository {
                 rs.getString("category"),
                 synonyms
         );
+    }
+
+    /**
+     * Returns the total count of technology records.
+     */
+    @Override
+    public long count() {
+        Long result = namedJdbcTemplate.queryForObject(countSql, Map.of(), Long.class);
+        return result != null ? result : 0L;
     }
 
     /**

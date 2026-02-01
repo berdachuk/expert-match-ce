@@ -74,6 +74,13 @@ public interface WorkExperienceRepository {
     void updateEmbedding(String workExpId, List<Double> embedding, int dimension);
 
     /**
+     * Returns the total count of work experience records.
+     *
+     * @return total count
+     */
+    long count();
+
+    /**
      * Deletes all work experience records.
      * Warning: This is a destructive operation.
      *

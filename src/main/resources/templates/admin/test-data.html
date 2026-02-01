@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head}">
+    <title>ExpertMatch - Test Data</title>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+<main class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Test Data</h1>
+
+            <div class="alert alert-success" th:if="${success != null && !success.isEmpty()}"
+                 th:text="${success}"></div>
+            <div class="alert alert-danger" th:if="${error != null && !error.isEmpty()}" th:text="${error}"></div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Current data statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3 col-6">
+                            <div class="text-muted small">Employees</div>
+                            <div class="fw-bold" id="statsEmployees">—</div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="text-muted small">Work experiences</div>
+                            <div class="fw-bold" id="statsWorkExperiences">—</div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="text-muted small">Projects</div>
+                            <div class="fw-bold" id="statsProjects">—</div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="text-muted small">Technologies</div>
+                            <div class="fw-bold" id="statsTechnologies">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Generate Full Test Dataset (with embeddings and graph)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success d-none" id="generateSuccessAlert" role="alert"></div>
+                    <div class="alert alert-danger d-none" id="generateErrorAlert" role="alert"></div>
+
+                    <form id="generateForm">
+                        <div class="mb-3">
+                            <label class="form-label" for="size">Dataset size</label>
+                            <select class="form-select" id="size" name="size">
+                                <option value="">Loading sizes...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" id="clear" name="clear" type="checkbox" value="true">
+                                <label class="form-check-label" for="clear">Clear existing data first</label>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="generateButton" type="submit">
+                            <span id="generateButtonText">Generate Test Data</span>
+                            <span aria-hidden="true" class="spinner-border spinner-border-sm d-none ms-2"
+                                  id="generateSpinner" role="status"></span>
+                        </button>
+                        <small class="text-muted ms-2" id="timeEstimate">This is a long-running operation and may take
+                            1-2 minutes to complete.</small>
+                        <button class="btn btn-danger d-none ms-2" id="stopButton" type="button">
+                            <span id="stopButtonText">Stop Generation</span>
+                        </button>
+                        <div class="mt-3 d-none" id="generateProgress">
+                            <div class="progress" style="height: 25px;">
+                                <div aria-valuemax="100"
+                                     aria-valuemin="0" aria-valuenow="0"
+                                     class="progress-bar progress-bar-striped progress-bar-animated"
+                                     id="generateProgressBar" role="progressbar" style="width: 0%">
+                                    <span id="generateProgressText">Generating...</span>
+                                </div>
+                            </div>
+                            <div class="mt-2 text-muted small" id="generateStatusText"></div>
+                        </div>
+                        <div class="mt-3 d-none" id="executionTracePanel">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0 text-white">Logs</h6>
+                                    <button class="btn btn-sm btn-outline-light" id="toggleTraceButton" type="button">
+                                        <span id="toggleTraceIcon">&#9660;</span> <span id="toggleTraceText">Collapse</span>
+                                    </button>
+                                </div>
+                                <div class="card-body p-0" id="traceContent"
+                                     style="max-height: 500px; overflow-y: auto; display: block;">
+                                    <div class="list-group list-group-flush" id="traceEntries">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Clear Test Data</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success d-none" id="clearSuccessAlert" role="alert"></div>
+                    <div class="alert alert-danger d-none" id="clearErrorAlert" role="alert"></div>
+
+                    <form id="clearForm">
+                        <button class="btn btn-danger" id="clearButton" type="submit">
+                            <span id="clearButtonText">Clear All Test Data</span>
+                            <span aria-hidden="true" class="spinner-border spinner-border-sm d-none ms-2"
+                                  id="clearSpinner"
+                                  role="status"></span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+<script th:src="@{/js/main.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const generateForm = document.getElementById('generateForm');
+        const generateButton = document.getElementById('generateButton');
+        const generateButtonText = document.getElementById('generateButtonText');
+        const generateSpinner = document.getElementById('generateSpinner');
+        const generateProgress = document.getElementById('generateProgress');
+        const generateProgressBar = document.getElementById('generateProgressBar');
+        const generateProgressText = document.getElementById('generateProgressText');
+        const generateStatusText = document.getElementById('generateStatusText');
+        const generateSuccessAlert = document.getElementById('generateSuccessAlert');
+        const generateErrorAlert = document.getElementById('generateErrorAlert');
+        const stopButton = document.getElementById('stopButton');
+        const stopButtonText = document.getElementById('stopButtonText');
+        const executionTracePanel = document.getElementById('executionTracePanel');
+        const traceEntries = document.getElementById('traceEntries');
+        const traceContent = document.getElementById('traceContent');
+        const toggleTraceButton = document.getElementById('toggleTraceButton');
+        const toggleTraceIcon = document.getElementById('toggleTraceIcon');
+        const toggleTraceText = document.getElementById('toggleTraceText');
+        const timeEstimate = document.getElementById('timeEstimate');
+        const sizeSelect = document.getElementById('size');
+        let traceExpanded = true;
+        let currentJobId = null;
+        let sizeConfigs = {};
+        let pollInterval = null;
+
+        function loadStatistics() {
+            fetch('/api/v1/test-data/stats', { method: 'GET', headers: { 'Accept': 'application/json' } })
+                .then(function (r) {
+                    if (!r.ok) throw new Error('Failed to load statistics');
+                    return r.json();
+                })
+                .then(function (data) {
+                    document.getElementById('statsEmployees').textContent = data.employees != null ? data.employees : '—';
+                    document.getElementById('statsWorkExperiences').textContent = data.workExperiences != null ? data.workExperiences : '—';
+                    document.getElementById('statsProjects').textContent = data.projects != null ? data.projects : '—';
+                    document.getElementById('statsTechnologies').textContent = data.technologies != null ? data.technologies : '—';
+                })
+                .catch(function (err) {
+                    console.error('Error loading statistics:', err);
+                    document.getElementById('statsEmployees').textContent = '—';
+                    document.getElementById('statsWorkExperiences').textContent = '—';
+                    document.getElementById('statsProjects').textContent = '—';
+                    document.getElementById('statsTechnologies').textContent = '—';
+                });
+        }
+
+        function loadAvailableSizes() {
+            fetch('/api/v1/test-data/sizes')
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to load available sizes');
+                    return response.json();
+                })
+                .then(sizes => {
+                    sizes.forEach(config => { sizeConfigs[config.size] = config; });
+                    sizeSelect.innerHTML = '';
+                    sizes.forEach(config => {
+                        const option = document.createElement('option');
+                        option.value = config.size;
+                        option.textContent = config.size + ' - ' + config.description;
+                        if (config.size === 'tiny') option.selected = true;
+                        sizeSelect.appendChild(option);
+                    });
+                    updateTimeEstimate();
+                })
+                .catch(error => {
+                    console.error('Error loading sizes:', error);
+                    sizeSelect.innerHTML = '<option value="">Error loading sizes</option>';
+                });
+        }
+
+        function updateTimeEstimate() {
+            if (!timeEstimate || !sizeSelect) return;
+            const size = sizeSelect.value;
+            const config = sizeConfigs[size];
+            if (config && config.estimatedTimeMinutes > 0) {
+                const m = config.estimatedTimeMinutes;
+                timeEstimate.textContent = m < 2
+                    ? 'This may take about ' + m + ' minute to complete.'
+                    : 'This may take about ' + m + ' minutes to complete.';
+            } else {
+                timeEstimate.textContent = 'This is a long-running operation and may take several minutes to complete.';
+            }
+        }
+
+        loadAvailableSizes();
+        loadStatistics();
+        if (sizeSelect) sizeSelect.addEventListener('change', updateTimeEstimate);
+
+        function updateTraceEntries(newEntries) {
+            if (!traceEntries || !newEntries) return;
+            const currentCount = traceEntries.children.length;
+            for (let i = currentCount; i < newEntries.length; i++) {
+                const entry = newEntries[i];
+                const el = document.createElement('div');
+                el.className = 'list-group-item';
+                let timestamp = '';
+                if (entry.timestamp) {
+                    try {
+                        const date = new Date(entry.timestamp);
+                        if (!isNaN(date.getTime())) timestamp = date.toLocaleTimeString();
+                        else timestamp = entry.timestamp;
+                    } catch (e) { timestamp = entry.timestamp; }
+                }
+                const level = entry.level || 'INFO';
+                const step = entry.step || '';
+                const message = entry.message || '';
+                const progress = entry.progress !== undefined && entry.progress !== null ? entry.progress : '';
+                let badgeClass = 'bg-secondary';
+                if (level === 'SUCCESS') badgeClass = 'bg-success';
+                else if (level === 'ERROR') badgeClass = 'bg-danger';
+                else if (level === 'WARN') badgeClass = 'bg-warning';
+                else if (level === 'INFO') badgeClass = 'bg-info';
+                function escapeHtml(text) {
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+                el.innerHTML = '<div class="d-flex justify-content-between align-items-start">' +
+                    '<div class="flex-grow-1">' +
+                    '<span class="badge ' + badgeClass + ' me-2">' + level + '</span>' +
+                    (step ? '<strong>' + escapeHtml(step) + '</strong>' : '') +
+                    (message ? ' <span class="ms-2">' + escapeHtml(message) + '</span>' : '') +
+                    '</div>' +
+                    '<div class="text-end text-muted small ms-3">' +
+                    (timestamp ? '<div>' + timestamp + '</div>' : '') +
+                    (progress !== '' ? '<div class="fw-bold">' + progress + '%</div>' : '') +
+                    '</div></div>';
+                traceEntries.appendChild(el);
+            }
+            if (traceExpanded && traceContent) traceContent.scrollTop = traceContent.scrollHeight;
+        }
+
+        if (toggleTraceButton) {
+            toggleTraceButton.addEventListener('click', function () {
+                traceExpanded = !traceExpanded;
+                if (traceExpanded) {
+                    traceContent.style.display = 'block';
+                    toggleTraceIcon.textContent = '\u9660';
+                    toggleTraceText.textContent = ' Collapse';
+                } else {
+                    traceContent.style.display = 'none';
+                    toggleTraceIcon.textContent = '\u25B6';
+                    toggleTraceText.textContent = ' Expand';
+                }
+            });
+        }
+
+        if (generateForm) {
+            generateForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const size = document.getElementById('size').value;
+                const clear = document.getElementById('clear').checked;
+
+                generateSuccessAlert.classList.add('d-none');
+                generateErrorAlert.classList.add('d-none');
+                generateButton.disabled = true;
+                generateButtonText.textContent = 'Generating...';
+                generateSpinner.classList.remove('d-none');
+                generateProgress.classList.remove('d-none');
+                generateProgressBar.style.width = '0%';
+                generateProgressBar.setAttribute('aria-valuenow', 0);
+                generateProgressText.textContent = '0%';
+                generateStatusText.textContent = 'Starting generation...';
+                executionTracePanel.classList.remove('d-none');
+                traceEntries.innerHTML = '';
+                traceExpanded = true;
+                traceContent.style.display = 'block';
+                toggleTraceIcon.textContent = '\u9660';
+                toggleTraceText.textContent = ' Collapse';
+                stopButton.classList.remove('d-none');
+
+                const url = '/api/v1/test-data/complete/async?size=' + encodeURIComponent(size) + '&clear=' + clear;
+
+                fetch(url, { method: 'POST', headers: { 'Accept': 'application/json' } })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(data => { throw new Error(data.message || 'Failed to start'); }).catch(() => { throw new Error('Network error'); });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        currentJobId = data.jobId;
+                        pollInterval = setInterval(function () {
+                            fetch('/api/v1/test-data/progress/' + currentJobId, { method: 'GET', headers: { 'Accept': 'application/json' } })
+                                .then(r => {
+                                    if (r.status === 404) throw new Error('Job not found');
+                                    if (!r.ok) throw new Error('Failed to get progress');
+                                    return r.json();
+                                })
+                                .then(data => {
+                                    generateProgressBar.style.width = data.progress + '%';
+                                    generateProgressBar.setAttribute('aria-valuenow', data.progress);
+                                    generateProgressText.textContent = data.progress + '%';
+                                    generateStatusText.textContent = (data.currentStep || '') + ': ' + (data.message || '');
+                                    if (data.traceEntries && data.traceEntries.length > 0) {
+                                        executionTracePanel.classList.remove('d-none');
+                                        updateTraceEntries(data.traceEntries);
+                                    }
+                                    if (data.status === 'completed') {
+                                        clearInterval(pollInterval);
+                                        pollInterval = null;
+                                        generateProgressBar.style.width = '100%';
+                                        generateProgressText.textContent = '100%';
+                                        generateStatusText.textContent = 'Test data generated successfully';
+                                        generateSuccessAlert.textContent = 'Test data (data + embeddings + graph) generated successfully - Size: ' + size + (clear ? ' (existing data cleared)' : '');
+                                        generateSuccessAlert.classList.remove('d-none');
+                                        setTimeout(function () { generateProgress.classList.add('d-none'); }, 2000);
+                                        generateButton.disabled = false;
+                                        generateButtonText.textContent = 'Generate Test Data';
+                                        generateSpinner.classList.add('d-none');
+                                        stopButton.classList.add('d-none');
+                                        currentJobId = null;
+                                        loadStatistics();
+                                    } else if (data.status === 'error') {
+                                        clearInterval(pollInterval);
+                                        pollInterval = null;
+                                        generateErrorAlert.textContent = 'Failed: ' + (data.errorMessage || 'Unknown error');
+                                        generateErrorAlert.classList.remove('d-none');
+                                        generateProgress.classList.add('d-none');
+                                        generateButton.disabled = false;
+                                        generateButtonText.textContent = 'Generate Test Data';
+                                        generateSpinner.classList.add('d-none');
+                                        stopButton.classList.add('d-none');
+                                        currentJobId = null;
+                                    } else if (data.status === 'cancelled') {
+                                        if (data.traceEntries && data.traceEntries.length > 0) updateTraceEntries(data.traceEntries);
+                                        clearInterval(pollInterval);
+                                        pollInterval = null;
+                                        generateErrorAlert.textContent = 'Generation was cancelled';
+                                        generateErrorAlert.classList.remove('d-none');
+                                        setTimeout(function () { generateProgress.classList.add('d-none'); }, 2000);
+                                        generateButton.disabled = false;
+                                        generateButtonText.textContent = 'Generate Test Data';
+                                        generateSpinner.classList.add('d-none');
+                                        stopButton.classList.add('d-none');
+                                        currentJobId = null;
+                                    }
+                                })
+                                .catch(err => {
+                                    clearInterval(pollInterval);
+                                    pollInterval = null;
+                                    generateErrorAlert.textContent = 'Progress error: ' + err.message;
+                                    generateErrorAlert.classList.remove('d-none');
+                                    generateProgress.classList.add('d-none');
+                                    generateButton.disabled = false;
+                                    generateButtonText.textContent = 'Generate Test Data';
+                                    generateSpinner.classList.add('d-none');
+                                    stopButton.classList.add('d-none');
+                                    currentJobId = null;
+                                });
+                        }, 500);
+                    })
+                    .catch(error => {
+                        if (pollInterval) clearInterval(pollInterval);
+                        generateErrorAlert.textContent = 'Failed to start: ' + error.message;
+                        generateErrorAlert.classList.remove('d-none');
+                        generateProgress.classList.add('d-none');
+                        generateButton.disabled = false;
+                        generateButtonText.textContent = 'Generate Test Data';
+                        generateSpinner.classList.add('d-none');
+                        stopButton.classList.add('d-none');
+                        currentJobId = null;
+                    });
+            });
+        }
+
+        if (stopButton) {
+            stopButton.addEventListener('click', function () {
+                if (!currentJobId) return;
+                stopButton.disabled = true;
+                stopButtonText.textContent = 'Cancelling...';
+                fetch('/api/v1/test-data/cancel/' + currentJobId, { method: 'POST', headers: { 'Accept': 'application/json' } })
+                    .then(r => {
+                        if (!r.ok) return r.json().then(d => { throw new Error(d.message || 'Cancel failed'); });
+                        return r.json();
+                    })
+                    .then(() => { stopButtonText.textContent = 'Cancelled'; })
+                    .catch(err => {
+                        generateErrorAlert.textContent = 'Cancel failed: ' + err.message;
+                        generateErrorAlert.classList.remove('d-none');
+                        stopButton.disabled = false;
+                        stopButtonText.textContent = 'Stop Generation';
+                    });
+            });
+        }
+
+        const clearForm = document.getElementById('clearForm');
+        const clearButton = document.getElementById('clearButton');
+        const clearButtonText = document.getElementById('clearButtonText');
+        const clearSpinner = document.getElementById('clearSpinner');
+        const clearSuccessAlert = document.getElementById('clearSuccessAlert');
+        const clearErrorAlert = document.getElementById('clearErrorAlert');
+
+        if (clearForm) {
+            clearForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                if (!confirm('Are you sure you want to clear all test data? This will delete employees, work experiences, projects, and technologies. This action cannot be undone.')) return;
+                clearSuccessAlert.classList.add('d-none');
+                clearErrorAlert.classList.add('d-none');
+                clearButton.disabled = true;
+                clearButtonText.textContent = 'Clearing...';
+                clearSpinner.classList.remove('d-none');
+                fetch('/api/v1/test-data/clear', { method: 'POST', headers: { 'Accept': 'application/json' } })
+                    .then(r => {
+                        if (!r.ok) return r.json().then(d => { throw new Error(d.message || 'Clear failed'); });
+                        return r.json();
+                    })
+                    .then(() => {
+                        clearSuccessAlert.textContent = 'Test data cleared successfully';
+                        clearSuccessAlert.classList.remove('d-none');
+                        loadStatistics();
+                    })
+                    .catch(err => {
+                        clearErrorAlert.textContent = 'Failed to clear: ' + err.message;
+                        clearErrorAlert.classList.remove('d-none');
+                    })
+                    .finally(() => {
+                        clearButton.disabled = false;
+                        clearButtonText.textContent = 'Clear All Test Data';
+                        clearSpinner.classList.add('d-none');
+                    });
+            });
+        }
+    });
+</script>
+</body>
+</html>

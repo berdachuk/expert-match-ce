@@ -45,6 +45,9 @@ public class WorkExperienceRepositoryImpl implements WorkExperienceRepository {
     @InjectSql("/sql/workexperience/updateEmbedding.sql")
     private String updateEmbeddingSql;
 
+    @InjectSql("/sql/workexperience/count.sql")
+    private String countSql;
+
     @InjectSql("/sql/workexperience/deleteAll.sql")
     private String deleteAllSql;
 
@@ -281,6 +284,15 @@ public class WorkExperienceRepositoryImpl implements WorkExperienceRepository {
         params.put("dimension", dimension);
 
         namedJdbcTemplate.update(updateEmbeddingSql, params);
+    }
+
+    /**
+     * Returns the total count of work experience records.
+     */
+    @Override
+    public long count() {
+        Long result = namedJdbcTemplate.queryForObject(countSql, Map.of(), Long.class);
+        return result != null ? result : 0L;
     }
 
     /**

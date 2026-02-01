@@ -72,6 +72,13 @@ public interface EmployeeRepository {
     List<String> findAllIds(int limit);
 
     /**
+     * Returns the total count of employee records.
+     *
+     * @return total count
+     */
+    long count();
+
+    /**
      * Deletes all employee records.
      * Warning: This is a destructive operation.
      *

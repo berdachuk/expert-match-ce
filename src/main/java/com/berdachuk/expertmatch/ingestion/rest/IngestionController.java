@@ -58,6 +58,13 @@ public class IngestionController implements IngestionApi {
         this.environment = environment;
     }
 
+    private static String maskPasswordInUrl(String url) {
+        if (url == null || !url.contains("?")) {
+            return url;
+        }
+        return url.replaceAll("([?&]password=)[^&]*", "$1****");
+    }
+
     @Override
     public Optional<NativeWebRequest> getRequest() {
         return Optional.empty();
@@ -140,13 +147,6 @@ public class IngestionController implements IngestionApi {
         response.put("connected", connected);
         response.put("connectionInfo", connectionInfo);
         return ResponseEntity.ok(response);
-    }
-
-    private static String maskPasswordInUrl(String url) {
-        if (url == null || !url.contains("?")) {
-            return url;
-        }
-        return url.replaceAll("([?&]password=)[^&]*", "$1****");
     }
 
     /**

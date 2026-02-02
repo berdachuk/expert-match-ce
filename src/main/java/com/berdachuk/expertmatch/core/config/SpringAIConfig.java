@@ -62,6 +62,7 @@ public class SpringAIConfig {
      * final answer text is returned instead of raw tool_calls JSON.
      * <p>
      * Selection: When chatClientWithTools exists it is @Primary. This no-tools client is NOT
+     *
      * @Primary so that when both exist (e.g. config load order), chatClientWithTools is chosen.
      */
     @Bean

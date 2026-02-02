@@ -45,13 +45,6 @@ public class DatabaseIngestionServiceImpl implements DatabaseIngestionService {
         log.info("DatabaseIngestionService initialized with external repository for source database ingestion");
     }
 
-    @Override
-    @Transactional
-    public IngestionResult ingestAll(int batchSize) {
-        log.info("Starting ingestion from external database with batch size: {}", batchSize);
-        return ingestFromOffset(0L, batchSize);
-    }
-
     private static LocalDate firstNonNull(LocalDate... values) {
         for (LocalDate v : values) {
             if (v != null) {
@@ -77,6 +70,13 @@ public class DatabaseIngestionServiceImpl implements DatabaseIngestionService {
             }
         }
         return false;
+    }
+
+    @Override
+    @Transactional
+    public IngestionResult ingestAll(int batchSize) {
+        log.info("Starting ingestion from external database with batch size: {}", batchSize);
+        return ingestFromOffset(0L, batchSize);
     }
 
     @Override
@@ -433,8 +433,7 @@ public class DatabaseIngestionServiceImpl implements DatabaseIngestionService {
     private List<String> extractTechnologies(Map<String, Object> record) {
         // Try technologies field first
         Object technologiesObj = record.get("technologies");
-        if (technologiesObj instanceof String) {
-            String techs = (String) technologiesObj;
+        if (technologiesObj instanceof String techs) {
             if (!techs.isBlank()) {
                 return Arrays.stream(techs.split(","))
                         .map(String::trim)
@@ -542,9 +541,8 @@ public class DatabaseIngestionServiceImpl implements DatabaseIngestionService {
         if (value instanceof java.sql.Timestamp) {
             return ((java.sql.Timestamp) value).toLocalDateTime().toLocalDate();
         }
-        if (value instanceof String) {
+        if (value instanceof String s) {
             try {
-                String s = (String) value;
                 if (s.length() > 10) {
                     s = s.substring(0, 10);
                 }

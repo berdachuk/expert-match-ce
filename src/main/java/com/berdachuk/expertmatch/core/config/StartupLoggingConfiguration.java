@@ -40,6 +40,16 @@ public class StartupLoggingConfiguration {
         this.embeddingModels = embeddingModels;
     }
 
+    private static String maskPasswordInUrl(String url) {
+        if (url == null || !url.contains("?")) {
+            return url;
+        }
+        if (url.matches(".*[?&]password=[^&]*.*")) {
+            return url.replaceAll("([?&]password=)[^&]*", "$1****");
+        }
+        return url;
+    }
+
     /**
      * Log application information when the application is ready.
      */
@@ -124,16 +134,6 @@ public class StartupLoggingConfiguration {
         log.info("=================================================================");
         log.info("Application is ready to accept requests!");
         log.info("=================================================================");
-    }
-
-    private static String maskPasswordInUrl(String url) {
-        if (url == null || !url.contains("?")) {
-            return url;
-        }
-        if (url.matches(".*[?&]password=[^&]*.*")) {
-            return url.replaceAll("([?&]password=)[^&]*", "$1****");
-        }
-        return url;
     }
 
     /**

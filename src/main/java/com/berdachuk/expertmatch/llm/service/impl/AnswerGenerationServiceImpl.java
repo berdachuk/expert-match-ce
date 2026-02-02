@@ -364,14 +364,13 @@ public class AnswerGenerationServiceImpl implements AnswerGenerationService {
 
         // Build expert information section - NO expert data included
         // The LLM MUST use getRetrievedExperts() tool to get expert information
-        StringBuilder expertInfoSection = new StringBuilder();
-        expertInfoSection.append("## Expert Information\n");
-        expertInfoSection.append("**No expert data included in prompt.**\n\n");
-        expertInfoSection.append("**CRITICAL ACTION REQUIRED**: You MUST call the **getRetrievedExperts()** tool FIRST to retrieve expert information before generating your answer.\n");
-        expertInfoSection.append("Example: Call `getRetrievedExperts()` to get the experts that were already found for this query.\n");
-        expertInfoSection.append("\n");
-        expertInfoSection.append("**Important**: Do NOT call expertQuery() - that would start a new search. Use getRetrievedExperts() to access the experts already retrieved.\n");
-        variables.put("expertInfoSection", expertInfoSection.toString());
+        String expertInfoSection = "## Expert Information\n" +
+                "**No expert data included in prompt.**\n\n" +
+                "**CRITICAL ACTION REQUIRED**: You MUST call the **getRetrievedExperts()** tool FIRST to retrieve expert information before generating your answer.\n" +
+                "Example: Call `getRetrievedExperts()` to get the experts that were already found for this query.\n" +
+                "\n" +
+                "**Important**: Do NOT call expertQuery() - that would start a new search. Use getRetrievedExperts() to access the experts already retrieved.\n";
+        variables.put("expertInfoSection", expertInfoSection);
 
         // Build instructions section based on intent
         // Note: Instructions are built dynamically based on intent, which is acceptable

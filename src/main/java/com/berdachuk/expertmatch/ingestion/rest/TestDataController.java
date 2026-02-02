@@ -49,6 +49,13 @@ public class TestDataController implements TestDataApi {
         this.testDataStatisticsService = testDataStatisticsService;
     }
 
+    private static boolean isValidSize(String size) {
+        for (String valid : VALID_SIZES) {
+            if (valid.equals(size)) return true;
+        }
+        return false;
+    }
+
     @Override
     public Optional<NativeWebRequest> getRequest() {
         return Optional.empty();
@@ -294,13 +301,6 @@ public class TestDataController implements TestDataApi {
             throw new com.berdachuk.expertmatch.core.exception.ValidationException(
                     "Failed to clear test data: " + e.getMessage());
         }
-    }
-
-    private static boolean isValidSize(String size) {
-        for (String valid : VALID_SIZES) {
-            if (valid.equals(size)) return true;
-        }
-        return false;
     }
 }
 

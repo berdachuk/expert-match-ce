@@ -15,7 +15,7 @@ public interface ExpertEnrichmentService {
      * Loads full employee data, skills, projects, and work experience for each expert ID.
      *
      * @param expertIdsWithScores Map of expert IDs to their relevance scores
-     * @param parsedQuery        The parsed query containing intent, skills, and technologies
+     * @param parsedQuery         The parsed query containing intent, skills, and technologies
      * @return List of enriched expert matches with full details
      */
     List<QueryResponse.ExpertMatch> enrichExperts(

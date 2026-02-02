@@ -104,7 +104,7 @@ public class FlywayConfig {
                 .schemas(properties.getSchemas().toArray(new String[0]))
                 .baselineOnMigrate(properties.isBaselineOnMigrate())
                 .baselineVersion(properties.getBaselineVersion() != null ?
-                        properties.getBaselineVersion().toString() : "0")
+                        properties.getBaselineVersion() : "0")
                 .initSql(initSql)
                 // Disable validation on migrate to allow checksum updates after file changes
                 .validateOnMigrate(false)

@@ -44,6 +44,8 @@ RERANKING_TEMPERATURE: 0.1
 INGEST_POSTGRES_HOST: localhost
 INGEST_POSTGRES_PORT: 5432
 INGEST_POSTGRES_DB: aist-tool-networking
+# Schema containing work_experience_json table (use 'public' if table is in public schema)
+INGEST_POSTGRES_SCHEMA: work_experience
 INGEST_POSTGRES_PASSWORD: your_password
 INGEST_POSTGRES_USER: Auto_EPM-ESP_srv-aist@epam.com
 
@@ -73,6 +75,7 @@ server:
     connection-timeout: 300000  # 5 minutes
     keep-alive-timeout: 300000  # 5 minutes
 
+expertmatch:
   ingestion:
     constant-expansion:
       enabled: false  # Disable LLM constant expansion by default (enable in local/dev profiles)
@@ -82,4 +85,4 @@ server:
       # Falls back to base constants if LLM is unavailable or fails.
     external-database:
       # External database configuration for work experience ingestion
-      enabled: ${EXPERTMATCH_INGESTION_EXTERNAL_DB_ENABLED:false}
+      enabled: true

@@ -117,7 +117,9 @@ The ingestion reads from `work_experience.work_experience_json` table with the f
 - `end_date` (date) - Project end date
 - `project` (jsonb) - Project information
 - `employee` (jsonb) - Employee information
-- `customer` (jsonb) - Customer information
+- `customer` (jsonb) - Customer information (id, name, industry, etc.; used for customer_id, customer_name, industry)
+- `customer_description` (text) - Customer/company description (used in metadata and as industry fallback)
+- `customer_name` (text) - Top-level customer name (fallback when customer JSONB absent)
 - `technologies` (text) - Comma-separated technologies
 - `technologies_ref` (jsonb) - Technologies as JSON array
 - `raw_message` (jsonb) - Decoded message

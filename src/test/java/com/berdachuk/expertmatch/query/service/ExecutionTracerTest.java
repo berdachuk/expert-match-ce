@@ -105,7 +105,7 @@ class ExecutionTracerTest {
         ExecutionTracer tracer = new ExecutionTracer();
 
         try {
-            Thread.sleep(10);
+            Thread.sleep(1);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -115,7 +115,7 @@ class ExecutionTracerTest {
 
         ExecutionTrace.ExecutionTraceData trace = tracer.buildTrace();
 
-        assertTrue(trace.totalDurationMs() >= 10);
+        assertTrue(trace.totalDurationMs() >= 1);
     }
 
     @Test

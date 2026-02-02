@@ -44,6 +44,23 @@
 - Backend: Spring Boot 3.5.9, Java 21, PostgreSQL 17, PgVector, Apache AGE, Spring AI
 - Testing: JUnit 5, Testcontainers, Mockito
 
+### AI Provider Configuration
+- **Always Use OpenAI-Compatible Providers**: All AI providers must use OpenAI-compatible APIs only
+- **Ollama Exclusion**: Ollama is excluded from the project - do not use Ollama provider or native Ollama API endpoints
+- **Provider Selection**: Use `openai` provider for all components (chat, embedding, reranking)
+- **Base URL Format**: For OpenAI-compatible APIs, do NOT include `/v1` in the base URL - Spring AI's OpenAiApi automatically adds `/v1/chat/completions`
+- **Default Configuration**:
+  - Chat: `openai` provider, `https://api.openai.com`, `gpt-4`
+  - Embedding: `openai` provider, `https://api.openai.com`, `text-embedding-3-large` (1536 dimensions)
+  - Reranking: `openai` provider, `https://api.openai.com`, `gpt-4` (uses chat models for semantic reranking)
+- **Configuration Override**: Each component can use different OpenAI-compatible providers via environment variables:
+  - `CHAT_BASE_URL`, `CHAT_API_KEY`, `CHAT_MODEL`
+  - `EMBEDDING_BASE_URL`, `EMBEDDING_API_KEY`, `EMBEDDING_MODEL`, `EMBEDDING_DIMENSIONS`
+  - `RERANKING_BASE_URL`, `RERANKING_API_KEY`, `RERANKING_MODEL`
+- **Invalid**: Using `ollama` provider, `http://localhost:11434` endpoints, native Ollama API format
+- **Valid**: Using `openai` provider, OpenAI-compatible endpoints (OpenAI, Azure OpenAI, or other compatible services)
+- **Benefits**: Consistent API format, better compatibility, easier integration with cloud services
+
 ### Naming Conventions
 - JSON/API: camelCase (`chatId`, `messageType`)
 - Database: snake_case (`chat_id`, `created_at`)
@@ -147,6 +164,29 @@
 - **No Incremental Migrations**: Do not create V2, V3, V4, etc. for production/development (use consolidated V1)
 - **Consolidation Process**: When making schema changes, update V1 directly instead of creating new migrations
 - **Post-MVP**: After MVP, can use incremental migrations (V2, V3, etc.) for new features
+- **Flyway Configuration - Primary Database Only**: Flyway MUST use ONLY the primary application database
+  - **CRITICAL**: Flyway migrations must NEVER run on external read-only databases or any secondary DataSources
+  - **Primary Database Only**: Flyway must be explicitly configured to use the primary DataSource from `spring.datasource.*` properties
+  - **Implementation**: In `FlywayConfig`, create the DataSource explicitly from `DataSourceProperties` to ensure the primary database is used
+  - **Verification**: Always verify the DataSource URL in Flyway configuration logs to confirm it's using the primary database (e.g., `jdbc:postgresql://localhost:5433/expertmatch`)
+  - **Invalid**: Injecting DataSource without explicit configuration (may select wrong DataSource when multiple exist)
+  - **Valid**: Creating DataSource explicitly from `DataSourceProperties` in Flyway configuration
+  - **External Database Exclusion**: External read-only DataSource (e.g., `externalDataSource`) must NEVER be used by Flyway
+  - **Example**: 
+    ```java
+    @Bean
+    @Primary
+    public Flyway flyway(DataSourceProperties dataSourceProperties, FlywayProperties properties) {
+        // Create primary DataSource explicitly from properties
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(dataSourceProperties.getUrl());
+        config.setUsername(dataSourceProperties.getUsername());
+        config.setPassword(dataSourceProperties.getPassword());
+        DataSource primaryDataSource = new HikariDataSource(config);
+        // Use primaryDataSource for Flyway
+    }
+    ```
+  - **Benefits**: Prevents accidental migration execution on wrong database, ensures schema consistency, protects external read-only databases from modification
 
 ### Database Testing
 - **Always use Testcontainers**: Never use H2 or other in-memory databases for database tests
@@ -196,6 +236,23 @@
 - **Documentation Folder**: Use `/home/berdachuk/projects-ai/expert-match-root/expert-match/docs` for all documentation files
 - **Documentation Types**: API guides, setup instructions, Postman collections, authorization guides, etc.
 - **Build Exclusion**: The `docs` folder is excluded from build targets and should not be included in JAR/WAR files
+
+## Spring Modulith Architecture
+
+1. **Always Follow Modulith Best Practices**: This project uses Spring Modulith for modular architecture - always follow
+   Modulith rules and best practices when writing code
+2. **Module Boundaries**: Each module is defined by a `package-info.java` file with
+   `@org.springframework.modulith.ApplicationModule` annotation
+3. **Core Module Intentional Sharing**: The core module contains shared infrastructure intentionally used across all
+   modules - this is an intentional design choice, not a violation
+4. **Declare Module Dependencies**: Always explicitly declare module dependencies in `package-info.java` using
+   `@ApplicationModule(allowedDependencies = {...})` annotation
+5. **Dependency Declaration Syntax**: Declare dependencies using module names only (e.g., "core", "employee") without
+   sub-package qualifiers like "::"
+6. **Cross-module Dependencies**: Minimize cross-module dependencies and avoid circular dependencies between modules
+7. **Service Orchestration**: Orchestration services like `QueryService` and `RetrievalService` may
+   legitimately depend on multiple domain modules to coordinate complex workflows
+8. **Module Access Verification**: The ModulithVerificationTest should pass and verify module structure compliance
 
 ## Software Engineering Principles
 

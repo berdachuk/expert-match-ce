@@ -54,7 +54,11 @@ markdown_extensions:
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - plantuml_markdown:
       server: https://www.plantuml.com/plantuml
       cachedir: .plantuml-cache
@@ -81,6 +85,7 @@ nav:
       - Deep Research Benefits: ExpertMatch-Deep-Research-Benefits.md
       - PgVector Benefits: ExpertMatch-PgVector-Benefits.md
       - Apache AGE Benefits: ExpertMatch-Apache-AGE-Benefits.md
+      - Agent Skills Benefits: ExpertMatch-Agent-Skills-Benefits.md
       - Cypher & Apache AGE Tutorial: CYPHER_APACHE_AGE_TUTORIAL.md
   - Architecture:
       - Expert Search Flow: ExpertMatch-Expert-Search-Flow.md

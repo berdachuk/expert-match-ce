@@ -1,5 +1,6 @@
 package com.berdachuk.expertmatch.query.service;
 
+import com.berdachuk.expertmatch.core.domain.ExecutionTrace;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -20,7 +21,7 @@ public class TokenUsageExtractor {
      * @param chatResponse The ChatResponse from LLM call
      * @return TokenUsage with input/output/total tokens, or null if not available
      */
-    public static com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage extractTokenUsage(ChatResponse chatResponse) {
+    public static ExecutionTrace.TokenUsage extractTokenUsage(ChatResponse chatResponse) {
         if (chatResponse == null) {
             return null;
         }
@@ -47,7 +48,7 @@ public class TokenUsageExtractor {
 
             // If we have at least one token value, return usage
             if (promptTokens != null || completionTokens != null || totalTokens != null) {
-                return new com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage(
+                return new ExecutionTrace.TokenUsage(
                         promptTokens,      // Maps to inputTokens in our model
                         completionTokens,  // Maps to outputTokens in our model
                         totalTokens

@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class QueryExamplesServiceTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final QueryExamplesService service = new com.berdachuk.expertmatch.query.service.QueryExamplesServiceImpl(objectMapper);
+    private final QueryExamplesService service = new com.berdachuk.expertmatch.query.service.impl.QueryExamplesServiceImpl(objectMapper);
 
     @Test
     void testGetExamples_ReturnsNonEmptyList() {

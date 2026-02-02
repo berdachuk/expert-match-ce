@@ -1,5 +1,7 @@
 package com.berdachuk.expertmatch.query.domain;
 
+import com.berdachuk.expertmatch.core.domain.EntityExtractorTypes.ExtractedEntities;
+import com.berdachuk.expertmatch.core.service.EntityExtractor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,7 +84,7 @@ class EntityExtractorTest {
                 projectExtractionPromptTemplate
         );
 
-        EntityExtractor.ExtractedEntities result = entityExtractor.extract(query);
+        ExtractedEntities result = entityExtractor.extract(query);
 
         assertNotNull(result);
         assertEquals(1, result.domains().size());
@@ -108,7 +110,7 @@ class EntityExtractorTest {
                 projectExtractionPromptTemplate
         );
 
-        EntityExtractor.ExtractedEntities result = entityExtractor.extract(query);
+        ExtractedEntities result = entityExtractor.extract(query);
 
         assertNotNull(result);
         assertEquals(1, result.persons().size());
@@ -135,7 +137,7 @@ class EntityExtractorTest {
                 projectExtractionPromptTemplate
         );
 
-        EntityExtractor.ExtractedEntities result = entityExtractor.extract(query);
+        ExtractedEntities result = entityExtractor.extract(query);
 
         assertNotNull(result);
         assertEquals(1, result.organizations().size());
@@ -161,7 +163,7 @@ class EntityExtractorTest {
                 projectExtractionPromptTemplate
         );
 
-        EntityExtractor.ExtractedEntities result = entityExtractor.extract(query);
+        ExtractedEntities result = entityExtractor.extract(query);
 
         assertNotNull(result);
         assertEquals(2, result.technologies().size());
@@ -188,7 +190,7 @@ class EntityExtractorTest {
                 projectExtractionPromptTemplate
         );
 
-        EntityExtractor.ExtractedEntities result = entityExtractor.extract(query);
+        ExtractedEntities result = entityExtractor.extract(query);
 
         assertNotNull(result);
         assertEquals(1, result.projects().size());
@@ -216,7 +218,7 @@ class EntityExtractorTest {
                 projectExtractionPromptTemplate
         );
 
-        EntityExtractor.ExtractedEntities result = entityExtractor.extract(query);
+        ExtractedEntities result = entityExtractor.extract(query);
 
         assertNotNull(result);
         assertEquals(1, result.persons().size());
@@ -360,4 +362,3 @@ class EntityExtractorTest {
         return response;
     }
 }
-

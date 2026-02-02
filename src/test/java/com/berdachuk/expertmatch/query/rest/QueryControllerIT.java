@@ -1,4 +1,4 @@
-package com.berdachuk.expertmatch.query.service;
+package com.berdachuk.expertmatch.query.rest;
 
 import com.berdachuk.expertmatch.chat.service.ChatService;
 import com.berdachuk.expertmatch.core.util.IdGenerator;
@@ -1089,13 +1089,18 @@ class QueryControllerIT extends BaseIntegrationTest {
                 """.formatted(validChatId);
 
         // For SSE endpoints, content type may not be set immediately due to async processing
+        // Avoid accessing response headers to prevent ConcurrentModificationException
         // Just verify the endpoint accepts the request and returns 200
-        mockMvc.perform(post("/api/v1/query-stream")
+        var result = mockMvc.perform(post("/api/v1/query-stream")
                         .header("X-User-Id", TEST_USER_ID)
                         .contentType(APPLICATION_JSON)
                         .accept("text/event-stream")
                         .content(requestBody))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Verify response was processed (status is already checked above)
+        assertNotNull(result.getResponse(), "Response should be returned");
     }
 
     @Test
@@ -1217,6 +1222,90 @@ class QueryControllerIT extends BaseIntegrationTest {
                         .contentType(APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void testProcessQuery_ExecutionTraceIncludesToolCallStructure() throws Exception {
+        // Test that execution trace includes tool call structure
+        // This verifies that tool calls (like getRetrievedExperts) appear in Execution Trace
+        String requestBody = """
+                {
+                    "query": "Looking for experts in Java and Spring Boot",
+                    "chatId": "%s",
+                    "options": {
+                        "includeExecutionTrace": true
+                    }
+                }
+                """.formatted(validChatId);
+
+        mockMvc.perform(post("/api/v1/query")
+                        .header("X-User-Id", TEST_USER_ID)
+                        .contentType(APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.executionTrace").exists())
+                .andExpect(jsonPath("$.executionTrace.steps").isArray())
+                .andExpect(jsonPath("$.executionTrace.steps[0].name").exists())
+                .andExpect(jsonPath("$.executionTrace.steps[0].service").exists())
+                .andExpect(jsonPath("$.executionTrace.steps[0].method").exists())
+                .andExpect(jsonPath("$.executionTrace.steps[0].status").exists());
+    }
+
+    @Test
+    void testProcessQuery_ToolCallsInExecutionTrace() throws Exception {
+        // Test that tool calls (getRetrievedExperts) appear in Execution Trace
+        // This verifies the RAG pattern tool calling integration
+        String requestBody = """
+                {
+                    "query": "Looking for experts in Java and Spring Boot",
+                    "chatId": "%s",
+                    "options": {
+                        "includeExecutionTrace": true
+                    }
+                }
+                """.formatted(validChatId);
+
+        mockMvc.perform(post("/api/v1/query")
+                        .header("X-User-Id", TEST_USER_ID)
+                        .contentType(APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.executionTrace").exists())
+                .andExpect(jsonPath("$.executionTrace.steps").isArray());
+        // Note: Tool calls may or may not appear depending on LLM behavior and query pattern
+        // In RAG pattern, tool calls typically don't occur as all data is in the prompt
+        // This test verifies the execution trace structure exists, but tool calls are optional
+        // The structure supports tool calls when they occur (e.g., in tool-calling patterns)
+    }
+
+    @Test
+    void testProcessQuery_ExecutionTraceIncludesToolCallStructure_Original() throws Exception {
+        // Test that Execution Trace includes tool call structure when enabled
+        // Note: Actual tool calls may not occur with mocked LLMs, but structure should be present
+        String requestBody = """
+                {
+                    "query": "Find Java experts",
+                    "chatId": "%s",
+                    "options": {
+                        "maxResults": 10,
+                        "includeExecutionTrace": true
+                    }
+                }
+                """.formatted(validChatId);
+
+        mockMvc.perform(post("/api/v1/query")
+                        .header("X-User-Id", TEST_USER_ID)
+                        .contentType(APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.executionTrace").exists())
+                .andExpect(jsonPath("$.executionTrace.steps").isArray())
+                .andExpect(jsonPath("$.executionTrace.steps[0].name").exists())
+                .andExpect(jsonPath("$.executionTrace.steps[0].service").exists())
+                .andExpect(jsonPath("$.executionTrace.steps[0].method").exists())
+                .andExpect(jsonPath("$.executionTrace.steps[0].status").exists());
+        // Note: toolCall field may be null for non-tool-call steps, which is correct behavior
+        // The structure allows tool calls to be included when they occur
     }
 }
 

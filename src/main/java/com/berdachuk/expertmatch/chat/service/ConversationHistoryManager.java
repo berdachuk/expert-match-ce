@@ -1,7 +1,7 @@
 package com.berdachuk.expertmatch.chat.service;
 
 import com.berdachuk.expertmatch.chat.repository.ConversationHistoryRepository;
-import com.berdachuk.expertmatch.query.service.ExecutionTracer;
+import com.berdachuk.expertmatch.core.service.ExecutionTracer;
 
 import java.util.List;
 

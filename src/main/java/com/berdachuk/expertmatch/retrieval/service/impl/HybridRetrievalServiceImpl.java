@@ -1,10 +1,14 @@
-package com.berdachuk.expertmatch.retrieval.service;
+package com.berdachuk.expertmatch.retrieval.service.impl;
 
+import com.berdachuk.expertmatch.core.domain.EntityExtractorTypes.Entity;
+import com.berdachuk.expertmatch.core.domain.EntityExtractorTypes.ExtractedEntities;
+import com.berdachuk.expertmatch.core.domain.ParsedQuery;
+import com.berdachuk.expertmatch.core.domain.QueryRequest;
 import com.berdachuk.expertmatch.core.exception.RetrievalException;
+import com.berdachuk.expertmatch.core.service.EntityExtractor;
+import com.berdachuk.expertmatch.core.service.ExecutionTracer;
 import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
-import com.berdachuk.expertmatch.query.domain.EntityExtractor;
-import com.berdachuk.expertmatch.query.domain.QueryRequest;
-import com.berdachuk.expertmatch.query.service.ExecutionTracer;
+import com.berdachuk.expertmatch.retrieval.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -52,7 +56,7 @@ public class HybridRetrievalServiceImpl implements HybridRetrievalService {
      * Performs hybrid retrieval for expert matching.
      */
     @Override
-    public HybridRetrievalService.RetrievalResult retrieve(QueryRequest request, com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery) {
+    public HybridRetrievalService.RetrievalResult retrieve(QueryRequest request, ParsedQuery parsedQuery) {
         return retrieve(request, parsedQuery, null);
     }
 
@@ -60,7 +64,7 @@ public class HybridRetrievalServiceImpl implements HybridRetrievalService {
      * Performs hybrid retrieval for expert matching with optional execution tracing.
      */
     @Override
-    public HybridRetrievalService.RetrievalResult retrieve(QueryRequest request, com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery, ExecutionTracer tracer) {
+    public HybridRetrievalService.RetrievalResult retrieve(QueryRequest request, ParsedQuery parsedQuery, ExecutionTracer tracer) {
         log.info("Starting hybrid retrieval for query: '{}'", parsedQuery.originalQuery());
         int maxResults = request.options().maxResults();
         double minConfidence = request.options().minConfidence();
@@ -194,7 +198,7 @@ public class HybridRetrievalServiceImpl implements HybridRetrievalService {
     /**
      * Performs vector similarity search.
      */
-    private List<String> performVectorSearch(com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery, int maxResults) {
+    private List<String> performVectorSearch(ParsedQuery parsedQuery, int maxResults) {
         try {
             return vectorSearch.searchByText(
                             parsedQuery.originalQuery(),
@@ -226,7 +230,7 @@ public class HybridRetrievalServiceImpl implements HybridRetrievalService {
     /**
      * Performs graph traversal search.
      */
-    private List<String> performGraphSearch(com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery, int maxResults) {
+    private List<String> performGraphSearch(ParsedQuery parsedQuery, int maxResults) {
         List<String> results = new ArrayList<>();
 
         // Search by technologies (if multiple, use AND search)
@@ -247,9 +251,9 @@ public class HybridRetrievalServiceImpl implements HybridRetrievalService {
         }
 
         // Search by domain (extract from query if available)
-        EntityExtractor.ExtractedEntities entities = entityExtractor.extract(parsedQuery.originalQuery());
+        ExtractedEntities entities = entityExtractor.extract(parsedQuery.originalQuery());
         if (!entities.domains().isEmpty()) {
-            for (EntityExtractor.Entity domain : entities.domains()) {
+            for (Entity domain : entities.domains()) {
                 results.addAll(graphSearch.findExpertsByDomain(domain.name()));
             }
         }
@@ -260,7 +264,7 @@ public class HybridRetrievalServiceImpl implements HybridRetrievalService {
     /**
      * Performs keyword search.
      */
-    private List<String> performKeywordSearch(com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery, int maxResults) {
+    private List<String> performKeywordSearch(ParsedQuery parsedQuery, int maxResults) {
         // Use skills and technologies as keywords
         List<String> keywords = new ArrayList<>(parsedQuery.skills());
         keywords.addAll(parsedQuery.technologies());
@@ -276,9 +280,9 @@ public class HybridRetrievalServiceImpl implements HybridRetrievalService {
      * Performs person name search when person entities are found in the query.
      * First tries exact/partial name match, then falls back to similarity search if no results.
      */
-    private List<String> performPersonNameSearch(com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery, int maxResults) {
+    private List<String> performPersonNameSearch(ParsedQuery parsedQuery, int maxResults) {
         // Extract person entities from the query
-        EntityExtractor.ExtractedEntities entities = entityExtractor.extract(parsedQuery.originalQuery());
+        ExtractedEntities entities = entityExtractor.extract(parsedQuery.originalQuery());
 
         if (entities.persons().isEmpty()) {
             log.debug("No person entities found in query, skipping person name search");
@@ -286,7 +290,7 @@ public class HybridRetrievalServiceImpl implements HybridRetrievalService {
         }
 
         List<String> allResults = new ArrayList<>();
-        for (EntityExtractor.Entity person : entities.persons()) {
+        for (Entity person : entities.persons()) {
             String personName = person.name();
             log.info("Searching for employee by name: '{}'", personName);
 
@@ -317,7 +321,7 @@ public class HybridRetrievalServiceImpl implements HybridRetrievalService {
     /**
      * Gets weights for fusion based on query characteristics.
      */
-    private Map<String, Double> getWeights(com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery) {
+    private Map<String, Double> getWeights(ParsedQuery parsedQuery) {
         Map<String, Double> weights = new HashMap<>();
 
         // Default weights
@@ -336,7 +340,7 @@ public class HybridRetrievalServiceImpl implements HybridRetrievalService {
         }
 
         // If person entities are found, prioritize person name search
-        EntityExtractor.ExtractedEntities entities = entityExtractor.extract(parsedQuery.originalQuery());
+        ExtractedEntities entities = entityExtractor.extract(parsedQuery.originalQuery());
         if (!entities.persons().isEmpty()) {
             weights.put("person", 3.0); // Very high weight when person names are explicitly mentioned
         }

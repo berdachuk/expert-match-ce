@@ -10,10 +10,9 @@
  * - SystemController (REST API)
  */
 @org.springframework.modulith.ApplicationModule(
-    id = "system",
-    displayName = "System",
-    allowedDependencies = {"core"}
+        id = "system",
+        displayName = "System",
+        allowedDependencies = {"ingestion", "api", "core"}
 )
 package com.berdachuk.expertmatch.system;
 
-import org.springframework.modulith.ApplicationModule;

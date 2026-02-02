@@ -7,4 +7,3 @@
 @org.springframework.modulith.NamedInterface("API")
 package com.berdachuk.expertmatch.query.service;
 
-import org.springframework.modulith.NamedInterface;

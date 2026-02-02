@@ -7,4 +7,3 @@
 @org.springframework.modulith.NamedInterface("API")
 package com.berdachuk.expertmatch.mcp.rest;
 
-import org.springframework.modulith.NamedInterface;

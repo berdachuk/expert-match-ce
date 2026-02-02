@@ -2,6 +2,7 @@ package com.berdachuk.expertmatch.llm.tools;
 
 import com.berdachuk.expertmatch.core.config.ToolSearchConfiguration;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
+import com.berdachuk.expertmatch.query.tools.ExpertMatchTools;
 import org.junit.jupiter.api.Test;
 import org.springaicommunity.tool.search.SearchType;
 import org.springaicommunity.tool.search.ToolSearchRequest;

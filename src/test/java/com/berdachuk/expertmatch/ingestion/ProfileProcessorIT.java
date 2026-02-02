@@ -88,6 +88,7 @@ class ProfileProcessorIT extends BaseIntegrationTest {
         ProjectData project = new ProjectData(
                 "PRJ-001",
                 "Test Project",
+                null,
                 "Test Customer",
                 "Test Company",
                 "Developer",
@@ -96,7 +97,8 @@ class ProfileProcessorIT extends BaseIntegrationTest {
                 List.of("Java", "Spring"),
                 "Test responsibilities",
                 "Technology",
-                "Test summary"
+                "Test summary",
+                null
         );
         EmployeeProfile profile = new EmployeeProfile(employee, "Summary", List.of(project));
 

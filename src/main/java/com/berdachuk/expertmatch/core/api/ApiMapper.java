@@ -1,8 +1,10 @@
 package com.berdachuk.expertmatch.core.api;
 
 import com.berdachuk.expertmatch.chat.repository.ConversationHistoryRepository;
-import com.berdachuk.expertmatch.query.domain.QueryRequest;
-import com.berdachuk.expertmatch.query.domain.QueryResponse;
+import com.berdachuk.expertmatch.core.domain.ExecutionTrace;
+import com.berdachuk.expertmatch.core.domain.QueryOptions;
+import com.berdachuk.expertmatch.core.domain.QueryRequest;
+import com.berdachuk.expertmatch.core.domain.QueryResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -21,25 +23,25 @@ public interface ApiMapper {
     // Query-related mappings
 
     @Mapping(target = "options", source = "options", qualifiedByName = "mapQueryOptions")
-    com.berdachuk.expertmatch.query.domain.QueryRequest toDomainQueryRequest(com.berdachuk.expertmatch.api.model.QueryRequest apiRequest);
+    QueryRequest toDomainQueryRequest(com.berdachuk.expertmatch.api.model.QueryRequest apiRequest);
 
     @Named("mapQueryOptions")
-    default QueryRequest.QueryOptions mapQueryOptions(com.berdachuk.expertmatch.api.model.QueryOptions apiOptions) {
+    default QueryOptions mapQueryOptions(com.berdachuk.expertmatch.api.model.QueryOptions apiOptions) {
         if (apiOptions == null) {
             return null;
         }
-        return new QueryRequest.QueryOptions(
-                apiOptions.getMaxResults(),
-                apiOptions.getMinConfidence(),
-                apiOptions.getIncludeSources(),
-                apiOptions.getIncludeEntities(),
-                apiOptions.getRerank(),
-                apiOptions.getDeepResearch(),
-                apiOptions.getUseCascadePattern(),  // useCascadePattern - now available in API model
-                apiOptions.getUseRoutingPattern(),  // useRoutingPattern - now available in API model
-                apiOptions.getUseCyclePattern(),    // useCyclePattern - now available in API model
-                apiOptions.getIncludeExecutionTrace()
-        );
+        return QueryOptions.builder()
+                .maxResults(apiOptions.getMaxResults())
+                .minConfidence(apiOptions.getMinConfidence())
+                .includeSources(apiOptions.getIncludeSources())
+                .includeEntities(apiOptions.getIncludeEntities())
+                .rerank(apiOptions.getRerank())
+                .deepResearch(apiOptions.getDeepResearch())
+                .useCascadePattern(apiOptions.getUseCascadePattern())
+                .useRoutingPattern(apiOptions.getUseRoutingPattern())
+                .useCyclePattern(apiOptions.getUseCyclePattern())
+                .includeExecutionTrace(apiOptions.getIncludeExecutionTrace())
+                .build();
     }
 
     @Mapping(target = "chatId", source = "chatId")
@@ -50,7 +52,7 @@ public interface ApiMapper {
     @Mapping(target = "entities", source = "entities", qualifiedByName = "mapEntities")
     @Mapping(target = "summary", source = "summary", qualifiedByName = "mapMatchSummary")
     @Mapping(target = "executionTrace", source = "executionTrace", qualifiedByName = "mapExecutionTrace")
-    com.berdachuk.expertmatch.api.model.QueryResponse toApiQueryResponse(com.berdachuk.expertmatch.query.domain.QueryResponse domainResponse);
+    com.berdachuk.expertmatch.api.model.QueryResponse toApiQueryResponse(QueryResponse domainResponse);
 
     @Named("mapExpertMatches")
     default List<com.berdachuk.expertmatch.api.model.ExpertMatch> mapExpertMatches(List<QueryResponse.ExpertMatch> domainExperts) {
@@ -194,7 +196,7 @@ public interface ApiMapper {
 
     @Named("mapExecutionTrace")
     default com.berdachuk.expertmatch.api.model.ExecutionTrace mapExecutionTrace(
-            com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionTraceData domainTrace) {
+            ExecutionTrace.ExecutionTraceData domainTrace) {
         if (domainTrace == null) {
             return null;
         }
@@ -208,7 +210,7 @@ public interface ApiMapper {
     }
 
     default com.berdachuk.expertmatch.api.model.ExecutionStep mapExecutionStep(
-            com.berdachuk.expertmatch.query.domain.ExecutionTrace.ExecutionStep domainStep) {
+            ExecutionTrace.ExecutionStep domainStep) {
         com.berdachuk.expertmatch.api.model.ExecutionStep apiStep = new com.berdachuk.expertmatch.api.model.ExecutionStep();
         apiStep.setName(domainStep.name());
         apiStep.setService(domainStep.service());
@@ -221,11 +223,27 @@ public interface ApiMapper {
                 ? org.openapitools.jackson.nullable.JsonNullable.of(domainStep.llmModel())
                 : org.openapitools.jackson.nullable.JsonNullable.undefined());
         apiStep.setTokenUsage(mapTokenUsage(domainStep.tokenUsage()));
+        apiStep.setToolCall(domainStep.toolCall() != null
+                ? mapToolCallInfo(domainStep.toolCall())
+                : null);
         return apiStep;
     }
 
+    default com.berdachuk.expertmatch.api.model.ToolCallInfo mapToolCallInfo(
+            ExecutionTrace.ToolCallInfo domainToolCall) {
+        com.berdachuk.expertmatch.api.model.ToolCallInfo apiToolCall = new com.berdachuk.expertmatch.api.model.ToolCallInfo();
+        apiToolCall.setToolName(domainToolCall.toolName());
+        apiToolCall.setToolType(com.berdachuk.expertmatch.api.model.ToolCallInfo.ToolTypeEnum.fromValue(domainToolCall.toolType()));
+        apiToolCall.setParameters(domainToolCall.parameters());
+        apiToolCall.setResponse(domainToolCall.response());
+        apiToolCall.setSkillName(domainToolCall.skillName() != null
+                ? org.openapitools.jackson.nullable.JsonNullable.of(domainToolCall.skillName())
+                : org.openapitools.jackson.nullable.JsonNullable.undefined());
+        return apiToolCall;
+    }
+
     default com.berdachuk.expertmatch.api.model.TokenUsage mapTokenUsage(
-            com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage domainTokenUsage) {
+            ExecutionTrace.TokenUsage domainTokenUsage) {
         if (domainTokenUsage == null) {
             return null;
         }

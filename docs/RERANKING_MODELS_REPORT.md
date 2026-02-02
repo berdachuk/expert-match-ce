@@ -274,6 +274,7 @@ export RERANKING_MODEL=dengcao/Qwen3-Reranker-8B:Q4_K_M
 **Error**: `model not found` or `model 'qwen3-reranker-8b' not found`
 
 **Solution**:
+
 1. Use the correct model name: `dengcao/Qwen3-Reranker-8B:Q4_K_M`
 2. Pull the model first: `ollama pull dengcao/Qwen3-Reranker-8B:Q4_K_M`
 3. Verify with: `ollama list`
@@ -292,6 +293,7 @@ model: dengcao/Qwen3-Reranker-8B:Q4_K_M
 **Error**: `out of memory` or `OOM`
 
 **Solution**:
+
 1. Use a smaller model: `dengcao/Qwen3-Reranker-0.6B:Q8_0`
 2. Use lower quantization: `Q3_K_M` instead of `Q4_K_M`
 3. Increase available RAM or use GPU
@@ -299,6 +301,7 @@ model: dengcao/Qwen3-Reranker-8B:Q4_K_M
 ### Issue: Slow Inference
 
 **Solution**:
+
 1. Use GPU acceleration (if available)
 2. Use smaller model: `Qwen3-Reranker-0.6B`
 3. Use lower quantization: `Q3_K_M` or `Q4_K_M`
@@ -352,6 +355,7 @@ model: dengcao/Qwen3-Reranker-8B:Q4_K_M
    ```
 
 4. **Verify**:
+
 - Check logs for reranking model initialization
    - Test a query with reranking enabled
 
@@ -375,6 +379,7 @@ model: dengcao/Qwen3-Reranker-8B:Q4_K_M
  **Integration**: Update `application-local.yml` with correct model name
 
 **Next Steps**:
+
 1. Pull the recommended model: `ollama pull dengcao/Qwen3-Reranker-8B:Q4_K_M`
 2. Update configuration with correct model name
 3. Test reranking functionality

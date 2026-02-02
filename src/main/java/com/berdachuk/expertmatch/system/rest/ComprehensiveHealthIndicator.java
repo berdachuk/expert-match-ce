@@ -1,5 +1,6 @@
 package com.berdachuk.expertmatch.system.rest;
 
+import com.berdachuk.expertmatch.ingestion.service.ExternalDatabaseConnectionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
@@ -8,6 +9,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -19,7 +21,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Comprehensive health indicator that verifies all required infrastructure:
- * - Database connectivity
+ * - Primary database connectivity (application database)
+ * - External database connectivity (read-only ingestion database, if enabled)
  * - LLM models (ChatModel)
  * - Embedding models
  * - Vector store (PgVector)
@@ -37,21 +40,26 @@ public class ComprehensiveHealthIndicator implements HealthIndicator {
     private final ChatModel chatModel;
     private final EmbeddingModel embeddingModel;
     private final Environment environment;
+    private final ExternalDatabaseConnectionService externalDatabaseConnectionService;
 
     // Cache for expensive checks
     private final AtomicReference<CachedHealthResult> llmHealthCache = new AtomicReference<>();
     private final AtomicReference<CachedHealthResult> embeddingHealthCache = new AtomicReference<>();
 
-    @Autowired(required = false)
+    @Autowired
     public ComprehensiveHealthIndicator(
             NamedParameterJdbcTemplate namedJdbcTemplate,
             ChatModel chatModel,
             EmbeddingModel embeddingModel,
-            Environment environment) {
+            Environment environment,
+            @Nullable ExternalDatabaseConnectionService externalDatabaseConnectionService) {
+        // Use NamedParameterJdbcTemplate - Spring Boot auto-configures it with @Primary DataSource
+        // This ensures we use the PRIMARY database, not the external read-only database
         this.namedJdbcTemplate = namedJdbcTemplate;
         this.chatModel = chatModel;
         this.embeddingModel = embeddingModel;
         this.environment = environment;
+        this.externalDatabaseConnectionService = externalDatabaseConnectionService;
     }
 
     @Override
@@ -62,17 +70,35 @@ public class ComprehensiveHealthIndicator implements HealthIndicator {
 
         log.debug("Starting comprehensive health check...");
 
-        // 1. Database Health Check (always checked - fast and free)
-        Health dbHealth = checkDatabase();
-        details.put("database", dbHealth.getDetails());
-        if (!dbHealth.getStatus().getCode().equals("UP")) {
+        // 1. Primary Database Health Check (always checked - fast and free)
+        Health primaryDbHealth = checkPrimaryDatabase();
+        details.put("primaryDatabase", primaryDbHealth.getDetails());
+        if (!primaryDbHealth.getStatus().getCode().equals("UP")) {
             isUp = false;
-            log.warn("Database health check failed: {}", dbHealth.getStatus());
+            log.warn("Primary database health check failed: {}", primaryDbHealth.getStatus());
         } else {
-            log.debug("Database health check passed");
+            log.debug("Primary database health check passed");
         }
 
-        // 2. Vector Store Health Check (always checked - fast and free)
+        // 2. External Database Health Check (only if external database ingestion is enabled)
+        if (externalDatabaseConnectionService != null) {
+            Health externalDbHealth = checkExternalDatabase();
+            details.put("externalDatabase", externalDbHealth.getDetails());
+            // External database failure doesn't affect overall health status (it's optional)
+            if (!externalDbHealth.getStatus().getCode().equals("UP")) {
+                log.warn("External database health check failed: {}", externalDbHealth.getStatus());
+            } else {
+                log.debug("External database health check passed");
+            }
+        } else {
+            Map<String, Object> externalDbDetails = new HashMap<>();
+            externalDbDetails.put("status", "DISABLED");
+            externalDbDetails.put("message", "External database ingestion is not enabled");
+            details.put("externalDatabase", externalDbDetails);
+            log.debug("External database health check skipped (not enabled)");
+        }
+
+        // 3. Vector Store Health Check (always checked - fast and free)
         Health vectorHealth = checkVectorStore();
         details.put("vectorStore", vectorHealth.getDetails());
         if (!vectorHealth.getStatus().getCode().equals("UP")) {
@@ -82,7 +108,7 @@ public class ComprehensiveHealthIndicator implements HealthIndicator {
             log.debug("Vector store health check passed");
         }
 
-        // 3. LLM Model Health Check (cached to avoid costs)
+        // 4. LLM Model Health Check (cached to avoid costs)
         Health llmHealth = checkLlmModel();
         details.put("llm", llmHealth.getDetails());
         if (!llmHealth.getStatus().getCode().equals("UP")) {
@@ -92,7 +118,7 @@ public class ComprehensiveHealthIndicator implements HealthIndicator {
             log.debug("LLM health check passed");
         }
 
-        // 4. Embedding Model Health Check (cached to avoid costs)
+        // 5. Embedding Model Health Check (cached to avoid costs)
         Health embeddingHealth = checkEmbeddingModel();
         details.put("embedding", embeddingHealth.getDetails());
         if (!embeddingHealth.getStatus().getCode().equals("UP")) {
@@ -102,7 +128,7 @@ public class ComprehensiveHealthIndicator implements HealthIndicator {
             log.debug("Embedding health check passed");
         }
 
-        // 5. Reranking Model Configuration (from environment, not a health check)
+        // 6. Reranking Model Configuration (from environment, not a health check)
         Map<String, Object> rerankingConfig = extractRerankingModelConfig();
         if (!rerankingConfig.isEmpty()) {
             details.put("reranking", rerankingConfig);
@@ -118,16 +144,28 @@ public class ComprehensiveHealthIndicator implements HealthIndicator {
         Health result = healthBuilder.build();
 
         if (isUp) {
-            log.info("Comprehensive health check passed in {}ms - Database: {}, VectorStore: {}, LLM: {}, Embedding: {}",
+            String externalDbStatus = externalDatabaseConnectionService != null
+                    ? details.get("externalDatabase") instanceof Map
+                    ? ((Map<?, ?>) details.get("externalDatabase")).get("status").toString()
+                    : "N/A"
+                    : "DISABLED";
+            log.info("Comprehensive health check passed in {}ms - PrimaryDB: {}, ExternalDB: {}, VectorStore: {}, LLM: {}, Embedding: {}",
                     duration.toMillis(),
-                    dbHealth.getStatus().getCode(),
+                    primaryDbHealth.getStatus().getCode(),
+                    externalDbStatus,
                     vectorHealth.getStatus().getCode(),
                     llmHealth.getStatus().getCode(),
                     embeddingHealth.getStatus().getCode());
         } else {
-            log.error("Comprehensive health check failed in {}ms - Database: {}, VectorStore: {}, LLM: {}, Embedding: {}",
+            String externalDbStatus = externalDatabaseConnectionService != null
+                    ? details.get("externalDatabase") instanceof Map
+                    ? ((Map<?, ?>) details.get("externalDatabase")).get("status").toString()
+                    : "N/A"
+                    : "DISABLED";
+            log.error("Comprehensive health check failed in {}ms - PrimaryDB: {}, ExternalDB: {}, VectorStore: {}, LLM: {}, Embedding: {}",
                     duration.toMillis(),
-                    dbHealth.getStatus().getCode(),
+                    primaryDbHealth.getStatus().getCode(),
+                    externalDbStatus,
                     vectorHealth.getStatus().getCode(),
                     llmHealth.getStatus().getCode(),
                     embeddingHealth.getStatus().getCode());
@@ -137,9 +175,10 @@ public class ComprehensiveHealthIndicator implements HealthIndicator {
     }
 
     /**
-     * Checks database connectivity and basic functionality.
+     * Checks primary database connectivity and basic functionality.
+     * This is the main application database used for storing expert data.
      */
-    private Health checkDatabase() {
+    private Health checkPrimaryDatabase() {
         try {
             // Simple query to verify database connectivity
             Integer result = namedJdbcTemplate.queryForObject("SELECT 1", Collections.emptyMap(), Integer.class);
@@ -152,19 +191,66 @@ public class ComprehensiveHealthIndicator implements HealthIndicator {
 
                 Map<String, Object> details = new HashMap<>();
                 details.put("status", "UP");
+                details.put("type", "primary");
                 details.put("schemaExists", schemaCount != null && schemaCount > 0);
+                details.put("description", "Application database for storing expert profiles and work experience");
 
                 return Health.up().withDetails(details).build();
             } else {
                 return Health.down()
                         .withDetail("error", "Database query returned unexpected result")
+                        .withDetail("type", "primary")
                         .build();
             }
         } catch (Exception e) {
-            log.error("Database health check failed", e);
+            log.error("Primary database health check failed", e);
             return Health.down()
                     .withDetail("error", e.getMessage())
                     .withDetail("exception", e.getClass().getSimpleName())
+                    .withDetail("type", "primary")
+                    .build();
+        }
+    }
+
+    /**
+     * Checks external database connectivity.
+     * This is the read-only ingestion database used for importing work experience data.
+     */
+    private Health checkExternalDatabase() {
+        try {
+            if (externalDatabaseConnectionService == null) {
+                return Health.down()
+                        .withDetail("status", "DISABLED")
+                        .withDetail("type", "external")
+                        .withDetail("message", "External database connection service not available")
+                        .build();
+            }
+
+            boolean connected = externalDatabaseConnectionService.verifyConnection();
+            String connectionInfo = externalDatabaseConnectionService.getConnectionInfo();
+
+            Map<String, Object> details = new HashMap<>();
+            details.put("status", connected ? "UP" : "DOWN");
+            details.put("type", "external");
+            details.put("readOnly", true);
+            details.put("connectionInfo", connectionInfo);
+            details.put("description", "Read-only external database for work experience data ingestion");
+
+            if (connected) {
+                return Health.up().withDetails(details).build();
+            } else {
+                return Health.down()
+                        .withDetails(details)
+                        .withDetail("error", "Failed to verify connection to external database")
+                        .build();
+            }
+        } catch (Exception e) {
+            log.error("External database health check failed", e);
+            return Health.down()
+                    .withDetail("error", e.getMessage())
+                    .withDetail("exception", e.getClass().getSimpleName())
+                    .withDetail("type", "external")
+                    .withDetail("readOnly", true)
                     .build();
         }
     }
@@ -175,39 +261,97 @@ public class ComprehensiveHealthIndicator implements HealthIndicator {
     private Health checkVectorStore() {
         try {
             // Check if vector extension is available
-            Integer extensionCount = namedJdbcTemplate.queryForObject(
-                    "SELECT COUNT(*) FROM pg_extension WHERE extname = 'vector'",
-                    Collections.emptyMap(),
-                    Integer.class);
+            // Try both pg_extension and pg_type queries to ensure we detect the extension
+            Integer extensionCount = null;
+            Integer typeCount = null;
+            String errorMessage = null;
+
+            // First check: query pg_extension catalog
+            try {
+                extensionCount = namedJdbcTemplate.queryForObject(
+                        "SELECT COUNT(*) FROM pg_catalog.pg_extension WHERE extname = 'vector'",
+                        Collections.emptyMap(),
+                        Integer.class);
+                log.debug("Vector extension check (pg_extension) - extensionCount: {}", extensionCount);
+            } catch (Exception e) {
+                log.debug("Failed to query pg_extension: {}", e.getMessage());
+                errorMessage = e.getMessage();
+            }
+
+            // Second check: query pg_type as fallback (more reliable, checks if type exists)
+            // Always try this check, not just when first fails, since pg_extension query might return 0
+            // even if extension exists (permissions issue)
+            // Check both public and expertmatch schemas (vector type is in public schema)
+            try {
+                typeCount = namedJdbcTemplate.queryForObject(
+                        "SELECT COUNT(*) FROM pg_catalog.pg_type t " +
+                                "JOIN pg_catalog.pg_namespace n ON t.typnamespace = n.oid " +
+                                "WHERE n.nspname IN ('public', 'expertmatch') AND t.typname = 'vector'",
+                        Collections.emptyMap(),
+                        Integer.class);
+                log.debug("Vector type check (pg_type) - typeCount: {}", typeCount);
+            } catch (Exception e) {
+                log.debug("Failed to query pg_type for vector: {}", e.getMessage());
+                if (errorMessage == null) {
+                    errorMessage = e.getMessage();
+                }
+            }
 
             // Check if work_experience table with embedding column exists
-            Integer tableCount = namedJdbcTemplate.queryForObject(
-                    "SELECT COUNT(*) FROM information_schema.columns " +
-                            "WHERE table_schema = 'expertmatch' " +
-                            "AND table_name = 'work_experience' " +
-                            "AND column_name = 'embedding'",
-                    Collections.emptyMap(),
-                    Integer.class);
+            Integer tableCount = null;
+            try {
+                tableCount = namedJdbcTemplate.queryForObject(
+                        "SELECT COUNT(*) FROM information_schema.columns " +
+                                "WHERE table_schema = 'expertmatch' " +
+                                "AND table_name = 'work_experience' " +
+                                "AND column_name = 'embedding'",
+                        Collections.emptyMap(),
+                        Integer.class);
+                log.debug("Embedding column check - tableCount: {}", tableCount);
+            } catch (Exception e) {
+                log.warn("Failed to query information_schema for embedding column: {}", e.getMessage());
+            }
 
             Map<String, Object> details = new HashMap<>();
-            details.put("status", "UP");
-            details.put("vectorExtensionAvailable", extensionCount != null && extensionCount > 0);
-            details.put("embeddingColumnExists", tableCount != null && tableCount > 0);
+            // Extension is available if either extensionCount > 0 or typeCount > 0
+            boolean extensionAvailable = (extensionCount != null && extensionCount > 0) ||
+                    (typeCount != null && typeCount > 0);
+            boolean columnExists = tableCount != null && tableCount > 0;
+            details.put("vectorExtensionAvailable", extensionAvailable);
+            details.put("embeddingColumnExists", columnExists);
+            if (extensionCount != null) {
+                details.put("extensionCount", extensionCount);
+            }
+            if (typeCount != null) {
+                details.put("typeCount", typeCount);
+            }
+            if (tableCount != null) {
+                details.put("tableCount", tableCount);
+            }
+            if (errorMessage != null) {
+                details.put("queryError", errorMessage);
+            }
 
-            if (extensionCount == null || extensionCount == 0) {
+            if (!extensionAvailable) {
+                log.warn("PgVector extension not available - extensionCount: {}, typeCount: {}, error: {}",
+                        extensionCount, typeCount, errorMessage);
                 return Health.down()
                         .withDetail("error", "PgVector extension not available")
+                        .withDetail("status", "DOWN")
                         .withDetails(details)
                         .build();
             }
 
-            if (tableCount == null || tableCount == 0) {
+            if (!columnExists) {
+                log.warn("Embedding column not found in work_experience table - tableCount: {}", tableCount);
                 return Health.down()
                         .withDetail("error", "Embedding column not found")
+                        .withDetail("status", "DOWN")
                         .withDetails(details)
                         .build();
             }
 
+            details.put("status", "UP");
             return Health.up().withDetails(details).build();
         } catch (Exception e) {
             log.error("Vector store health check failed", e);

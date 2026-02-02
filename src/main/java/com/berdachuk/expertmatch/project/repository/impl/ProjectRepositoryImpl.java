@@ -32,6 +32,9 @@ public class ProjectRepositoryImpl implements ProjectRepository {
     @InjectSql("/sql/project/findIdByName.sql")
     private String findIdByNameSql;
 
+    @InjectSql("/sql/project/count.sql")
+    private String countSql;
+
     @InjectSql("/sql/project/deleteAll.sql")
     private String deleteAllSql;
 
@@ -107,6 +110,15 @@ public class ProjectRepositoryImpl implements ProjectRepository {
         List<String> results = namedJdbcTemplate.query(findIdByNameSql, params, (rs, rowNum) -> rs.getString("id"));
 
         return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+    }
+
+    /**
+     * Returns the total count of project records.
+     */
+    @Override
+    public long count() {
+        Long result = namedJdbcTemplate.queryForObject(countSql, Map.of(), Long.class);
+        return result != null ? result : 0L;
     }
 
     /**

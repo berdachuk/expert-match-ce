@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head}">
+    <title>ExpertMatch - Visual Graph</title>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+<main class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Visual Graph</h1>
+
+            <div class="alert alert-danger d-none" id="errorAlert" role="alert"></div>
+            <div class="alert alert-info d-none" id="infoAlert" role="alert"></div>
+
+            <!-- Statistics Panel -->
+            <div class="card mb-4" id="statsPanel">
+                <div class="card-header">
+                    <h5 class="mb-0">Graph Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center" id="statsLoading">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span class="ms-2">Loading statistics...</span>
+                    </div>
+                    <div class="d-none" id="statsContent">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Total Vertices:</strong> <span id="totalVertices">0</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Total Edges:</strong> <span id="totalEdges">0</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Graph Status:</strong> <span id="graphStatus">Unknown</span>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-sm btn-primary" id="refreshStatsBtn">Refresh Stats</button>
+                            </div>
+                        </div>
+                        <div class="mt-3" id="vertexCounts"></div>
+                        <div class="mt-3" id="edgeCounts"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls Panel -->
+            <div class="card mb-4" id="controlsPanel">
+                <div class="card-header">
+                    <h5 class="mb-0">Visualization Controls</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label" for="vertexTypeFilter">Filter by Vertex Type</label>
+                            <select class="form-select" id="vertexTypeFilter">
+                                <option value="">All Types</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="maxNodes">Max Nodes</label>
+                            <input class="form-control" id="maxNodes" max="10000" min="100" step="100" type="number"
+                                   value="1000">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="layoutSelect">Layout</label>
+                            <select class="form-select" id="layoutSelect">
+                                <option value="grid">Grid</option>
+                                <option value="cose">Force-Directed (Small)</option>
+                                <option selected value="cose-spread">Force-Directed (Spread)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="showEdges">Show Edges</label>
+                            <div class="form-check form-switch mt-2">
+                                <input checked class="form-check-input" id="showEdges" type="checkbox">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button class="btn btn-primary" id="loadGraphBtn">Load Graph</button>
+                                <button class="btn btn-secondary" id="clearGraphBtn">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-warning d-none" id="largeGraphWarning">
+                                <strong>Warning:</strong> Large graph detected. Loading may take time and impact
+                                performance.
+                                Consider filtering by vertex type or reducing max nodes.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualization Container -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Graph Visualization</h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary" id="zoomInBtn">Zoom In</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="zoomOutBtn">Zoom Out</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="resetViewBtn">Reset View</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="togglePanelsBtn">
+                            <span id="togglePanelsIcon">◀</span> Hide Controls
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="text-center py-5 d-none" id="loadingIndicator">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading graph...</span>
+                        </div>
+                        <p class="mt-2">Loading graph data...</p>
+                    </div>
+                    <div id="cy" style="width: 100%; height: 600px; border: 1px solid #ddd; position: relative;"></div>
+                    <div class="node-tooltip d-none" id="nodeTooltip"></div>
+                    <div class="p-3 bg-light border-top" id="graphInfo">
+                        <small class="text-muted">
+                            Nodes: <span id="nodeCount">0</span> |
+                            Edges: <span id="edgeCount">0</span> |
+                            Zoom: <span id="zoomLevel">1.0</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+<style>
+    .node-tooltip {
+        position: absolute;
+        background-color: rgba(0, 0, 0, 0.95);
+        color: white;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 12px;
+        pointer-events: none;
+        z-index: 1000;
+        max-width: 400px;
+        max-height: 500px;
+        overflow-y: auto;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        line-height: 1.5;
+    }
+
+    .node-tooltip strong,
+    .node-tooltip .tooltip-header {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 13px;
+        font-weight: 600;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 4px;
+    }
+
+    .node-tooltip .tooltip-item {
+        margin: 2px 0;
+    }
+
+    .node-tooltip .tooltip-meta {
+        margin-top: 6px;
+        padding-top: 4px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    .node-tooltip .tooltip-label {
+        font-weight: 600;
+        margin-right: 6px;
+    }
+
+    .panel-hidden {
+        display: none !important;
+    }
+
+    #cy.fullscreen {
+        height: calc(100vh - 200px) !important;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let cy = null;
+    let currentStats = null;
+    let cytoscapeLoaded = false;
+    let panelsVisible = true;
+    let tooltipTimeout = null;
+
+    function escapeHtml(text) {
+        if (text == null) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function showError(message) {
+        const errorAlert = document.getElementById('errorAlert');
+        if (errorAlert) {
+            errorAlert.textContent = message;
+            errorAlert.classList.remove('d-none');
+        } else {
+            console.error(message);
+        }
+    }
+
+    function hideError() {
+        const errorAlert = document.getElementById('errorAlert');
+        if (errorAlert) {
+            errorAlert.classList.add('d-none');
+        }
+    }
+
+    function showInfo(message) {
+        const infoAlert = document.getElementById('infoAlert');
+        if (infoAlert) {
+            infoAlert.textContent = message;
+            infoAlert.classList.remove('d-none');
+            setTimeout(() => {
+                infoAlert.classList.add('d-none');
+            }, 3000);
+        }
+    }
+
+    function hideInfo() {
+        const infoAlert = document.getElementById('infoAlert');
+        if (infoAlert) {
+            infoAlert.classList.add('d-none');
+        }
+    }
+
+    function updateGraphInfo() {
+        if (cy) {
+            const nodeCountEl = document.getElementById('nodeCount');
+            const edgeCountEl = document.getElementById('edgeCount');
+            if (nodeCountEl) nodeCountEl.textContent = cy.nodes().length;
+            if (edgeCountEl) edgeCountEl.textContent = cy.edges().length;
+        }
+    }
+
+    window.hideInfo = hideInfo;
+    window.showInfo = showInfo;
+    window.showError = showError;
+    window.hideError = hideError;
+
+    function initCytoscape() {
+        if (typeof cytoscape === 'undefined') {
+            console.error('Cytoscape.js library not loaded');
+            showError('Graph visualization library failed to load. Please refresh the page.');
+            return false;
+        }
+
+        if (cy) {
+            cy.destroy();
+        }
+
+        cy = cytoscape({
+            container: document.getElementById('cy'),
+            elements: {nodes: [], edges: []},
+            style: [
+                {
+                    selector: 'node',
+                    style: {
+                        'label': 'data(label)',
+                        'width': 30,
+                        'height': 30,
+                        'background-color': '#262626',
+                        'color': '#fff',
+                        'text-valign': 'center',
+                        'text-halign': 'center',
+                        'font-size': '10px',
+                        'text-wrap': 'wrap',
+                        'text-max-width': '80px'
+                    }
+                },
+                {selector: 'node[type="Expert"]', style: {'background-color': '#262626', 'shape': 'ellipse'}},
+                {selector: 'node[type="Project"]', style: {'background-color': '#0d6efd', 'shape': 'rectangle'}},
+                {selector: 'node[type="Technology"]', style: {'background-color': '#198754', 'shape': 'diamond'}},
+                {selector: 'node[type="Domain"]', style: {'background-color': '#ffc107', 'shape': 'hexagon'}},
+                {selector: 'node[type="Customer"]', style: {'background-color': '#6f42c1', 'shape': 'round-rectangle'}},
+                {
+                    selector: 'edge',
+                    style: {
+                        'width': 2,
+                        'line-color': '#ccc',
+                        'target-arrow-color': '#ccc',
+                        'target-arrow-shape': 'triangle',
+                        'curve-style': 'straight'
+                    }
+                },
+                {
+                    selector: 'edge[type="PARTICIPATES"]',
+                    style: {'line-color': '#262626', 'target-arrow-color': '#262626'}
+                },
+                {
+                    selector: 'edge[type="HAS_TECHNOLOGY"]',
+                    style: {'line-color': '#198754', 'target-arrow-color': '#198754'}
+                },
+                {
+                    selector: 'edge[type="HAS_DOMAIN"]',
+                    style: {'line-color': '#ffc107', 'target-arrow-color': '#ffc107'}
+                },
+                {
+                    selector: 'edge[type="HAS_CUSTOMER"]',
+                    style: {'line-color': '#0d6efd', 'target-arrow-color': '#0d6efd'}
+                },
+                {
+                    selector: 'edge[type="EXPERT_CUSTOMER"]',
+                    style: {'line-color': '#6f42c1', 'target-arrow-color': '#6f42c1'}
+                }
+            ],
+            layout: {
+                name: 'cose',
+                animate: false,
+                fit: true,
+                padding: 30,
+                nodeRepulsion: 400000,
+                idealEdgeLength: 100,
+                nodeOverlap: 10,
+                minNodeSpacing: 25,
+                randomize: false,
+                componentSpacing: 100,
+                nestingFactor: 5,
+                gravity: 80,
+                numIter: 100,
+                initialTemp: 200,
+                coolingFactor: 0.95,
+                minTemp: 1.0
+            },
+            minZoom: 0.1,
+            maxZoom: 2.0,
+            wheelSensitivity: 0.2
+        });
+
+        cy.on('zoom', function () {
+            document.getElementById('zoomLevel').textContent = cy.zoom().toFixed(2);
+            const showEdges = document.getElementById('showEdges').checked;
+            if (!showEdges || cy.zoom() < 0.3) {
+                cy.edges().style('opacity', 0);
+            } else {
+                cy.edges().style('opacity', 0.6);
+            }
+        });
+
+        const tooltip = document.getElementById('nodeTooltip');
+
+        function formatTooltipRow(label, value) {
+            if (value == null || value === '') return '';
+            return '<div class="tooltip-item"><span class="tooltip-label">' + escapeHtml(label) + ':</span>' + escapeHtml(String(value)) + '</div>';
+        }
+
+        cy.on('mouseover', 'node', function (evt) {
+            if (tooltipTimeout) clearTimeout(tooltipTimeout);
+            const node = evt.target;
+            const nodeData = node.data();
+            const nodeType = nodeData.type || nodeData.label || 'Node';
+            let tooltipContent = '<div class="tooltip-header">' + escapeHtml(nodeType) + '</div>';
+            tooltipContent += formatTooltipRow('ID', nodeData.id);
+            tooltipContent += formatTooltipRow('Name', nodeData.name);
+            tooltipContent += formatTooltipRow('Email', nodeData.email);
+            tooltipContent += formatTooltipRow('Seniority', nodeData.seniority);
+            tooltipContent += formatTooltipRow('Project type', nodeData.projectType);
+            const degree = node.degree();
+            if (degree !== undefined && degree !== null) {
+                tooltipContent += '<div class="tooltip-item tooltip-meta"><span class="tooltip-label">Connections:</span>' + degree + '</div>';
+            }
+            tooltip.innerHTML = tooltipContent;
+            tooltip.classList.remove('d-none');
+            updateTooltipPosition(evt, node);
+        });
+
+        cy.on('mousemove', 'node', function (evt) {
+            if (!tooltip.classList.contains('d-none')) {
+                updateTooltipPosition(evt, evt.target);
+            }
+        });
+
+        cy.on('mouseout', 'node', function () {
+            tooltipTimeout = setTimeout(function () {
+                tooltip.classList.add('d-none');
+            }, 100);
+        });
+
+        cy.on('mouseout', function (evt) {
+            if (evt.target === cy) {
+                tooltip.classList.add('d-none');
+            }
+        });
+
+        function updateTooltipPosition(evt, node) {
+            const container = cy.container();
+            const containerRect = container.getBoundingClientRect();
+            let x, y;
+            if (evt.originalEvent) {
+                x = evt.originalEvent.clientX - containerRect.left;
+                y = evt.originalEvent.clientY - containerRect.top;
+            } else {
+                const renderedPos = node.renderedPosition();
+                x = renderedPos.x;
+                y = renderedPos.y;
+            }
+            tooltip.style.left = (x + 20) + 'px';
+            tooltip.style.top = (y - 20) + 'px';
+            const tooltipRect = tooltip.getBoundingClientRect();
+            const maxX = containerRect.width - tooltipRect.width - 10;
+            const maxY = containerRect.height - tooltipRect.height - 10;
+            if (x + 20 > maxX) {
+                tooltip.style.left = (x - tooltipRect.width - 20) + 'px';
+            }
+            if (y - 20 < 0) {
+                tooltip.style.top = (y + 30) + 'px';
+            }
+        }
+
+        updateGraphInfo();
+        return true;
+    }
+
+    async function loadStatistics() {
+        const statsLoading = document.getElementById('statsLoading');
+        const statsContent = document.getElementById('statsContent');
+        try {
+            statsLoading.classList.remove('d-none');
+            statsContent.classList.add('d-none');
+            const response = await fetch('/api/v1/graph/stats');
+            if (!response.ok) {
+                throw new Error('Failed to load statistics: ' + response.status);
+            }
+            const stats = await response.json();
+            if (stats.error) throw new Error(stats.error);
+            currentStats = stats;
+            document.getElementById('totalVertices').textContent = stats.totalVertices || 0;
+            document.getElementById('totalEdges').textContent = stats.totalEdges || 0;
+            document.getElementById('graphStatus').textContent = stats.exists ? 'Available' : 'Not Available';
+            const vertexCountsDiv = document.getElementById('vertexCounts');
+            if (stats.vertexCounts && Object.keys(stats.vertexCounts).length > 0) {
+                vertexCountsDiv.innerHTML = '<strong>Vertices by Type:</strong> ' +
+                    Object.entries(stats.vertexCounts).map(([type, count]) => type + ': ' + count).join(', ');
+            } else {
+                vertexCountsDiv.innerHTML = '';
+            }
+            const edgeCountsDiv = document.getElementById('edgeCounts');
+            if (stats.edgeCounts && Object.keys(stats.edgeCounts).length > 0) {
+                edgeCountsDiv.innerHTML = '<strong>Edges by Type:</strong> ' +
+                    Object.entries(stats.edgeCounts).map(([type, count]) => type + ': ' + count).join(', ');
+            } else {
+                edgeCountsDiv.innerHTML = '';
+            }
+            const vertexTypeFilter = document.getElementById('vertexTypeFilter');
+            vertexTypeFilter.innerHTML = '<option value="">All Types</option>';
+            if (stats.vertexCounts) {
+                Object.keys(stats.vertexCounts).forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = type;
+                    vertexTypeFilter.appendChild(option);
+                });
+            }
+            const largeGraphWarning = document.getElementById('largeGraphWarning');
+            if (stats.totalVertices > 100000) {
+                largeGraphWarning.classList.remove('d-none');
+            } else {
+                largeGraphWarning.classList.add('d-none');
+            }
+            statsLoading.classList.add('d-none');
+            statsContent.classList.remove('d-none');
+        } catch (error) {
+            console.error('Error loading statistics:', error);
+            showError('Failed to load graph statistics: ' + error.message);
+            statsLoading.classList.add('d-none');
+        }
+    }
+
+    async function loadGraphData() {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const maxNodes = parseInt(document.getElementById('maxNodes').value) || 1000;
+        const vertexType = document.getElementById('vertexTypeFilter').value;
+        const showEdges = document.getElementById('showEdges').checked;
+        try {
+            loadingIndicator.classList.remove('d-none');
+            if (typeof hideError === 'function') hideError();
+            if (typeof hideInfo === 'function') hideInfo();
+            const batchSize = Math.min(maxNodes, 5000);
+            let offset = 0;
+            let allNodes = [];
+            let allEdges = [];
+            while (offset < maxNodes) {
+                const limit = Math.min(batchSize, maxNodes - offset);
+                const url = '/api/v1/graph/data?limit=' + limit + '&offset=' + offset +
+                    (vertexType ? '&vertexType=' + encodeURIComponent(vertexType) : '');
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to load graph data');
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                if (data.nodes && data.nodes.length > 0) allNodes = allNodes.concat(data.nodes);
+                if (showEdges && data.edges && data.edges.length > 0) allEdges = allEdges.concat(data.edges);
+                if (!data.nodes || data.nodes.length < limit) break;
+                offset += limit;
+            }
+            const nodeMap = new Map();
+            allNodes.forEach(node => {
+                const nodeId = node.data.id;
+                if (!nodeMap.has(nodeId)) nodeMap.set(nodeId, node);
+            });
+            allNodes = Array.from(nodeMap.values());
+            const nodeIds = new Set(allNodes.map(n => n.data.id));
+            allEdges = allEdges.filter(edge =>
+                nodeIds.has(edge.data.source) && nodeIds.has(edge.data.target)
+            );
+            if (allNodes.length > maxNodes) {
+                allNodes = allNodes.slice(0, maxNodes);
+                const limitedNodeIds = new Set(allNodes.map(n => n.data.id));
+                allEdges = allEdges.filter(edge =>
+                    limitedNodeIds.has(edge.data.source) && limitedNodeIds.has(edge.data.target)
+                );
+            }
+            if (allEdges.length > maxNodes * 10) allEdges = allEdges.slice(0, maxNodes * 10);
+            if (cy) {
+                if (allNodes.length === 0) {
+                    showError('No nodes found to display');
+                    loadingIndicator.classList.add('d-none');
+                    return;
+                }
+                cy.batch(function () {
+                    cy.elements().remove();
+                    cy.add(allNodes);
+                    if (showEdges && allEdges.length > 0) cy.add(allEdges);
+                });
+                const layoutName = document.getElementById('layoutSelect').value;
+                const layoutOptions = {name: 'cose', animate: false, fit: true, padding: 30};
+                if (layoutName === 'cose-spread') {
+                    layoutOptions.nodeRepulsion = 1000000;
+                    layoutOptions.idealEdgeLength = 150;
+                    layoutOptions.nodeOverlap = 20;
+                    layoutOptions.minNodeSpacing = 50;
+                    layoutOptions.randomize = true;
+                    layoutOptions.componentSpacing = 250;
+                    layoutOptions.nestingFactor = 1.2;
+                    layoutOptions.gravity = 1;
+                    layoutOptions.numIter = 1000;
+                    layoutOptions.initialTemp = 200;
+                    layoutOptions.coolingFactor = 0.95;
+                    layoutOptions.minTemp = 1.0;
+                } else if (layoutName === 'grid') {
+                    layoutOptions.name = 'grid';
+                    layoutOptions.rows = Math.ceil(Math.sqrt(allNodes.length));
+                } else {
+                    layoutOptions.nodeRepulsion = 400000;
+                    layoutOptions.idealEdgeLength = 100;
+                    layoutOptions.nodeOverlap = 10;
+                    layoutOptions.minNodeSpacing = 25;
+                    layoutOptions.randomize = false;
+                    layoutOptions.componentSpacing = 100;
+                    layoutOptions.nestingFactor = 5;
+                    layoutOptions.gravity = 80;
+                    layoutOptions.numIter = 100;
+                    layoutOptions.initialTemp = 200;
+                    layoutOptions.coolingFactor = 0.95;
+                    layoutOptions.minTemp = 1.0;
+                }
+                cy.layout(layoutOptions).run();
+                const zoom = cy.zoom();
+                if (!showEdges || zoom < 0.3) cy.edges().style('opacity', 0);
+                else cy.edges().style('opacity', 0.6);
+                cy.fit();
+            } else {
+                showError('Graph visualization not initialized');
+            }
+            updateGraphInfo();
+            showInfo('Loaded ' + allNodes.length + ' nodes and ' + allEdges.length + ' edges');
+        } catch (error) {
+            console.error('Error loading graph data:', error);
+            showError('Failed to load graph data: ' + error.message);
+        } finally {
+            loadingIndicator.classList.add('d-none');
+        }
+    }
+
+    function setupEventListeners() {
+        document.getElementById('loadGraphBtn').addEventListener('click', loadGraphData);
+        document.getElementById('clearGraphBtn').addEventListener('click', function () {
+            if (cy) {
+                cy.elements().remove();
+                updateGraphInfo();
+            }
+        });
+        document.getElementById('refreshStatsBtn').addEventListener('click', loadStatistics);
+        document.getElementById('zoomInBtn').addEventListener('click', function () {
+            if (cy) cy.zoom(cy.zoom() * 1.2);
+        });
+        document.getElementById('zoomOutBtn').addEventListener('click', function () {
+            if (cy) cy.zoom(cy.zoom() * 0.8);
+        });
+        document.getElementById('resetViewBtn').addEventListener('click', function () {
+            if (cy) {
+                cy.fit();
+                cy.center();
+            }
+        });
+        document.getElementById('showEdges').addEventListener('change', function () {
+            if (cy) {
+                const showEdges = this.checked;
+                const zoom = cy.zoom();
+                if (!showEdges || zoom < 0.3) cy.edges().style('opacity', 0);
+                else cy.edges().style('opacity', 0.6);
+            }
+        });
+        document.getElementById('togglePanelsBtn').addEventListener('click', function () {
+            const statsPanel = document.getElementById('statsPanel');
+            const controlsPanel = document.getElementById('controlsPanel');
+            const toggleIcon = document.getElementById('togglePanelsIcon');
+            const toggleBtn = document.getElementById('togglePanelsBtn');
+            const cyContainer = document.getElementById('cy');
+            if (panelsVisible) {
+                statsPanel.classList.add('panel-hidden');
+                controlsPanel.classList.add('panel-hidden');
+                toggleIcon.textContent = '▶';
+                toggleBtn.innerHTML = '<span id="togglePanelsIcon">▶</span> Show Controls';
+                cyContainer.classList.add('fullscreen');
+                panelsVisible = false;
+            } else {
+                statsPanel.classList.remove('panel-hidden');
+                controlsPanel.classList.remove('panel-hidden');
+                toggleIcon.textContent = '◀';
+                toggleBtn.innerHTML = '<span id="togglePanelsIcon">◀</span> Hide Controls';
+                cyContainer.classList.remove('fullscreen');
+                panelsVisible = true;
+            }
+            if (cy) {
+                cy.resize();
+                cy.fit();
+            }
+        });
+    }
+
+    function initializeApp() {
+        setupEventListeners();
+        if (initCytoscape()) {
+            loadStatistics();
+        }
+    }
+
+    function loadCytoscapeAndInit() {
+        const cytoscapeScript = document.createElement('script');
+        cytoscapeScript.src = 'https://cdn.jsdelivr.net/npm/cytoscape@3/dist/cytoscape.min.js';
+        cytoscapeScript.onload = function () {
+            cytoscapeLoaded = true;
+            initializeApp();
+        };
+        cytoscapeScript.onerror = function () {
+            showError('Graph visualization library failed to load. Please check your internet connection and refresh the page.');
+        };
+        document.head.appendChild(cytoscapeScript);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadCytoscapeAndInit);
+    } else {
+        loadCytoscapeAndInit();
+    }
+</script>
+</body>
+</html>

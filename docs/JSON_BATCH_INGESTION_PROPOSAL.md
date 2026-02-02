@@ -68,11 +68,13 @@ GraphBuilderService.buildGraph()
     - `createWorkExperienceRecord()`: Creates work experience with metadata
 
 2. **Data Models**:
+
 - `EmployeeProfile`: Root record (employee + summary + projects)
     - `EmployeeData`: Employee fields (id, name, email, seniority, etc.)
     - `ProjectData`: Project fields (code, name, dates, technologies, etc.)
 
 3. **Database Operations**:
+
 - Employee: `INSERT ... ON CONFLICT DO UPDATE`
     - Work Experience: `INSERT ... ON CONFLICT DO NOTHING`
     - Projects: Created/found via project name matching
@@ -520,6 +522,7 @@ public record IngestionResult(
     - Test invalid JSON structure
 
 2. **Partial Data Handling**:
+
 - Test missing optional employee fields (email, seniority, etc.)
     - Test missing summary
     - Test missing projects array
@@ -527,6 +530,7 @@ public record IngestionResult(
     - Test missing required fields (should fail gracefully)
 
 3. **Database Operations**:
+
 - Test employee insertion with defaults
     - Test employee update on conflict
     - Test work experience creation
@@ -534,12 +538,14 @@ public record IngestionResult(
     - Test project creation/finding
 
 4. **Error Recovery**:
+
 - Test processing continues after one profile fails
     - Test processing continues after one project fails
     - Test invalid date formats
     - Test database constraint violations
 
 5. **Integration Tests**:
+
 - Test full ingestion flow
     - Test with real database (Testcontainers)
     - Test idempotency (re-running ingestion)

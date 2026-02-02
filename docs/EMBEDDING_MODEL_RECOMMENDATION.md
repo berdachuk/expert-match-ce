@@ -149,6 +149,7 @@ The 8B model demonstrates **superior performance** across multiple benchmarks:
 ###  **Use `qwen3-embedding:8b` with 1024 dimensions (Recommended)**
 
 **Reasons**:
+
 1.  **Perfect compatibility** - Configure to output 1024 dimensions (matches schema)
 2.  **Superior quality** - 6-10% better performance on benchmarks
 3.  **No schema changes** - Uses same 1024 dimensions as 0.6B
@@ -181,6 +182,7 @@ spring:
 - You're doing development/testing
 
 **Reasons**:
+
 1.  **Faster inference** - 2-4x faster than 8B
 2.  **Less memory** - ~1GB vs ~8GB RAM
 3.  **Smaller model** - 639MB vs 4.7GB

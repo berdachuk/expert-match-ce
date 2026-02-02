@@ -1,5 +1,6 @@
-package com.berdachuk.expertmatch.query.service;
+package com.berdachuk.expertmatch.query.service.impl;
 
+import com.berdachuk.expertmatch.query.service.QueryExamplesService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
@@ -21,7 +22,7 @@ public class QueryExamplesServiceImpl implements QueryExamplesService {
 
     private static final String EXAMPLES_RESOURCE = "query-examples.json";
     private final ObjectMapper objectMapper;
-    private List<QueryExample> cachedExamples;
+    private List<QueryExamplesService.QueryExample> cachedExamples;
 
     public QueryExamplesServiceImpl(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -34,7 +35,7 @@ public class QueryExamplesServiceImpl implements QueryExamplesService {
      * @return List of query examples with categories and descriptions
      */
     @Override
-    public List<QueryExample> getExamples() {
+    public List<QueryExamplesService.QueryExample> getExamples() {
         if (cachedExamples != null) {
             return cachedExamples;
         }
@@ -57,7 +58,7 @@ public class QueryExamplesServiceImpl implements QueryExamplesService {
      * @return List of query examples
      * @throws IOException if the resource file cannot be read or parsed
      */
-    private List<QueryExample> loadExamplesFromResource() throws IOException {
+    private List<QueryExamplesService.QueryExample> loadExamplesFromResource() throws IOException {
         ClassPathResource resource = new ClassPathResource(EXAMPLES_RESOURCE);
 
         if (!resource.exists()) {
@@ -75,7 +76,7 @@ public class QueryExamplesServiceImpl implements QueryExamplesService {
      * Data model for JSON resource file structure.
      */
     private record QueryExamplesData(
-            List<QueryExample> examples
+            List<QueryExamplesService.QueryExample> examples
     ) {
     }
 }

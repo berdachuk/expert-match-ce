@@ -30,6 +30,7 @@ combines:
 - **Semantic Reranking** - Precision optimization
 - **LLM Orchestration** - Natural language answer generation
 - **Smart Tool Selection** - Tool Search Tool pattern with 34-64% token savings through dynamic tool discovery
+- **Agent Skills** (Optional) - Modular knowledge management through Markdown-based skills
 
 The flow processes natural language queries, retrieves relevant experts through multiple search strategies, enriches
 results with detailed context, and generates actionable recommendations.
@@ -944,6 +945,7 @@ showing all components, services, and data flows involved in the process.
 2. **QueryController**: Receives the HTTP request, validates it, and delegates to `QueryService`
 
 3. **Conversation Management**:
+
 - Saves the user message to conversation history
     - Loads previous conversation context (last 10 messages) for continuity
 
@@ -966,23 +968,27 @@ showing all components, services, and data flows involved in the process.
 6. **HybridRetrievalService**: Orchestrates three parallel search strategies:
 
    **a. Vector Search (VectorSearchService)**:
+
 - Converts query to embedding vector
     - Performs semantic similarity search using PgVector
     - Finds experts with similar project experiences
     - Returns ranked list of expert IDs
 
    **b. Graph Traversal (GraphSearchService)**:
+
 - Executes Cypher queries on Apache AGE graph
     - Traverses relationships: Expert → Project → Technology
     - Finds experts connected to required technologies
     - Supports AND/OR logic for multiple technologies
 
    **c. Keyword Search (KeywordSearchService)**:
+
 - Performs traditional full-text search
     - Matches exact technology names and skills
     - Fast lookup for specific terms
 
 7. **Result Fusion (ResultFusionService)**:
+
 - Combines results from all three search strategies
    - Applies [Reciprocal Rank Fusion (RRF) algorithm](RECIPROCAL_RANK_FUSION.md)
     - Weights results based on query characteristics
@@ -999,11 +1005,13 @@ showing all components, services, and data flows involved in the process.
 9. **ExpertEnrichmentService**: Enriches expert IDs with detailed information:
 
    **a. Data Fetching**:
+
 - Fetches employee records from database
     - Retrieves work experience for all expert IDs
     - Builds employee map for efficient lookup
 
    **b. For Each Expert**:
+
 - **Skill Matching**: Calculates match score for must-have and nice-to-have skills
     - **Technology Normalization**: Uses `TechnologyRepository` to normalize skill names and match synonyms
     - **Normalized Matching**: Matches skills using normalized names from Technology table
@@ -1018,6 +1026,7 @@ showing all components, services, and data flows involved in the process.
 #### **Phase 5: Answer Generation**
 
 10. **Context Building**:
+
 - Builds expert contexts from enriched expert data
     - Prepares structured data for LLM prompt
 
@@ -1036,6 +1045,7 @@ showing all components, services, and data flows involved in the process.
 #### **Phase 6: Response Finalization**
 
 12. **Response Building**:
+
 - Saves assistant response to conversation history
     - Updates chat metadata (last activity, message count)
     - Builds `QueryResponse` object with:
@@ -1047,6 +1057,7 @@ showing all components, services, and data flows involved in the process.
         - Match summary
 
 13. **Response Delivery**:
+
 - QueryController formats and returns HTTP response
     - User receives expert recommendations with:
 - Natural language explanation
@@ -1057,16 +1068,19 @@ showing all components, services, and data flows involved in the process.
 #### **Key Data Flows**
 
 - **Database Interactions**:
+
 - Vector similarity searches via PgVector
     - Graph traversals via Apache AGE
     - Relational queries for employee and work experience data
     - Conversation history storage and retrieval
 
 - **LLM Interactions**:
+
 - Semantic reranking (optional)
     - Answer generation with RAG pattern
 
 - **Internal Service Communication**:
+
 - Synchronous service calls within QueryService
     - Data transformation between layers
     - Result aggregation and enrichment
@@ -1080,6 +1094,7 @@ showing all components, services, and data flows involved in the process.
     - Answer Generation: 1-5 seconds (LLM processing)
 
 - **Scalability**:
+
 - Parallel search execution (vector, graph, keyword)
     - Efficient database queries with indexes
     - Caching of conversation history

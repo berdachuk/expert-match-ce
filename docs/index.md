@@ -30,6 +30,9 @@ ExpertMatch leverages a **Hybrid GraphRAG architecture** combining:
 - [SGR Benefits](ExpertMatch-SGR-Benefits.md) - Benefits and value proposition of SGR patterns
 - [Smart Tool Selection](SMART_TOOL_SELECTION.md) - Tool Search Tool pattern, 34-64% token savings, dynamic tool
   discovery
+- [Agent Skills Implementation](AGENT_SKILLS_IMPLEMENTATION.md) - Agent Skills feature documentation and usage guide
+- [Agent Skills Monitoring](AGENT_SKILLS_MONITORING.md) - How to monitor and observe Agent Skills usage
+- [Agent Skills Benefits](ExpertMatch-Agent-Skills-Benefits.md) - Benefits and value proposition of Agent Skills
 - [Apache AGE Benefits](ExpertMatch-Apache-AGE-Benefits.md) - Benefits of graph database capabilities
 - [Cypher & Apache AGE Tutorial](CYPHER_APACHE_AGE_TUTORIAL.md) - Comprehensive tutorial on Cypher language and Apache
   AGE graph database
@@ -48,6 +51,8 @@ ExpertMatch leverages a **Hybrid GraphRAG architecture** combining:
 - [Conversation History Management](CONVERSATION_HISTORY_MANAGEMENT.md) - Token counting and summarization
 - [Smart Tool Selection](SMART_TOOL_SELECTION.md) - Tool Search Tool pattern, 34-64% token savings, dynamic tool
   discovery
+- [Agent Skills Implementation](AGENT_SKILLS_IMPLEMENTATION.md) - Agent Skills configuration and usage
+- [Library Compatibility Report](library-compatibility-report.md) - Library versions and compatibility status
 
 ### Data Ingestion
 
@@ -75,6 +80,7 @@ ExpertMatch leverages a **Hybrid GraphRAG architecture** combining:
 - **SGR Patterns**: Full Schema-Guided Reasoning implementation (Cascade, Routing, Cycle patterns) for structured LLM
   reasoning
 - **Smart Tool Selection**: Tool Search Tool pattern with 34-64% token savings through dynamic tool discovery
+- **Agent Skills**: Optional Markdown-based skills for modular knowledge management (disabled by default)
 - **RFP Response Support**: Quickly identifies experts for RFP responses
 - **Team Formation**: Recommends optimal team compositions
 - **Hybrid GraphRAG**: Combines vector, graph, and keyword search
@@ -94,7 +100,7 @@ ExpertMatch uses a modern, scalable fullstack architecture:
 - **UI Library**: Bootstrap/Custom CSS
 - **Styling**: Tailwind CSS 3.4.3
 - **Database**: PostgreSQL 17 with PgVector and Apache AGE
-- **AI/ML**: Spring AI 1.1.1 for LLM orchestration
+- **AI/ML**: Spring AI 1.1.0 for LLM orchestration
 - **Vector Search**: PgVector with HNSW indexing
 - **Graph Database**: Apache AGE for relationship traversal
 - **Deployment**: Docker Compose for local development
@@ -125,5 +131,13 @@ For questions or issues, please refer to the relevant documentation section or c
 
 ---
 
-*Last updated: 2026-01-10 (Updated module structure and interface-based design documentation)*
+*Last updated: 2026-01-16 (Architecture analysis and documentation update - Spring AI 1.1.0, Agent Skills
+implementation)*
+
+## Recent Changes (2026-01-16)
+
+- **Spring AI Version**: Updated from 2.0.0-SNAPSHOT to 1.1.0 for Spring Boot 3.5.9 compatibility
+- **Agent Skills**: New optional feature implemented for modular knowledge management via Markdown-based skills
+- **Library Compatibility**: All libraries verified compatible, 227 tests passing with 0 errors
+- **Documentation**: Comprehensive architecture analysis and documentation updates completed
 

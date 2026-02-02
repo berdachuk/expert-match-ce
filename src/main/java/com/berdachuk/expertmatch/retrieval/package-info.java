@@ -14,10 +14,9 @@
  * - KeywordSearchService (service layer)
  */
 @org.springframework.modulith.ApplicationModule(
-    id = "retrieval",
-    displayName = "Hybrid Retrieval",
-    allowedDependencies = {"employee::API", "embedding::API", "graph::API", "core"}
+        id = "retrieval",
+        displayName = "Hybrid Retrieval",
+        allowedDependencies = {"employee", "embedding", "graph", "workexperience", "core", "llm"}
 )
 package com.berdachuk.expertmatch.retrieval;
 
-import org.springframework.modulith.ApplicationModule;

@@ -1,11 +1,22 @@
 package com.berdachuk.expertmatch.graph.service;
 
+import com.berdachuk.expertmatch.graph.domain.ExpertCustomerRelationship;
+import com.berdachuk.expertmatch.graph.domain.ParticipationRelationship;
+import com.berdachuk.expertmatch.graph.domain.ProjectCustomerRelationship;
+import com.berdachuk.expertmatch.graph.domain.ProjectTechnologyRelationship;
+
 import java.util.List;
 
 /**
  * Service interface for graph builder operations.
  */
 public interface GraphBuilderService {
+    /**
+     * Clears all vertices and edges from the Apache AGE graph.
+     * Use before rebuilding or when clearing test data so the graph reflects current relational data only.
+     */
+    void clearGraph();
+
     /**
      * Builds the complete graph from database data.
      * Creates all vertices (experts, projects, technologies, domains, customers) and relationships.
@@ -105,28 +116,4 @@ public interface GraphBuilderService {
      * @param technologyName The name of the technology
      */
     void createUsesRelationship(String projectId, String technologyName);
-
-    /**
-     * Participation relationship.
-     */
-    record ParticipationRelationship(String expertId, String projectId, String role) {
-    }
-
-    /**
-     * Project-technology relationship.
-     */
-    record ProjectTechnologyRelationship(String projectId, String technologyName) {
-    }
-
-    /**
-     * Expert-customer relationship.
-     */
-    record ExpertCustomerRelationship(String expertId, String customerId) {
-    }
-
-    /**
-     * Project-customer relationship.
-     */
-    record ProjectCustomerRelationship(String projectId, String customerId) {
-    }
 }

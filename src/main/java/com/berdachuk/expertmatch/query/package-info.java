@@ -9,10 +9,9 @@
  * - QueryController (REST API)
  */
 @org.springframework.modulith.ApplicationModule(
-    id = "query",
-    displayName = "Query Processing",
-    allowedDependencies = {"retrieval::API", "llm::API", "employee::API", "core"}
+        id = "query",
+        displayName = "Query Processing",
+        allowedDependencies = {"core", "llm", "retrieval", "chat", "employee", "workexperience", "embedding", "api"}
 )
 package com.berdachuk.expertmatch.query;
 
-import org.springframework.modulith.ApplicationModule;

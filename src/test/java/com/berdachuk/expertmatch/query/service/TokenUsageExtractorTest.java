@@ -1,6 +1,6 @@
 package com.berdachuk.expertmatch.query.service;
 
-import com.berdachuk.expertmatch.query.domain.ExecutionTrace;
+import com.berdachuk.expertmatch.core.domain.ExecutionTrace;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;

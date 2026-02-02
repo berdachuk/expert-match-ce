@@ -1,13 +1,11 @@
-package com.berdachuk.expertmatch.retrieval.service;
+package com.berdachuk.expertmatch.retrieval.service.impl;
 
-import com.berdachuk.expertmatch.core.repository.sql.InjectSql;
+import com.berdachuk.expertmatch.retrieval.repository.KeywordSearchRepository;
+import com.berdachuk.expertmatch.retrieval.service.KeywordSearchService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Service for keyword/full-text search using PostgreSQL.
@@ -16,16 +14,10 @@ import java.util.Map;
 @Service
 public class KeywordSearchServiceImpl implements KeywordSearchService {
 
-    private final NamedParameterJdbcTemplate namedJdbcTemplate;
+    private final KeywordSearchRepository repository;
 
-    @InjectSql("/sql/retrieval/keywordSearch.sql")
-    private String keywordSearchSql;
-
-    @InjectSql("/sql/retrieval/searchByTechnologies.sql")
-    private String searchByTechnologiesSql;
-
-    public KeywordSearchServiceImpl(NamedParameterJdbcTemplate namedJdbcTemplate) {
-        this.namedJdbcTemplate = namedJdbcTemplate;
+    public KeywordSearchServiceImpl(KeywordSearchRepository repository) {
+        this.repository = repository;
     }
 
     /**
@@ -46,12 +38,8 @@ public class KeywordSearchServiceImpl implements KeywordSearchService {
         // plainto_tsquery automatically handles multi-word terms, special characters, and AND logic
         String searchTerms = String.join(" ", keywords);
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("searchTerms", searchTerms);
-        params.put("maxResults", maxResults);
-
         try {
-            return namedJdbcTemplate.query(keywordSearchSql, params, (rs, rowNum) -> rs.getString("employee_id"));
+            return repository.searchByKeywords(searchTerms, maxResults);
         } catch (org.springframework.jdbc.UncategorizedSQLException e) {
             // Handle transaction aborted errors (25P02) and other SQL errors gracefully
             // This can happen if a previous query in the transaction failed
@@ -89,12 +77,8 @@ public class KeywordSearchServiceImpl implements KeywordSearchService {
             throw new IllegalArgumentException("Max results must be at least 1, got: " + maxResults);
         }
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("technologies", technologies.toArray(new String[0]));
-        params.put("maxResults", maxResults);
-
         try {
-            return namedJdbcTemplate.query(searchByTechnologiesSql, params, (rs, rowNum) -> rs.getString("employee_id"));
+            return repository.searchByTechnologies(technologies.toArray(new String[0]), maxResults);
         } catch (org.springframework.jdbc.UncategorizedSQLException e) {
             // Handle transaction aborted errors (25P02) and other SQL errors gracefully
             java.sql.SQLException sqlException = e.getSQLException();
@@ -115,4 +99,3 @@ public class KeywordSearchServiceImpl implements KeywordSearchService {
         }
     }
 }
-

@@ -12,10 +12,9 @@
  * - ChatController (REST API)
  */
 @org.springframework.modulith.ApplicationModule(
-    id = "chat",
-    displayName = "Chat Management",
-    allowedDependencies = {"core"}
+        id = "chat",
+        displayName = "Chat Management",
+        allowedDependencies = {"core", "api"}
 )
 package com.berdachuk.expertmatch.chat;
 
-import org.springframework.modulith.ApplicationModule;

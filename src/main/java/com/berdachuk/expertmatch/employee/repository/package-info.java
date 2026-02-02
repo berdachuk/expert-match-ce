@@ -7,4 +7,3 @@
 @org.springframework.modulith.NamedInterface("SPI")
 package com.berdachuk.expertmatch.employee.repository;
 
-import org.springframework.modulith.NamedInterface;

@@ -1,7 +1,8 @@
 package com.berdachuk.expertmatch.retrieval.service;
 
-import com.berdachuk.expertmatch.query.domain.QueryRequest;
-import com.berdachuk.expertmatch.query.service.ExecutionTracer;
+import com.berdachuk.expertmatch.core.domain.ParsedQuery;
+import com.berdachuk.expertmatch.core.domain.QueryRequest;
+import com.berdachuk.expertmatch.core.service.ExecutionTracer;
 
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,7 @@ public interface HybridRetrievalService {
      * @param parsedQuery The parsed query containing intent, skills, and technologies
      * @return Retrieval result containing expert IDs and relevance scores
      */
-    RetrievalResult retrieve(QueryRequest request, com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery);
+    RetrievalResult retrieve(QueryRequest request, ParsedQuery parsedQuery);
 
     /**
      * Retrieves expert recommendations using hybrid search (graph + vector + keyword) with execution tracing.
@@ -27,7 +28,7 @@ public interface HybridRetrievalService {
      * @param tracer      Optional execution tracer for tracking retrieval steps
      * @return Retrieval result containing expert IDs and relevance scores
      */
-    RetrievalResult retrieve(QueryRequest request, com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery parsedQuery, ExecutionTracer tracer);
+    RetrievalResult retrieve(QueryRequest request, ParsedQuery parsedQuery, ExecutionTracer tracer);
 
     /**
      * Retrieval result containing expert recommendations and relevance scores.

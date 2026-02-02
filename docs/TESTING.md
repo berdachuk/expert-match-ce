@@ -110,10 +110,12 @@ Tests use the `test` profile with:
     - Only active in `test` profile
 
 2. **SpringAIConfig Exclusion**:
+
 - `SpringAIConfig` is excluded from test profile via `@Profile("!test")`
     - Prevents real LLM models from being created during tests
 
 3. **Auto-Configuration Exclusions**:
+
 - Spring AI auto-configuration classes are excluded in `application-test.yml`:
 - `OllamaChatAutoConfiguration`
         - `OllamaEmbeddingAutoConfiguration`
@@ -122,6 +124,7 @@ Tests use the `test` profile with:
         - `OpenAiEmbeddingAutoConfiguration`
 
 4. **BaseIntegrationTest**:
+
 - All integration tests extend `BaseIntegrationTest`
     - Ensures test profile is active and mocks are used
 
@@ -186,6 +189,7 @@ If you see real LLM usage during tests:
    ```
 
 3. **Check Auto-Configuration Exclusions**:
+
 - Verify `application-test.yml` has exclusions configured
     - Verify `BaseIntegrationTest` has exclusions in properties
 
@@ -196,6 +200,7 @@ If you see real LLM usage during tests:
    ```
 
 5. **Check for SpringAIConfig Bean**:
+
 - If `SpringAIConfig` is instantiated in test profile, it will throw an exception
     - Check logs for "SpringAIConfig should NOT be active in test profile"
 
@@ -522,6 +527,7 @@ The `WebControllerIT` class tests the web UI endpoints that make HTTP calls to t
 ### Important: Avoiding Duplicate Headers
 
 **CRITICAL**: When making API calls from `WebController`, the `X-User-Id` header must be set **only once**:
+
 - The generated API client automatically sets the `X-User-Id` header from the `userId` parameter
 - **Do NOT** call `setApiHeaders(userId)` before API methods that accept `userId` as a parameter
 - Calling `setApiHeaders()` creates duplicate headers (e.g., `test-user-web-123,test-user-web-123`), which causes chat
@@ -579,10 +585,12 @@ If you see "Access denied to chat" errors in tests:
    ```
 
 2. **Verify Header is Set Once**:
+
 - Check that `setApiHeaders()` is NOT called before API methods that accept `userId` parameter
    - The generated client automatically sets the header from the parameter
 
 3. **Check User ID Consistency**:
+
 - Ensure the test creates the chat with the same user ID used in the request
    - Verify the `X-User-Id` header matches the chat owner's user ID
 

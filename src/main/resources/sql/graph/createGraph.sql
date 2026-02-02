@@ -1,0 +1,1 @@
+SELECT * FROM ag_catalog.create_graph(?)

@@ -500,10 +500,12 @@ If you encounter timeout errors during query processing:
     - Check Ollama server logs for timeout errors
 
 3. **Monitor Query Processing Time**:
+
 - Use execution trace (`includeExecutionTrace: true`) to identify slow steps
     - Check application logs for processing time information
 
 4. **Adjust Timeout Values**:
+
 - Increase `server.connection-timeout` in `application-local.yml` if needed
     - Restart application after configuration changes
 

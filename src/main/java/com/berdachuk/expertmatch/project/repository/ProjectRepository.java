@@ -36,6 +36,13 @@ public interface ProjectRepository {
     Optional<String> findIdByName(String projectName);
 
     /**
+     * Returns the total count of project records.
+     *
+     * @return total count
+     */
+    long count();
+
+    /**
      * Deletes all project records.
      * Warning: This is a destructive operation.
      *

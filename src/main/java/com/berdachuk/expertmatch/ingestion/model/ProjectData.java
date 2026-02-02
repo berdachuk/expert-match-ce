@@ -10,12 +10,13 @@ import java.util.stream.Stream;
 /**
  * Project data model with optional fields.
  * Required fields: projectName, startDate
- * Optional fields: projectCode, customerName, companyName, role, endDate,
- * technologies, responsibilities, industry, projectSummary
+ * Optional fields: projectCode, customerId, customerName, companyName, role, endDate,
+ * technologies, responsibilities, industry, projectSummary, customerDescription
  */
 public record ProjectData(
         @JsonInclude(JsonInclude.Include.NON_NULL) String projectCode,
         String projectName,
+        @JsonInclude(JsonInclude.Include.NON_NULL) String customerId,
         @JsonInclude(JsonInclude.Include.NON_NULL) String customerName,
         @JsonInclude(JsonInclude.Include.NON_NULL) String companyName,
         @JsonInclude(JsonInclude.Include.NON_NULL) String role,
@@ -24,7 +25,8 @@ public record ProjectData(
         @JsonInclude(JsonInclude.Include.NON_EMPTY) List<String> technologies,
         @JsonInclude(JsonInclude.Include.NON_NULL) String responsibilities,
         @JsonInclude(JsonInclude.Include.NON_NULL) String industry,
-        @JsonInclude(JsonInclude.Include.NON_NULL) String projectSummary
+        @JsonInclude(JsonInclude.Include.NON_NULL) String projectSummary,
+        @JsonInclude(JsonInclude.Include.NON_NULL) String customerDescription
 ) {
     /**
      * Generates project code from project name.
@@ -61,6 +63,7 @@ public record ProjectData(
         return new ProjectData(
                 projectCode != null ? projectCode : generateProjectCode(projectName),
                 projectName,
+                customerId,
                 customerName != null ? customerName : "Unknown Customer",
                 companyName != null ? companyName : (customerName != null ? customerName : "Unknown Customer"),
                 role != null ? role : "Developer",
@@ -69,7 +72,8 @@ public record ProjectData(
                 technologies != null ? technologies : List.of(),
                 responsibilities != null ? responsibilities : "",
                 industry != null ? industry : "Technology",
-                projectSummary != null ? projectSummary : ""
+                projectSummary != null ? projectSummary : "",
+                customerDescription
         );
     }
 }

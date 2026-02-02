@@ -507,16 +507,19 @@ expertmatch:
 **SGR in ExpertMatch**:
 
 1. **SGR Deep Research Pattern**:
+
 - **Status**:  **Implemented** (MVP)
    - **Location**: `DeepResearchService` integrated into `QueryService` retrieval flow
     - **Purpose**: Multi-step iterative retrieval for complex queries
    - **Components**: Gap analysis, query refinement, expanded retrieval, result synthesis
 
 2. **Schema-Guided Reasoning Patterns**:
+
 - **Status**:  **Implemented** (MVP)
    - **Location**: Integrated into `AnswerGenerationService` and `QueryParser`
    - **Purpose**: Structured, predictable LLM reasoning with JSON Schema constraints
    - **Components**:
+
 - **Cascade Pattern**: `ExpertEvaluationService` for structured expert evaluation
       - **Routing Pattern**: `QueryClassificationService` for LLM-based query classification
       - **Cycle Pattern**: `CyclePatternService` for multiple expert evaluations

@@ -1,11 +1,11 @@
-package com.berdachuk.expertmatch.graph.service;
+package com.berdachuk.expertmatch.graph.service.impl;
 
 import com.berdachuk.expertmatch.core.exception.RetrievalException;
+import com.berdachuk.expertmatch.graph.repository.GraphRepository;
+import com.berdachuk.expertmatch.graph.service.GraphService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,12 +26,12 @@ import java.util.Map;
 @Service
 public class GraphServiceImpl implements GraphService {
     private static final String GRAPH_NAME = "expertmatch_graph";
-    private final NamedParameterJdbcTemplate namedJdbcTemplate;
     private final JdbcTemplate jdbcTemplate;
+    private final GraphRepository graphRepository;
 
-    public GraphServiceImpl(NamedParameterJdbcTemplate namedJdbcTemplate) {
-        this.namedJdbcTemplate = namedJdbcTemplate;
-        this.jdbcTemplate = namedJdbcTemplate.getJdbcTemplate();
+    public GraphServiceImpl(JdbcTemplate jdbcTemplate, GraphRepository graphRepository) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.graphRepository = graphRepository;
     }
 
     /**
@@ -94,15 +94,8 @@ public class GraphServiceImpl implements GraphService {
         }
 
         try {
-            // Build SQL with 2 parameters (graph name and query string)
-            // Apache AGE cypher function signature: ag_catalog.cypher(graph_name name, query_string cstring, params agtype)
-            // The third parameter (params) has a default of NULL, so we omit it
-            // Use dollar-quoted string for Cypher query to handle special characters
-            // Explicitly use ag_catalog.cypher() and ag_catalog.agtype to ensure they are found
-            String sql = String.format(
-                    "SELECT * FROM ag_catalog.cypher('%s'::name, $%s$%s$%s$::cstring) AS t(result ag_catalog.agtype)",
-                    GRAPH_NAME, dollarTag, finalQuery, dollarTag
-            );
+            // Build SQL with correct column count from RETURN clause (single "result" or c0, c1, c2, ...)
+            String sql = buildCypherSql(finalQuery, dollarTag);
 
             // Execute LOAD 'age' and Cypher query on the same connection
             // This ensures AGE is loaded for the session that executes the query
@@ -227,6 +220,78 @@ public class GraphServiceImpl implements GraphService {
     }
 
     /**
+     * Builds SQL for Cypher execution with correct column count from RETURN clause.
+     * Single-expression RETURN uses "result"; multi-column uses c0, c1, c2, ...
+     */
+    private String buildCypherSql(String finalQuery, String dollarTag) {
+        String upperQuery = finalQuery.trim().toUpperCase();
+        int returnIndex = upperQuery.indexOf("RETURN");
+        if (returnIndex < 0) {
+            return String.format(
+                    "SELECT * FROM ag_catalog.cypher('%s'::name, $%s$%s$%s$::cstring) AS t(result ag_catalog.agtype)",
+                    GRAPH_NAME, dollarTag, finalQuery, dollarTag
+            );
+        }
+        String afterReturn = finalQuery.substring(returnIndex + 6).trim();
+        int commaCount = countCommasInReturnClause(afterReturn);
+        if (commaCount == 0) {
+            return String.format(
+                    "SELECT * FROM ag_catalog.cypher('%s'::name, $%s$%s$%s$::cstring) AS t(result ag_catalog.agtype)",
+                    GRAPH_NAME, dollarTag, finalQuery, dollarTag
+            );
+        }
+        int columnCount = commaCount + 1;
+        StringBuilder columnDefs = new StringBuilder();
+        for (int i = 0; i < columnCount; i++) {
+            if (i > 0) {
+                columnDefs.append(", ");
+            }
+            columnDefs.append("c").append(i).append(" ag_catalog.agtype");
+        }
+        return String.format(
+                "SELECT * FROM ag_catalog.cypher('%s'::name, $%s$%s$%s$::cstring) AS t(%s)",
+                GRAPH_NAME, dollarTag, finalQuery, dollarTag, columnDefs
+        );
+    }
+
+    /**
+     * Counts top-level commas in RETURN clause to determine column count.
+     */
+    private int countCommasInReturnClause(String returnClause) {
+        int commaCount = 0;
+        int parenDepth = 0;
+        int bracketDepth = 0;
+        boolean inString = false;
+        char stringDelimiter = '\0';
+        for (int i = 0; i < returnClause.length(); i++) {
+            char c = returnClause.charAt(i);
+            if (!inString && (c == '\'' || c == '"')) {
+                inString = true;
+                stringDelimiter = c;
+            } else if (inString && c == stringDelimiter) {
+                if (i == 0 || returnClause.charAt(i - 1) != '\\') {
+                    inString = false;
+                }
+            }
+            if (!inString && parenDepth == 0 && bracketDepth == 0 && c == ',') {
+                commaCount++;
+            }
+            if (!inString) {
+                if (c == '(') {
+                    parenDepth++;
+                } else if (c == ')') {
+                    parenDepth--;
+                } else if (c == '[') {
+                    bracketDepth++;
+                } else if (c == ']') {
+                    bracketDepth--;
+                }
+            }
+        }
+        return commaCount;
+    }
+
+    /**
      * Formats a value for embedding in a Cypher query string.
      * Properly escapes and formats based on the value type.
      *
@@ -297,29 +362,43 @@ public class GraphServiceImpl implements GraphService {
     )
     @Override
     public boolean graphExists() {
-        try {
-            // Use a simple query in a separate transaction
-            // This prevents aborting the main transaction if AGE is not available
-            String sql = """
-                    SELECT COUNT(*) 
-                    FROM ag_catalog.ag_graph 
-                    WHERE name = :graphName
-                    """;
+        return graphRepository.graphExists(GRAPH_NAME);
+    }
 
-            Map<String, Object> params = new HashMap<>();
-            params.put("graphName", GRAPH_NAME);
+    /**
+     * Creates the Apache AGE graph if it doesn't exist.
+     * This is an administrative operation that calls ag_catalog.create_graph().
+     * If the graph already exists, this method does nothing.
+     */
+    @Transactional
+    @Override
+    public void createGraph() {
+        graphRepository.createGraph(GRAPH_NAME);
+    }
 
-            Integer count = namedJdbcTemplate.queryForObject(sql, params, Integer.class);
-            return count != null && count > 0;
-        } catch (DataAccessException e) {
-            // Apache AGE not available, schema doesn't exist
-            log.debug("Graph check failed (AGE may not be available): {}", e.getMessage());
-            return false;
-        } catch (Exception e) {
-            // Any other exception - log and return false
-            log.debug("Graph check failed with unexpected error: {}", e.getMessage());
-            return false;
+    /**
+     * Creates graph indexes for better query performance.
+     * Creates GIN indexes on the properties JSONB column of vertex tables.
+     * This method safely handles cases where tables don't exist yet.
+     */
+    @Transactional
+    @Override
+    public void createGraphIndexes() {
+        String graphName = GRAPH_NAME;
+
+        // Check if tables exist
+        if (!graphRepository.vertexTableExists(graphName, "Expert")) {
+            log.debug("Graph tables do not exist yet, skipping index creation");
+            return;
         }
+
+        // Create indexes on properties JSONB column
+        graphRepository.createPropertyIndex(graphName, "Expert", "idx_" + graphName + "_expert_props");
+        graphRepository.createPropertyIndex(graphName, "Project", "idx_" + graphName + "_project_props");
+        graphRepository.createPropertyIndex(graphName, "Technology", "idx_" + graphName + "_technology_props");
+        graphRepository.createPropertyIndex(graphName, "Customer", "idx_" + graphName + "_customer_props");
+
+        log.debug("Graph indexes created successfully");
     }
 }
 

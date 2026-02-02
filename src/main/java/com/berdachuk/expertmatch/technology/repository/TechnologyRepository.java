@@ -51,6 +51,13 @@ public interface TechnologyRepository {
     List<Technology> findAll();
 
     /**
+     * Returns the total count of technology records.
+     *
+     * @return total count
+     */
+    long count();
+
+    /**
      * Deletes all technology records.
      * Warning: This is a destructive operation.
      *

@@ -184,9 +184,22 @@ public class TestAIConfig {
 
     /**
      * Mock ChatClient for tests.
+     * Only created when skills are disabled (expertmatch.skills.enabled=false or not set).
+     * When skills are enabled, chatClientWithSkills from AgentSkillsConfiguration will be @Primary instead.
+     * When tool search is enabled, chatClientWithToolSearch from ToolSearchConfiguration will be @Primary instead.
      */
-    @Bean
+    @Bean("testChatClient")
     @Primary
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+            name = "expertmatch.skills.enabled",
+            havingValue = "false",
+            matchIfMissing = true
+    )
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+            name = "expertmatch.tools.search.enabled",
+            havingValue = "false",
+            matchIfMissing = true
+    )
     public ChatClient testChatClient(ChatModel chatModel) {
         return ChatClient.builder(chatModel).build();
     }

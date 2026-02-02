@@ -1,11 +1,10 @@
 package com.berdachuk.expertmatch.employee.service.impl;
 
+import com.berdachuk.expertmatch.core.domain.ParsedQuery;
+import com.berdachuk.expertmatch.core.domain.QueryResponse;
 import com.berdachuk.expertmatch.employee.domain.Employee;
 import com.berdachuk.expertmatch.employee.repository.EmployeeRepository;
 import com.berdachuk.expertmatch.employee.service.ExpertEnrichmentService;
-import com.berdachuk.expertmatch.query.domain.QueryParser;
-import com.berdachuk.expertmatch.query.domain.QueryResponse;
-import com.berdachuk.expertmatch.retrieval.service.HybridRetrievalService;
 import com.berdachuk.expertmatch.technology.domain.Technology;
 import com.berdachuk.expertmatch.technology.repository.TechnologyRepository;
 import com.berdachuk.expertmatch.workexperience.domain.WorkExperience;
@@ -47,11 +46,11 @@ public class ExpertEnrichmentServiceImpl implements ExpertEnrichmentService {
      */
     @Override
     public List<QueryResponse.ExpertMatch> enrichExperts(
-            HybridRetrievalService.RetrievalResult retrievalResult,
-            QueryParser.ParsedQuery parsedQuery) {
+            Map<String, Double> expertIdsWithScores,
+            ParsedQuery parsedQuery) {
 
-        List<String> expertIds = retrievalResult.expertIds();
-        Map<String, Double> relevanceScores = retrievalResult.relevanceScores();
+        List<String> expertIds = new ArrayList<>(expertIdsWithScores.keySet());
+        Map<String, Double> relevanceScores = expertIdsWithScores;
 
         // Fetch employee data
         List<Employee> employees = employeeRepository.findByIds(expertIds);
@@ -120,7 +119,7 @@ public class ExpertEnrichmentServiceImpl implements ExpertEnrichmentService {
      * Calculates skill match score using Technology normalization and synonyms.
      */
     private QueryResponse.SkillMatch calculateSkillMatch(
-            QueryParser.ParsedQuery parsedQuery,
+            ParsedQuery parsedQuery,
             List<WorkExperience> workExperiences) {
 
         List<String> requiredSkills = new ArrayList<>(parsedQuery.skills());
@@ -165,7 +164,7 @@ public class ExpertEnrichmentServiceImpl implements ExpertEnrichmentService {
      * Builds matched skills breakdown using Technology normalization and synonyms.
      */
     private QueryResponse.MatchedSkills buildMatchedSkills(
-            QueryParser.ParsedQuery parsedQuery,
+            ParsedQuery parsedQuery,
             List<WorkExperience> workExperiences) {
 
         List<String> requiredSkills = new ArrayList<>(parsedQuery.skills());
@@ -194,7 +193,7 @@ public class ExpertEnrichmentServiceImpl implements ExpertEnrichmentService {
      */
     private List<QueryResponse.RelevantProject> buildRelevantProjects(
             List<WorkExperience> workExperiences,
-            QueryParser.ParsedQuery parsedQuery) {
+            ParsedQuery parsedQuery) {
 
         // Filter and sort by relevance
         return workExperiences.stream()
@@ -223,7 +222,7 @@ public class ExpertEnrichmentServiceImpl implements ExpertEnrichmentService {
      */
     private boolean isRelevant(
             WorkExperience workExperience,
-            QueryParser.ParsedQuery parsedQuery) {
+            ParsedQuery parsedQuery) {
 
         List<String> queryTechnologies = new ArrayList<>(parsedQuery.technologies());
         queryTechnologies.addAll(parsedQuery.skills());

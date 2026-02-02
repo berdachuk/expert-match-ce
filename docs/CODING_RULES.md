@@ -592,6 +592,7 @@ Ensure proper Spring AI configuration:
 - **Don't**:
   ```markdown
   **Функциональность**:
+  
   - Item 1
   - Item 2
   ```

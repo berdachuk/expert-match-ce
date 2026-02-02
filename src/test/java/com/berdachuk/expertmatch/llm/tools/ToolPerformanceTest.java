@@ -1,5 +1,6 @@
 package com.berdachuk.expertmatch.llm.tools;
 
+import com.berdachuk.expertmatch.query.tools.ExpertMatchTools;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

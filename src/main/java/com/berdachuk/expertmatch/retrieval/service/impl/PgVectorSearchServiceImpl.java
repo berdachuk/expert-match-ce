@@ -1,13 +1,11 @@
-package com.berdachuk.expertmatch.retrieval.service;
+package com.berdachuk.expertmatch.retrieval.service.impl;
 
-import com.berdachuk.expertmatch.core.repository.sql.InjectSql;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import com.berdachuk.expertmatch.retrieval.repository.PgVectorSearchRepository;
+import com.berdachuk.expertmatch.retrieval.repository.PgVectorSearchResult;
+import com.berdachuk.expertmatch.retrieval.service.PgVectorSearchService;
 import org.springframework.stereotype.Service;
 
-import java.sql.Array;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Service for vector similarity search using PgVector directly.
@@ -22,13 +20,10 @@ public class PgVectorSearchServiceImpl implements PgVectorSearchService {
      * - OpenAI/DIAL text-embedding-3-large: 1536 dimensions (used as-is)
      */
     private static final int DATABASE_EMBEDDING_DIMENSION = 1536;
-    private final NamedParameterJdbcTemplate namedJdbcTemplate;
+    private final PgVectorSearchRepository repository;
 
-    @InjectSql("/sql/retrieval/vectorSearch.sql")
-    private String vectorSearchSql;
-
-    public PgVectorSearchServiceImpl(NamedParameterJdbcTemplate namedJdbcTemplate) {
-        this.namedJdbcTemplate = namedJdbcTemplate;
+    public PgVectorSearchServiceImpl(PgVectorSearchRepository repository) {
+        this.repository = repository;
     }
 
     /**
@@ -76,42 +71,13 @@ public class PgVectorSearchServiceImpl implements PgVectorSearchService {
             throw new IllegalArgumentException("Formatted vector string is invalid: " + vectorString);
         }
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("queryVector", vectorString);
-        params.put("threshold", similarityThreshold);
-        params.put("maxResults", maxResults);
+        // Call repository for data access
+        List<PgVectorSearchResult> repoResults = repository.search(vectorString, similarityThreshold, maxResults);
 
-        return namedJdbcTemplate.query(vectorSearchSql, params, (rs, rowNum) -> {
-            String employeeId = rs.getString("employee_id");
-            double similarity = rs.getDouble("similarity");
-
-            // Build document metadata
-            Map<String, Object> metadata = new HashMap<>();
-            // Only add non-null values to metadata
-            String projectName = rs.getString("project_name");
-            if (projectName != null) {
-                metadata.put("projectName", projectName);
-            }
-
-            String projectSummary = rs.getString("project_summary");
-            if (projectSummary != null) {
-                metadata.put("projectSummary", projectSummary);
-            }
-
-            String role = rs.getString("role");
-            if (role != null) {
-                metadata.put("role", role);
-            }
-
-            // Extract technologies array
-            Array techArray = rs.getArray("technologies");
-            List<String> technologies = techArray != null
-                    ? List.of((String[]) techArray.getArray())
-                    : List.of();
-            metadata.put("technologies", technologies);
-
-            return new PgVectorSearchService.VectorSearchResult(employeeId, similarity, metadata);
-        });
+        // Convert to service result objects
+        return repoResults.stream()
+                .map(r -> new VectorSearchResult(r.employeeId(), r.similarity(), r.metadata()))
+                .toList();
     }
 
     /**
@@ -148,7 +114,7 @@ public class PgVectorSearchServiceImpl implements PgVectorSearchService {
 
     /**
      * Formats float array as PostgreSQL vector string.
-     * Format: "[0.1,0.2,0.3,...]" (space-separated for pgvector)
+     * Format: "[0.1,0.2,0.3,...]" (comma-separated for pgvector)
      */
     private String formatVector(float[] vector) {
         StringBuilder sb = new StringBuilder("[");
@@ -160,6 +126,4 @@ public class PgVectorSearchServiceImpl implements PgVectorSearchService {
         sb.append("]");
         return sb.toString();
     }
-
 }
-

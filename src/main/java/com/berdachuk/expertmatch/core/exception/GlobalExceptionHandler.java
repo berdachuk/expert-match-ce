@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Instant;
 import java.util.List;
@@ -53,6 +55,20 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles Spring 6.1+ no resource found (no handler matched the request).
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "NOT_FOUND",
+                ex.getMessage(),
+                Instant.now()
+        );
+        log.warn("No handler found for request: {} {}", ex.getHttpMethod(), ex.getResourcePath());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
      * Handles resource not found exceptions.
      */
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -63,6 +79,26 @@ public class GlobalExceptionHandler {
                 Instant.now()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Handles path variable type mismatch (e.g. invalid UUID for jobId).
+     * Returns 404 so the client sees "Job not found" instead of 400.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex,
+                                                                          WebRequest request) {
+        if (!(request instanceof ServletWebRequest servletRequest)) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("BAD_REQUEST", ex.getMessage(), Instant.now()));
+        }
+        String path = servletRequest.getRequest().getRequestURI();
+        if (path != null && path.contains("/ingestion/") && "jobId".equals(ex.getName())) {
+            log.debug("Invalid jobId format in path: {}", ex.getValue());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse("NOT_FOUND", "Job not found", Instant.now()));
+        }
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse("BAD_REQUEST", "Invalid parameter: " + ex.getName(), Instant.now()));
     }
 
     /**

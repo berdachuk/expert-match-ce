@@ -54,28 +54,25 @@ public class SpringAIConfig {
     }
 
     /**
-     * Chat client configuration.
-     * Handles ambiguity if multiple ChatModels are present (e.g., Ollama + OpenAI/DIAL).
-     * Selection priority:
-     * 1. Use @Primary ChatModel if available (respects primaryChatModel bean)
-     * 2. Exclude rerankingChatModel from selection (it's for reranking only)
-     * 3. If multiple models remain, select based on profile
+     * Chat client configuration (no tools).
+     * Created only when chatClientWithTools is not present (e.g. when Tool Search or Agent Skills
+     * provide their own ChatClient). When Tool Search is disabled and Agent Skills are disabled,
+     * ToolConfiguration creates chatClientWithTools with ExpertMatch tools (getRetrievedExperts etc.);
+     * that client must be used for answer generation so the LLM's tool calls are executed and the
+     * final answer text is returned instead of raw tool_calls JSON.
      * <p>
-     * Note: This bean is created as @Primary only when Tool Search Tool is disabled.
-     * When Tool Search Tool is enabled, chatClientWithToolSearch from ToolSearchConfiguration
-     * becomes the primary ChatClient.
+     * Selection: When chatClientWithTools exists it is @Primary. This no-tools client is NOT
+     * @Primary so that when both exist (e.g. config load order), chatClientWithTools is chosen.
      */
     @Bean
-    @Primary
     @ConditionalOnProperty(
             name = "expertmatch.tools.search.enabled",
             havingValue = "false",
             matchIfMissing = true
     )
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean(name = {"chatClientWithSkills", "chatClientWithTools"})
     public ChatClient chatClient(@Qualifier("primaryChatModel") ChatModel primaryChatModel) {
-        // Always use the @Primary ChatModel (primaryChatModel bean)
-        // This ensures we use the custom-configured model, not auto-configured ones
-        log.info("Configuring ChatClient with @Primary ChatModel: {}", primaryChatModel.getClass().getSimpleName());
+        log.info("Configuring ChatClient (no tools) with @Primary ChatModel: {}", primaryChatModel.getClass().getSimpleName());
         return ChatClient.builder(primaryChatModel).build();
     }
 
@@ -271,13 +268,12 @@ public class SpringAIConfig {
                     }
                 }
 
-                RetryTemplate retryTemplate = createRetryTemplate();
                 // Use builder pattern for OpenAiChatModel
                 log.info("REAL LLM CREATION: Creating OpenAiChatModel! ");
                 OpenAiChatModel model = OpenAiChatModel.builder()
                         .openAiApi(chatApi)
                         .defaultOptions(optionsBuilder.build())
-                        .retryTemplate(retryTemplate)
+                        // RetryTemplate removed - Spring AI 2.0 handles retry internally
                         .build();
                 log.info("REAL LLM CREATION: OpenAiChatModel created! Type: {} ", model.getClass().getName());
                 return model;
@@ -389,13 +385,11 @@ public class SpringAIConfig {
                     optionsBuilder.temperature(0.1);
                 }
 
-                RetryTemplate retryTemplate = createRetryTemplate();
-
                 log.info("REAL LLM CREATION: Creating OpenAiChatModel for reranking! ");
                 OpenAiChatModel rerankingChatModelInstance = OpenAiChatModel.builder()
                         .openAiApi(rerankingApi)
                         .defaultOptions(optionsBuilder.build())
-                        .retryTemplate(retryTemplate)
+                        // RetryTemplate removed - Spring AI 2.0 handles retry internally
                         .build();
                 log.info("REAL LLM CREATION: OpenAiChatModel created! Type: {} ", rerankingChatModelInstance.getClass().getName());
                 return rerankingChatModelInstance;

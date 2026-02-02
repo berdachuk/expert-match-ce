@@ -59,6 +59,9 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
     @InjectSql("/sql/employee/findAllIdsUnlimited.sql")
     private String findAllIdsUnlimitedSql;
 
+    @InjectSql("/sql/employee/count.sql")
+    private String countSql;
+
     @InjectSql("/sql/employee/deleteAll.sql")
     private String deleteAllSql;
 
@@ -332,6 +335,15 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
         }
 
         return namedJdbcTemplate.query(sql, params, (rs, rowNum) -> rs.getString("id"));
+    }
+
+    /**
+     * Returns the total count of employee records.
+     */
+    @Override
+    public long count() {
+        Long result = namedJdbcTemplate.queryForObject(countSql, Map.of(), Long.class);
+        return result != null ? result : 0L;
     }
 
     /**

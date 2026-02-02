@@ -431,6 +431,37 @@ components:
           $ref: '#/components/schemas/TokenUsage'
           nullable: true
           description: Token usage (null if no LLM or usage not available)
+        toolCall:
+          $ref: '#/components/schemas/ToolCallInfo'
+          nullable: true
+          description: Tool call information (null if not a tool call)
+
+    ToolCallInfo:
+      type: object
+      description: Tool call information for tracking tool invocations
+      properties:
+        toolName:
+          type: string
+          description: Tool name
+          example: "Skill"
+        toolType:
+          type: string
+          enum: [ AGENT_SKILL, JAVA_TOOL, FILE_SYSTEM_TOOL ]
+          description: Tool type
+          example: "AGENT_SKILL"
+        parameters:
+          type: string
+          description: Tool parameters (full JSON)
+          example: skillName=expert-matching-hybrid-retrieval
+        response:
+          type: string
+          description: Tool response (full JSON)
+          example: result=success
+        skillName:
+          type: string
+          nullable: true
+          description: Skill name (if toolType is AGENT_SKILL)
+          example: "expert-matching-hybrid-retrieval"
 
     TokenUsage:
       type: object
@@ -686,6 +717,175 @@ components:
         message:
           type: string
           description: Operation message
+
+    # Test data admin UI (async generation with progress)
+    TestDataSizeOption:
+      type: object
+      required:
+        - size
+        - description
+        - estimatedTimeMinutes
+      properties:
+        size:
+          type: string
+          enum: [ tiny, small, medium, large, huge ]
+          description: Dataset size key
+        description:
+          type: string
+          description: Human-readable size description
+        estimatedTimeMinutes:
+          type: integer
+          description: Estimated generation time in minutes
+          example: 2
+
+    TestDataStatsResponse:
+      type: object
+      required:
+        - employees
+        - workExperiences
+        - projects
+        - technologies
+      properties:
+        employees:
+          type: integer
+          description: Total count of employee records
+        workExperiences:
+          type: integer
+          description: Total count of work experience records
+        projects:
+          type: integer
+          description: Total count of project records
+        technologies:
+          type: integer
+          description: Total count of technology records
+
+    AsyncJobResponse:
+      type: object
+      required:
+        - status
+        - jobId
+      properties:
+        status:
+          type: string
+          example: started
+        message:
+          type: string
+        jobId:
+          type: string
+          description: Job ID for progress polling
+        size:
+          type: string
+          enum: [ tiny, small, medium, large, huge ]
+        cleared:
+          type: boolean
+
+    TraceEntry:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        level:
+          type: string
+          enum: [ INFO, SUCCESS, WARN, ERROR ]
+        step:
+          type: string
+        message:
+          type: string
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+
+    ProgressResponse:
+      type: object
+      properties:
+        jobId:
+          type: string
+        status:
+          type: string
+          enum: [ running, completed, error, cancelled ]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        currentStep:
+          type: string
+        message:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        errorMessage:
+          type: string
+        traceEntries:
+          type: array
+          items:
+            $ref: '#/components/schemas/TraceEntry'
+
+    IngestionAsyncJobResponse:
+      type: object
+      required:
+        - jobId
+        - status
+      properties:
+        jobId:
+          type: string
+          description: Job ID for progress polling
+        status:
+          type: string
+          example: started
+        message:
+          type: string
+        batchSize:
+          type: integer
+          description: Batch size used for ingestion
+        cleared:
+          type: boolean
+          description: Whether existing data was cleared first
+
+    IngestionJobSummary:
+      type: object
+      description: Summary of an ingestion job for list view
+      properties:
+        jobId:
+          type: string
+          description: Job identifier
+        status:
+          type: string
+          enum: [ running, completed, error, cancelled ]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        currentStep:
+          type: string
+        message:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+          nullable: true
+        errorMessage:
+          type: string
+          nullable: true
+
+    IngestionJobListResponse:
+      type: object
+      required:
+        - jobs
+      properties:
+        jobs:
+          type: array
+          description: List of ingestion jobs (newest first)
+          items:
+            $ref: '#/components/schemas/IngestionJobSummary'
 
     IngestionResult:
       type: object
@@ -979,6 +1179,129 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Internal server error during ingestion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ingestion/database/async:
+    post:
+      tags:
+        - Ingest
+      summary: Start async ingestion from external database
+      description: |
+        Starts async ingestion from external database, then generates embeddings and builds graph.
+        Returns a job ID for progress polling via GET /ingestion/progress/{jobId}.
+        Requires external database ingestion to be enabled. Admin only.
+      operationId: startIngestionFromDatabaseAsync
+      parameters:
+        - name: batchSize
+          in: query
+          description: Batch size for processing records. Defaults to 1000.
+          required: false
+          schema:
+            type: integer
+            default: 1000
+            minimum: 1
+        - name: clear
+          in: query
+          description: Clear existing data before ingestion.
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Ingestion job started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionAsyncJobResponse'
+        '400':
+          description: External database ingestion is not enabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Insufficient permissions (Admin only)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ingestion/jobs:
+    get:
+      tags:
+        - Ingest
+      summary: List ingestion jobs with status
+      description: Returns list of ingestion jobs (async database ingest) with status. Newest first.
+      operationId: listIngestionJobs
+      responses:
+        '200':
+          description: List of ingestion jobs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionJobListResponse'
+
+  /ingestion/progress/{jobId}:
+    get:
+      tags:
+        - Ingest
+      summary: Get ingestion job progress
+      description: Returns progress for an async ingestion job.
+      operationId: getIngestionProgress
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Progress and trace entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressResponse'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ingestion/cancel/{jobId}:
+    post:
+      tags:
+        - Ingest
+      summary: Cancel ingestion job
+      description: Cancels a running ingestion job.
+      operationId: cancelIngestionJob
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Job cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Job cannot be cancelled (not found or already finished)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Job not found
           content:
             application/json:
               schema:
@@ -1562,6 +1885,232 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - ADMIN role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /test-data/stats:
+    get:
+      tags:
+        - Test Data
+      summary: Get current data statistics
+      description: Returns current counts for employees, work experiences, projects, and technologies.
+      operationId: getTestDataStats
+      responses:
+        '200':
+          description: Current data statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestDataStatsResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - ADMIN role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /test-data/sizes:
+    get:
+      tags:
+        - Test Data
+      summary: Get available dataset sizes
+      description: |
+        Returns predefined dataset size options for the admin Test data page.
+        Used for the size dropdown (tiny, small, medium, large, huge) with descriptions and time estimates.
+      operationId: getTestDataSizes
+      responses:
+        '200':
+          description: List of size options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TestDataSizeOption'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - ADMIN role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /test-data/complete/async:
+    post:
+      tags:
+        - Test Data
+      summary: Start async complete dataset generation
+      description: |
+        Starts background generation of full test dataset (data + embeddings + graph).
+        Returns a job ID for progress polling via GET /test-data/progress/{jobId}.
+      operationId: generateCompleteDatasetAsync
+      parameters:
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ tiny, small, medium, large, huge ]
+            default: small
+        - name: clear
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Generation started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobResponse'
+        '400':
+          description: Invalid size parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - ADMIN role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /test-data/progress/{jobId}:
+    get:
+      tags:
+        - Test Data
+      summary: Get generation progress
+      description: Returns current progress and execution trace for an async test data generation job.
+      operationId: getTestDataProgress
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Progress and trace
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressResponse'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - ADMIN role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /test-data/cancel/{jobId}:
+    post:
+      tags:
+        - Test Data
+      summary: Cancel generation job
+      description: Cancels a running test data generation job. Cancellation takes effect between steps.
+      operationId: cancelTestDataJob
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Job cannot be cancelled (already completed or cancelled)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - ADMIN role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /test-data/clear:
+    post:
+      tags:
+        - Test Data
+      summary: Clear all test data
+      description: |
+        Clears all test data (employees, work experiences, projects, technologies) and all Apache AGE graph data.
+        Requires ADMIN role.
+      operationId: clearTestData
+      responses:
+        '200':
+          description: Test data and graph cleared successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - ADMIN role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
           content:
             application/json:
               schema:

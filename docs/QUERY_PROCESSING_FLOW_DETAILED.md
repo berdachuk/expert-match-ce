@@ -180,6 +180,7 @@ end
 * **Step 2.3**: Load and optimize conversation history using `ConversationHistoryManager`:
 - **Token Counting**: Estimates tokens for all messages using `TokenCountingService` (~4 characters per token)
     - **History Optimization**:
+
 - If within limits (`max-tokens`: 2000, `max-messages`: 10): Returns history as-is
         - If exceeds limits: Automatically summarizes older messages using LLM
         - Keeps recent messages (half of `max-messages`), summarizes older ones to fit within token budget

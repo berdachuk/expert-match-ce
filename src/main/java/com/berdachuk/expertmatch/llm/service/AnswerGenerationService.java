@@ -1,6 +1,6 @@
 package com.berdachuk.expertmatch.llm.service;
 
-import com.berdachuk.expertmatch.query.service.ExecutionTracer;
+import com.berdachuk.expertmatch.core.service.ExecutionTracer;
 
 import java.util.List;
 import java.util.Map;

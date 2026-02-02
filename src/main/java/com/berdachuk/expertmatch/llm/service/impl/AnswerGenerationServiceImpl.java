@@ -1,11 +1,14 @@
-package com.berdachuk.expertmatch.llm.service;
+package com.berdachuk.expertmatch.llm.service.impl;
 
+import com.berdachuk.expertmatch.core.domain.ExecutionTrace;
+import com.berdachuk.expertmatch.core.service.ExecutionTracer;
+import com.berdachuk.expertmatch.core.service.ExpertContextHolder;
+import com.berdachuk.expertmatch.core.service.ModelInfoExtractor;
+import com.berdachuk.expertmatch.core.service.TokenUsageExtractor;
+import com.berdachuk.expertmatch.llm.service.AnswerGenerationService;
 import com.berdachuk.expertmatch.llm.sgr.CyclePatternService;
 import com.berdachuk.expertmatch.llm.sgr.ExpertEvaluation;
 import com.berdachuk.expertmatch.llm.sgr.ExpertEvaluationService;
-import com.berdachuk.expertmatch.query.service.ExecutionTracer;
-import com.berdachuk.expertmatch.query.service.ModelInfoExtractor;
-import com.berdachuk.expertmatch.query.service.TokenUsageExtractor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
@@ -128,6 +131,14 @@ public class AnswerGenerationServiceImpl implements AnswerGenerationService {
                                  boolean useCyclePattern,
                                  ExecutionTracer tracer) {
 
+        // If expertContexts is null, try to get from ThreadLocal (for backward compatibility)
+        // But for tool calling pattern, we intentionally pass null to force LLM to use tools
+        if (expertContexts == null || expertContexts.isEmpty()) {
+            expertContexts = ExpertContextHolder.get();
+            log.debug("ExpertContexts from parameter was null, checked ThreadLocal: {}",
+                    expertContexts != null ? expertContexts.size() + " contexts" : "null");
+        }
+
         // Use Cycle pattern if enabled and multiple experts
         if (useCyclePattern && cyclePatternService != null && expertContexts != null && expertContexts.size() > 1) {
             try {
@@ -177,15 +188,29 @@ public class AnswerGenerationServiceImpl implements AnswerGenerationService {
         }
 
         // Default: Use RAG pattern
+        // For tool calling pattern, pass null to buildRAGPrompt to force LLM to use getRetrievedExperts() tool
+        // If expertContexts is provided (backward compatibility), use it; otherwise force tool calling
         if (tracer != null) {
             tracer.startStep("Generate Answer (RAG)", "AnswerGenerationService", "generateAnswer");
         }
-        String prompt = buildRAGPrompt(query, expertContexts, intent, conversationHistory);
+        // Pass null to force tool calling - LLM must call getRetrievedExperts() tool
+        // This ensures tool calls appear in Execution Trace
+        String prompt = buildRAGPrompt(query, null, intent, conversationHistory);
 
-        ChatResponse response = chatClient.prompt()
-                .user(prompt)
-                .call()
-                .chatResponse();
+        ChatResponse response;
+        try {
+            if (tracer != null) {
+                ExecutionTracer.setCurrent(tracer);
+            }
+            response = chatClient.prompt()
+                    .user(prompt)
+                    .call()
+                    .chatResponse();
+        } finally {
+            if (tracer != null) {
+                ExecutionTracer.clear();
+            }
+        }
 
         if (response == null || response.getResult() == null ||
                 response.getResult().getOutput() == null ||
@@ -202,9 +227,19 @@ public class AnswerGenerationServiceImpl implements AnswerGenerationService {
             log.warn("Blank answer text from LLM, returning empty answer");
             return "";
         }
+        // Safeguard: if the LLM returned raw tool_calls JSON (e.g. ChatClient had no tools),
+        // do not show that to the user
+        if (answer.contains("\"tool_calls\"") && answer.contains("getRetrievedExperts")) {
+            log.warn("LLM returned tool_calls JSON instead of answer text. ChatClient may lack ExpertMatch tools.");
+            if (tracer != null) {
+                tracer.failStep("Generate Answer (RAG)", "AnswerGenerationService", "generateAnswer",
+                        "LLM returned tool_calls; ensure ChatClient has getRetrievedExperts tool");
+            }
+            return "Unable to generate the answer. Please try again or contact support if the issue persists.";
+        }
         if (tracer != null) {
             String modelInfo = ModelInfoExtractor.extractModelInfo(chatModel, environment);
-            com.berdachuk.expertmatch.query.domain.ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
+            ExecutionTrace.TokenUsage tokenUsage = TokenUsageExtractor.extractTokenUsage(response);
             tracer.endStepWithLLM("Query: " + query + ", Experts: " + (expertContexts != null ? expertContexts.size() : 0),
                     "Answer: " + (answer != null ? answer.length() : 0) + " characters",
                     modelInfo, tokenUsage);
@@ -327,49 +362,15 @@ public class AnswerGenerationServiceImpl implements AnswerGenerationService {
         // User query
         variables.put("query", query);
 
-        // Build expert information section
+        // Build expert information section - NO expert data included
+        // The LLM MUST use getRetrievedExperts() tool to get expert information
         StringBuilder expertInfoSection = new StringBuilder();
-        int expertCount = expertContexts != null ? expertContexts.size() : 0;
-        if (expertCount == 0) {
-            expertInfoSection.append("## Expert Information\n");
-            expertInfoSection.append("No experts found matching the requirements.\n");
-            expertInfoSection.append("Please suggest alternative search criteria or explain why no matches were found.\n");
-        } else {
-            expertInfoSection.append("## Expert Information\n");
-            expertInfoSection.append("The following ").append(expertCount).append(" expert(s) have been identified as potential matches:\n\n");
-
-            for (int i = 0; i < expertContexts.size(); i++) {
-                ExpertContext expert = expertContexts.get(i);
-                expertInfoSection.append("### Expert ").append(i + 1).append(": ").append(expert.name()).append("\n");
-
-                if (expert.email() != null) {
-                    expertInfoSection.append("- **Email**: ").append(expert.email()).append("\n");
-                }
-
-                if (expert.seniority() != null) {
-                    expertInfoSection.append("- **Seniority**: ").append(expert.seniority()).append("\n");
-                }
-
-                if (expert.skills() != null && !expert.skills().isEmpty()) {
-                    expertInfoSection.append("- **Skills**: ").append(String.join(", ", expert.skills())).append("\n");
-                }
-
-                if (expert.projects() != null && !expert.projects().isEmpty()) {
-                    expertInfoSection.append("- **Relevant Projects**: ").append(String.join(", ", expert.projects())).append("\n");
-                }
-
-                if (expert.metadata() != null && !expert.metadata().isEmpty()) {
-                    if (expert.metadata().containsKey("matchScore")) {
-                        expertInfoSection.append("- **Match Score**: ").append(expert.metadata().get("matchScore")).append("\n");
-                    }
-                    if (expert.metadata().containsKey("relevanceScore")) {
-                        expertInfoSection.append("- **Relevance Score**: ").append(expert.metadata().get("relevanceScore")).append("\n");
-                    }
-                }
-
-                expertInfoSection.append("\n");
-            }
-        }
+        expertInfoSection.append("## Expert Information\n");
+        expertInfoSection.append("**No expert data included in prompt.**\n\n");
+        expertInfoSection.append("**CRITICAL ACTION REQUIRED**: You MUST call the **getRetrievedExperts()** tool FIRST to retrieve expert information before generating your answer.\n");
+        expertInfoSection.append("Example: Call `getRetrievedExperts()` to get the experts that were already found for this query.\n");
+        expertInfoSection.append("\n");
+        expertInfoSection.append("**Important**: Do NOT call expertQuery() - that would start a new search. Use getRetrievedExperts() to access the experts already retrieved.\n");
         variables.put("expertInfoSection", expertInfoSection.toString());
 
         // Build instructions section based on intent
@@ -399,21 +400,23 @@ public class AnswerGenerationServiceImpl implements AnswerGenerationService {
             }
             default -> {
                 instructionsSection.append("Provide a direct, useful answer that:\n");
+                instructionsSection.append("1. **FIRST**: Call the **getRetrievedExperts()** tool to retrieve expert information that was already found\n");
+                instructionsSection.append("2. **THEN**: Use the tool results to generate your answer\n");
                 if (hasConversationHistory) {
-                    instructionsSection.append("1. Considers the conversation history when answering\n");
-                    instructionsSection.append("2. Provides contextual answers that build upon previous exchanges\n");
-                    instructionsSection.append("3. If the query is a follow-up, reference previous context appropriately\n");
-                    instructionsSection.append("4. Directly presents the expert recommendations without verbose introductions\n");
-                    instructionsSection.append("5. Highlights key strengths of each recommended expert\n");
-                    instructionsSection.append("6. Explains why these experts are good matches\n");
-                    instructionsSection.append("7. Mentions any gaps or limitations if applicable\n");
-                    instructionsSection.append("8. Provides actionable next steps\n");
+                    instructionsSection.append("3. Considers the conversation history when answering\n");
+                    instructionsSection.append("4. Provides contextual answers that build upon previous exchanges\n");
+                    instructionsSection.append("5. If the query is a follow-up, reference previous context appropriately\n");
+                    instructionsSection.append("6. Directly presents the expert recommendations without verbose introductions\n");
+                    instructionsSection.append("7. Highlights key strengths of each recommended expert\n");
+                    instructionsSection.append("8. Explains why these experts are good matches\n");
+                    instructionsSection.append("9. Mentions any gaps or limitations if applicable\n");
+                    instructionsSection.append("10. Provides actionable next steps\n");
                 } else {
-                    instructionsSection.append("1. Directly presents the expert recommendations without verbose introductions\n");
-                    instructionsSection.append("2. Highlights key strengths of each recommended expert\n");
-                    instructionsSection.append("3. Explains why these experts are good matches\n");
-                    instructionsSection.append("4. Mentions any gaps or limitations if applicable\n");
-                    instructionsSection.append("5. Provides actionable next steps\n");
+                    instructionsSection.append("3. Directly presents the expert recommendations without verbose introductions\n");
+                    instructionsSection.append("4. Highlights key strengths of each recommended expert\n");
+                    instructionsSection.append("5. Explains why these experts are good matches\n");
+                    instructionsSection.append("6. Mentions any gaps or limitations if applicable\n");
+                    instructionsSection.append("7. Provides actionable next steps\n");
                 }
             }
         }

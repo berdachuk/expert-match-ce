@@ -191,6 +191,15 @@ public class ChatRepositoryImpl implements ChatRepository {
             log.error("SQL error during findAllByUserId: {}", e.getMessage(), e);
             throw e;
         } catch (Exception e) {
+            // Log the actual PostgreSQL error details
+            Throwable cause = e.getCause();
+            while (cause != null) {
+                if (cause instanceof java.sql.SQLException sqlEx) {
+                    log.error("findAllByUserId SQL error - SQLState: {}, ErrorCode: {}, Message: {}",
+                            sqlEx.getSQLState(), sqlEx.getErrorCode(), sqlEx.getMessage());
+                }
+                cause = cause.getCause();
+            }
             log.warn("findAllByUserId failed - returning empty list. Error: {}", e.getMessage());
             log.debug("findAllByUserId error details", e);
             return List.of(); // Return empty list to allow graceful degradation

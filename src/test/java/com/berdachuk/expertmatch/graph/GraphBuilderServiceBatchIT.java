@@ -1,6 +1,7 @@
 package com.berdachuk.expertmatch.graph;
 
 import com.berdachuk.expertmatch.core.util.IdGenerator;
+import com.berdachuk.expertmatch.graph.domain.ParticipationRelationship;
 import com.berdachuk.expertmatch.graph.service.GraphBuilderService;
 import com.berdachuk.expertmatch.graph.service.GraphService;
 import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
@@ -65,10 +66,10 @@ class GraphBuilderServiceBatchIT extends BaseIntegrationTest {
         graphBuilderService.createProjectVertex(project2, "Project 2", "E-commerce");
 
         // Create batch of participation relationships
-        List<GraphBuilderService.ParticipationRelationship> relationships = new ArrayList<>();
-        relationships.add(new GraphBuilderService.ParticipationRelationship(expert1, project1, "Backend Developer"));
-        relationships.add(new GraphBuilderService.ParticipationRelationship(expert2, project1, "Frontend Developer"));
-        relationships.add(new GraphBuilderService.ParticipationRelationship(expert1, project2, "Full Stack Developer"));
+        List<ParticipationRelationship> relationships = new ArrayList<>();
+        relationships.add(new ParticipationRelationship(expert1, project1, "Backend Developer"));
+        relationships.add(new ParticipationRelationship(expert2, project1, "Frontend Developer"));
+        relationships.add(new ParticipationRelationship(expert1, project2, "Full Stack Developer"));
 
         // Execute batch creation
         assertDoesNotThrow(() -> {

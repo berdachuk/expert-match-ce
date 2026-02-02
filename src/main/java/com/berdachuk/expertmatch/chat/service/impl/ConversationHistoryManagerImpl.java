@@ -3,7 +3,7 @@ package com.berdachuk.expertmatch.chat.service.impl;
 import com.berdachuk.expertmatch.chat.repository.ConversationHistoryRepository;
 import com.berdachuk.expertmatch.chat.service.ConversationHistoryManager;
 import com.berdachuk.expertmatch.chat.service.TokenCountingService;
-import com.berdachuk.expertmatch.query.service.ExecutionTracer;
+import com.berdachuk.expertmatch.core.service.ExecutionTracer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.PromptTemplate;

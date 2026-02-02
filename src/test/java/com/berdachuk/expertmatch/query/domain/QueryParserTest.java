@@ -1,5 +1,6 @@
 package com.berdachuk.expertmatch.query.domain;
 
+import com.berdachuk.expertmatch.core.domain.ParsedQuery;
 import com.berdachuk.expertmatch.llm.sgr.SGRPatternConfig;
 import com.berdachuk.expertmatch.query.sgr.QueryClassificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -90,7 +91,7 @@ class QueryParserTest {
                 technologyExtractionPromptTemplate
         );
 
-        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery result = queryParser.parse(query);
+        ParsedQuery result = queryParser.parse(query);
 
         assertNotNull(result);
         assertEquals(4, result.skills().size());
@@ -123,7 +124,7 @@ class QueryParserTest {
                 technologyExtractionPromptTemplate
         );
 
-        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery result = queryParser.parse(query);
+        ParsedQuery result = queryParser.parse(query);
 
         assertNotNull(result);
         assertEquals(2, result.seniorityLevels().size());
@@ -154,7 +155,7 @@ class QueryParserTest {
                 technologyExtractionPromptTemplate
         );
 
-        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery result = queryParser.parse(query);
+        ParsedQuery result = queryParser.parse(query);
 
         assertNotNull(result);
         assertEquals(2, result.seniorityLevels().size());
@@ -185,7 +186,7 @@ class QueryParserTest {
                 technologyExtractionPromptTemplate
         );
 
-        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery result = queryParser.parse(query);
+        ParsedQuery result = queryParser.parse(query);
 
         assertNotNull(result);
         assertEquals(2, result.seniorityLevels().size());
@@ -216,7 +217,7 @@ class QueryParserTest {
                 technologyExtractionPromptTemplate
         );
 
-        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery result = queryParser.parse(query);
+        ParsedQuery result = queryParser.parse(query);
 
         assertNotNull(result);
         assertEquals(2, result.seniorityLevels().size());
@@ -247,7 +248,7 @@ class QueryParserTest {
                 technologyExtractionPromptTemplate
         );
 
-        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery result = queryParser.parse(query);
+        ParsedQuery result = queryParser.parse(query);
 
         assertNotNull(result);
         assertEquals("C1", result.language());
@@ -276,7 +277,7 @@ class QueryParserTest {
                 technologyExtractionPromptTemplate
         );
 
-        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery result = queryParser.parse(query);
+        ParsedQuery result = queryParser.parse(query);
 
         assertNotNull(result);
         assertEquals(2, result.technologies().size());
@@ -307,7 +308,7 @@ class QueryParserTest {
                 technologyExtractionPromptTemplate
         );
 
-        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery result = parser.parse(query);
+        ParsedQuery result = parser.parse(query);
 
         assertNotNull(result);
         assertEquals("team_formation", result.intent());
@@ -336,7 +337,7 @@ class QueryParserTest {
                 technologyExtractionPromptTemplate
         );
 
-        com.berdachuk.expertmatch.query.domain.QueryParser.ParsedQuery result = queryParser.parse(query);
+        ParsedQuery result = queryParser.parse(query);
 
         assertNotNull(result);
         assertEquals(2, result.skills().size());

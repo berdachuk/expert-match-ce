@@ -2,13 +2,15 @@ package com.berdachuk.expertmatch.query.rest;
 
 import com.berdachuk.expertmatch.chat.service.ChatService;
 import com.berdachuk.expertmatch.core.api.ApiMapper;
+import com.berdachuk.expertmatch.core.domain.QueryRequest;
+import com.berdachuk.expertmatch.core.domain.QueryResponse;
 import com.berdachuk.expertmatch.core.security.HeaderBasedUserContext;
 import com.berdachuk.expertmatch.core.util.ValidationUtils;
-import com.berdachuk.expertmatch.query.domain.QueryRequest;
 import com.berdachuk.expertmatch.query.service.QueryService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
@@ -16,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
@@ -111,7 +112,7 @@ public class QueryStreamController {
                 // Process query (this will internally handle all stages)
                 // For now, we'll process synchronously and emit events
                 // In a more advanced implementation, we could make QueryService support callbacks
-                com.berdachuk.expertmatch.query.domain.QueryResponse domainResponse =
+                QueryResponse domainResponse =
                         queryService.processQuery(domainRequest, chatId, userId);
 
                 sendEvent(emitter, "retrieving", "Retrieval in progress", null);

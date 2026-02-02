@@ -106,14 +106,14 @@ public class McpResourceHandler {
 
     private String readExpertResource(String expertId) throws Exception {
         log.debug("Reading expert resource for ID: {}", expertId);
-        
+
         // Find employee
         Employee employee = employeeRepository.findById(expertId)
                 .orElseThrow(() -> new IllegalArgumentException("Expert not found: " + expertId));
-        
+
         // Find work experience for this employee
         List<WorkExperience> workExperiences = workExperienceRepository.findByEmployeeId(expertId);
-        
+
         // Build response
         Map<String, Object> response = new HashMap<>();
         response.put("id", employee.id());
@@ -122,7 +122,7 @@ public class McpResourceHandler {
         response.put("seniority", employee.seniority());
         response.put("languageEnglish", employee.languageEnglish());
         response.put("availabilityStatus", employee.availabilityStatus());
-        
+
         // Add work experiences
         List<Map<String, Object>> experiences = workExperiences.stream()
                 .map(we -> {
@@ -142,17 +142,17 @@ public class McpResourceHandler {
                 })
                 .collect(Collectors.toList());
         response.put("workExperiences", experiences);
-        
+
         return objectMapper.writeValueAsString(response);
     }
 
     private String readProjectResource(String projectId) throws Exception {
         log.debug("Reading project resource for ID: {}", projectId);
-        
+
         // Find project
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found: " + projectId));
-        
+
         // Build response
         Map<String, Object> response = new HashMap<>();
         response.put("id", project.id());
@@ -164,16 +164,16 @@ public class McpResourceHandler {
         response.put("customerId", project.customerId());
         response.put("customerName", project.customerName());
         response.put("industry", project.industry());
-        
+
         return objectMapper.writeValueAsString(response);
     }
 
     private String readTechnologyResource(String technologyName) throws Exception {
         log.debug("Reading technology resource for: {}", technologyName);
-        
+
         // Find employees who have experience with this technology
         List<String> employeeIds = workExperienceRepository.findEmployeeIdsByTechnologies(List.of(technologyName));
-        
+
         // Load employee details
         List<Map<String, Object>> employees = employeeRepository.findByIds(employeeIds).stream()
                 .map(emp -> {
@@ -185,31 +185,31 @@ public class McpResourceHandler {
                     return empMap;
                 })
                 .collect(Collectors.toList());
-        
+
         // Build response
         Map<String, Object> response = new HashMap<>();
         response.put("name", technologyName);
         response.put("employeeCount", employees.size());
         response.put("employees", employees);
-        
+
         return objectMapper.writeValueAsString(response);
     }
 
     private String readDomainResource(String domainName) throws Exception {
         log.debug("Reading domain resource for: {}", domainName);
-        
+
         // Query work experience by industry (domain maps to industry)
         String sql = """
                 SELECT DISTINCT employee_id
                 FROM expertmatch.work_experience
                 WHERE LOWER(industry) = LOWER(:domainName)
                 """;
-        
+
         Map<String, Object> params = new HashMap<>();
         params.put("domainName", domainName);
-        
+
         List<String> employeeIds = namedJdbcTemplate.query(sql, params, (rs, rowNum) -> rs.getString("employee_id"));
-        
+
         // Load employee details
         List<Map<String, Object>> employees = employeeRepository.findByIds(employeeIds).stream()
                 .map(emp -> {
@@ -221,13 +221,13 @@ public class McpResourceHandler {
                     return empMap;
                 })
                 .collect(Collectors.toList());
-        
+
         // Build response
         Map<String, Object> response = new HashMap<>();
         response.put("name", domainName);
         response.put("employeeCount", employees.size());
         response.put("employees", employees);
-        
+
         return objectMapper.writeValueAsString(response);
     }
 }

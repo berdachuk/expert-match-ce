@@ -6,8 +6,8 @@ import com.berdachuk.expertmatch.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
@@ -1105,9 +1105,9 @@ class QueryControllerIT extends BaseIntegrationTest {
 
     @Test
     void testProcessQueryStream_WithEmptyQuery_ReturnsError() throws Exception {
-        // Test that empty query triggers validation error
-        // Note: Empty string passes @NotBlank validation, but may fail business logic
-        // The endpoint accepts it and processes it (may return empty results)
+        // Test that empty query is accepted (200) or rejected (400); no 500.
+        // Avoid andReturn() + getResponse().getStatus() to prevent ConcurrentModificationException
+        // when MockMvc reads response while async SSE task is still writing.
         String requestBody = """
                 {
                     "query": "",
@@ -1117,19 +1117,12 @@ class QueryControllerIT extends BaseIntegrationTest {
                 }
                 """;
 
-        // Empty query may be accepted and processed (validation happens in business logic)
-        // Check that endpoint responds (may be 200 with empty results or error in stream)
-        var result = mockMvc.perform(post("/api/v1/query-stream")
+        mockMvc.perform(post("/api/v1/query-stream")
                         .header("X-User-Id", TEST_USER_ID)
                         .contentType(APPLICATION_JSON)
                         .accept("text/event-stream")
                         .content(requestBody))
-                .andReturn();
-
-        // Accept either 200 (error in stream) or 400 (rejected immediately)
-        int status = result.getResponse().getStatus();
-        assertTrue(status == 200 || status == 400,
-                "Should return 200 (error in stream) or 400 (rejected)");
+                .andExpect(status().isOk());
     }
 
 

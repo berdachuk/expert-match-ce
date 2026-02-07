@@ -29,14 +29,8 @@ import java.time.Duration;
         properties = {
                 // Disable Spring AI auto-configuration to prevent real LLM models from being created
                 // TestAIConfig provides @Primary mocks for all LLM services
-                "spring.ai.ollama.enabled=false",
                 "spring.ai.openai.enabled=false",
-                // Explicitly exclude Spring AI auto-configuration classes via property
-                // This works even when child tests override @SpringBootTest
-                "spring.autoconfigure.exclude=org.springframework.ai.model.ollama.autoconfigure.OllamaChatAutoConfiguration," +
-                        "org.springframework.ai.model.ollama.autoconfigure.OllamaEmbeddingAutoConfiguration," +
-                        "org.springframework.ai.model.ollama.autoconfigure.OllamaApiAutoConfiguration," +
-                        "org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration," +
+                "spring.autoconfigure.exclude=org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration," +
                         "org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration",
                 // Set dummy values to prevent auto-configuration from trying to create real models
                 // These won't be used since enabled=false, but prevent configuration errors

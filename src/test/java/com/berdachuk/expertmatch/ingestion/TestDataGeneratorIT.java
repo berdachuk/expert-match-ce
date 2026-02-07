@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Configuration:
  * - Uses "test" profile which excludes SpringAIConfig (via @Profile("!test"))
  * - TestAIConfig provides @Primary mocks for ChatModel and EmbeddingModel
- * - BaseIntegrationTest disables Spring AI auto-configuration (spring.ai.ollama.enabled=false, spring.ai.openai.enabled=false)
+ * - BaseIntegrationTest disables Spring AI auto-configuration (spring.ai.openai.enabled=false)
  * - @Primary annotations ensure mocks are selected over any auto-configured beans
  * <p>
  * LLM Usage:

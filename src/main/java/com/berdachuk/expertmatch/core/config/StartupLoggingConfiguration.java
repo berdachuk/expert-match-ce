@@ -202,20 +202,14 @@ public class StartupLoggingConfiguration {
             log.info("  Embedding Models: None configured");
         }
 
-        // Log Reranking Model Configuration
+        // Log Reranking Model Configuration (OpenAI-compatible only)
         log.info("  Reranking Models:");
-        String rerankingModel = environment.getProperty("spring.ai.ollama.reranking.options.model");
+        String rerankingModel = environment.getProperty("spring.ai.custom.reranking.model");
         if (rerankingModel != null && !rerankingModel.isEmpty()) {
-            String baseUrl = environment.getProperty("spring.ai.ollama.base-url", "http://localhost:11434");
-            log.info("    - OllamaRerankingModel: URL: {}, Model: {}", baseUrl, rerankingModel);
+            String baseUrl = environment.getProperty("spring.ai.custom.reranking.base-url", "https://api.openai.com");
+            log.info("    - Reranking: URL: {}, Model: {}", baseUrl, rerankingModel);
         } else {
-            String fallbackRerankingModel = environment.getProperty("expertmatch.query.reranking.model");
-            if (fallbackRerankingModel != null && !fallbackRerankingModel.isEmpty()) {
-                String baseUrl = environment.getProperty("spring.ai.ollama.base-url", "http://localhost:11434");
-                log.info("    - OllamaRerankingModel: URL: {}, Model: {}", baseUrl, fallbackRerankingModel);
-            } else {
-                log.info("    - OllamaRerankingModel: Not configured (reranking disabled)");
-            }
+            log.info("    - Reranking: Not configured (reranking disabled)");
         }
     }
 
@@ -223,22 +217,14 @@ public class StartupLoggingConfiguration {
      * Get model-specific details based on model type.
      */
     private String getModelDetails(String modelName, boolean isEmbeddingModel) {
-        if (modelName.toLowerCase().contains("ollama")) {
-            String baseUrl = environment.getProperty("spring.ai.ollama.base-url", "http://localhost:11435");
-            String modelProperty = isEmbeddingModel ?
-                    "spring.ai.ollama.embedding.embedding.options.model" :
-                    "spring.ai.ollama.chat.options.model";
-            String model = environment.getProperty(modelProperty, "not configured");
-            return String.format("URL: %s, Model: %s", baseUrl, model);
-        } else if (modelName.toLowerCase().contains("openai")) {
+        if (modelName.toLowerCase().contains("openai")) {
             String baseUrl = environment.getProperty("spring.ai.openai.base-url", "https://api.openai.com");
             String modelProperty = isEmbeddingModel ?
                     "spring.ai.openai.embedding.options.model" :
                     "spring.ai.openai.chat.options.model";
             String model = environment.getProperty(modelProperty, "not configured");
             return String.format("URL: %s, Model: %s", baseUrl, model);
-        } else {
-            return "Configuration not available";
         }
+        return "Configuration not available";
     }
 }

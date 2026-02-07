@@ -13,7 +13,7 @@ public class ModelInfoExtractor {
 
     /**
      * Extracts model information from a ChatModel.
-     * Returns formatted string like "OllamaChatModel (qwen3:4b-instruct-2507-q4_K_M)".
+     * Returns formatted string like "OpenAiChatModel (gpt-4)".
      *
      * @param chatModel   The ChatModel instance
      * @param environment Spring Environment for accessing configuration
@@ -41,7 +41,7 @@ public class ModelInfoExtractor {
 
     /**
      * Extracts model information from an EmbeddingModel.
-     * Returns formatted string like "OllamaEmbeddingModel (qwen3-embedding-8b)".
+     * Returns formatted string like "OpenAiEmbeddingModel (text-embedding-3-large)".
      *
      * @param embeddingModel The EmbeddingModel instance
      * @param environment    Spring Environment for accessing configuration
@@ -79,18 +79,10 @@ public class ModelInfoExtractor {
         }
 
         try {
-            // Try Ollama reranking model first
-            String ollamaRerankingModel = environment.getProperty("spring.ai.ollama.reranking.options.model");
-            if (ollamaRerankingModel != null && !ollamaRerankingModel.isEmpty()) {
-                return String.format("OllamaChatModel (%s)", ollamaRerankingModel);
+            String rerankingModel = environment.getProperty("spring.ai.custom.reranking.model");
+            if (rerankingModel != null && !rerankingModel.isEmpty()) {
+                return String.format("OpenAiChatModel (%s)", rerankingModel);
             }
-
-            // Try OpenAI reranking model
-            String openaiRerankingModel = environment.getProperty("spring.ai.openai.reranking.options.model");
-            if (openaiRerankingModel != null && !openaiRerankingModel.isEmpty()) {
-                return String.format("OpenAiChatModel (%s)", openaiRerankingModel);
-            }
-
             return null;
         } catch (Exception e) {
             log.debug("Failed to extract reranking model info: {}", e.getMessage());
@@ -101,7 +93,7 @@ public class ModelInfoExtractor {
     /**
      * Extracts model name from environment properties based on model type.
      *
-     * @param modelType        The model class simple name (e.g., "OllamaChatModel")
+     * @param modelType        The model class simple name (e.g., "OpenAiChatModel")
      * @param isEmbeddingModel Whether this is an embedding model
      * @param environment      Spring Environment
      * @return Model name or "not configured" if not found
@@ -113,19 +105,13 @@ public class ModelInfoExtractor {
 
         String modelTypeLower = modelType.toLowerCase();
 
-        if (modelTypeLower.contains("ollama")) {
-            String modelProperty = isEmbeddingModel ?
-                    "spring.ai.ollama.embedding.embedding.options.model" :
-                    "spring.ai.ollama.chat.options.model";
-            return environment.getProperty(modelProperty, "not configured");
-        } else if (modelTypeLower.contains("openai")) {
+        if (modelTypeLower.contains("openai")) {
             String modelProperty = isEmbeddingModel ?
                     "spring.ai.openai.embedding.options.model" :
                     "spring.ai.openai.chat.options.model";
             return environment.getProperty(modelProperty, "not configured");
-        } else {
-            return "not configured";
         }
+        return "not configured";
     }
 }
 

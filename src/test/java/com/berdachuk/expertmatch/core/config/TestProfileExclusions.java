@@ -1,7 +1,5 @@
 package com.berdachuk.expertmatch.core.config;
 
-import org.springframework.ai.model.ollama.autoconfigure.OllamaChatAutoConfiguration;
-import org.springframework.ai.model.ollama.autoconfigure.OllamaEmbeddingAutoConfiguration;
 import org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration;
 import org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -16,14 +14,8 @@ import org.springframework.context.annotation.Profile;
 @Configuration
 @Profile("test")
 @EnableAutoConfiguration(exclude = {
-        // Explicitly exclude Spring AI auto-configuration classes to prevent real LLM models from being created
-        // This is in addition to the enabled=false properties in BaseIntegrationTest
-        OllamaChatAutoConfiguration.class,
-        OllamaEmbeddingAutoConfiguration.class,
         OpenAiChatAutoConfiguration.class,
         OpenAiEmbeddingAutoConfiguration.class
-        // Note: SpringAiRetryAutoConfiguration is excluded via property in BaseIntegrationTest
-        // because the class may not be available at compile time in Spring AI 2.0.0-SNAPSHOT
 })
 public class TestProfileExclusions {
     // This class exists solely to exclude Spring AI auto-configurations for test profile

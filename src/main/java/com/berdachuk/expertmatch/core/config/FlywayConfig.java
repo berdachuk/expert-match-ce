@@ -2,9 +2,9 @@ package com.berdachuk.expertmatch.core.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.flywaydb.core.Flyway;
-import org.springframework.boot.autoconfigure.flyway.FlywayMigrationInitializer;
-import org.springframework.boot.autoconfigure.flyway.FlywayProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.flyway.autoconfigure.FlywayMigrationInitializer;
+import org.springframework.boot.flyway.autoconfigure.FlywayProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
@@ -44,7 +44,7 @@ public class FlywayConfig {
     public Flyway flyway(@org.springframework.beans.factory.annotation.Autowired(required = false)
                          @org.springframework.beans.factory.annotation.Qualifier("dataSource")
                          DataSource primaryDataSource,
-                         org.springframework.boot.autoconfigure.jdbc.DataSourceProperties dataSourceProperties,
+                         org.springframework.boot.jdbc.autoconfigure.DataSourceProperties dataSourceProperties,
                          FlywayProperties properties) {
         // Try to use existing primary DataSource first (created by Spring Boot auto-configuration)
         // If not available, create one explicitly from properties to ensure we use the PRIMARY database

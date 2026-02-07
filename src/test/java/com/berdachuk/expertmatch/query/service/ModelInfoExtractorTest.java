@@ -12,21 +12,6 @@ import static org.mockito.Mockito.when;
 class ModelInfoExtractorTest {
 
     @Test
-    void testExtractModelInfoWithOllama() {
-        ChatModel mockChatModel = new MockOllamaChatModel();
-
-        Environment mockEnv = mock(Environment.class);
-        when(mockEnv.getProperty("spring.ai.ollama.chat.options.model", "not configured"))
-                .thenReturn("qwen3:4b-instruct-2507-q4_K_M");
-
-        String modelInfo = ModelInfoExtractor.extractModelInfo(mockChatModel, mockEnv);
-
-        assertNotNull(modelInfo);
-        assertTrue(modelInfo.contains("MockOllamaChatModel") || modelInfo.contains("Ollama"));
-        assertTrue(modelInfo.contains("qwen3:4b-instruct-2507-q4_K_M"));
-    }
-
-    @Test
     void testExtractModelInfoWithOpenAI() {
         ChatModel mockChatModel = new MockOpenAiChatModel();
 
@@ -43,12 +28,12 @@ class ModelInfoExtractorTest {
 
     @Test
     void testExtractModelInfoWithNullEnvironment() {
-        ChatModel mockChatModel = new MockOllamaChatModel();
+        ChatModel mockChatModel = new MockOpenAiChatModel();
 
         String modelInfo = ModelInfoExtractor.extractModelInfo(mockChatModel, null);
 
         assertNotNull(modelInfo);
-        assertEquals("MockOllamaChatModel", modelInfo);
+        assertEquals("MockOpenAiChatModel", modelInfo);
     }
 
     @Test
@@ -63,8 +48,8 @@ class ModelInfoExtractorTest {
         EmbeddingModel mockEmbeddingModel = mock(EmbeddingModel.class);
 
         Environment mockEnv = mock(Environment.class);
-        when(mockEnv.getProperty("spring.ai.ollama.embedding.embedding.options.model", "not configured"))
-                .thenReturn("qwen3-embedding-8b");
+        when(mockEnv.getProperty("spring.ai.openai.embedding.options.model", "not configured"))
+                .thenReturn("text-embedding-3-large");
 
         String modelInfo = ModelInfoExtractor.extractEmbeddingModelInfo(mockEmbeddingModel, mockEnv);
 
@@ -76,35 +61,20 @@ class ModelInfoExtractorTest {
     @Test
     void testExtractRerankingModelInfo() {
         Environment mockEnv = mock(Environment.class);
-        when(mockEnv.getProperty("spring.ai.ollama.reranking.options.model"))
-                .thenReturn("dengcao/Qwen3-Reranker-8B:Q4_K_M");
-
-        String modelInfo = ModelInfoExtractor.extractRerankingModelInfo(mockEnv);
-
-        assertNotNull(modelInfo);
-        assertTrue(modelInfo.contains("OllamaChatModel"));
-        assertTrue(modelInfo.contains("dengcao/Qwen3-Reranker-8B:Q4_K_M"));
-    }
-
-    @Test
-    void testExtractRerankingModelInfoWithOpenAI() {
-        Environment mockEnv = mock(Environment.class);
-        when(mockEnv.getProperty("spring.ai.ollama.reranking.options.model")).thenReturn(null);
-        when(mockEnv.getProperty("spring.ai.openai.reranking.options.model"))
-                .thenReturn("gpt-4-rerank");
+        when(mockEnv.getProperty("spring.ai.custom.reranking.model"))
+                .thenReturn("gpt-4");
 
         String modelInfo = ModelInfoExtractor.extractRerankingModelInfo(mockEnv);
 
         assertNotNull(modelInfo);
         assertTrue(modelInfo.contains("OpenAiChatModel"));
-        assertTrue(modelInfo.contains("gpt-4-rerank"));
+        assertTrue(modelInfo.contains("gpt-4"));
     }
 
     @Test
     void testExtractRerankingModelInfoNotConfigured() {
         Environment mockEnv = mock(Environment.class);
-        when(mockEnv.getProperty("spring.ai.ollama.reranking.options.model")).thenReturn(null);
-        when(mockEnv.getProperty("spring.ai.openai.reranking.options.model")).thenReturn(null);
+        when(mockEnv.getProperty("spring.ai.custom.reranking.model")).thenReturn(null);
 
         String modelInfo = ModelInfoExtractor.extractRerankingModelInfo(mockEnv);
         assertNull(modelInfo);
@@ -116,14 +86,7 @@ class ModelInfoExtractorTest {
         assertNull(modelInfo);
     }
 
-    // Mock classes for testing
-    static class MockOllamaChatModel implements ChatModel {
-        @Override
-        public org.springframework.ai.chat.model.ChatResponse call(org.springframework.ai.chat.prompt.Prompt prompt) {
-            return null;
-        }
-    }
-
+    // Mock class for testing
     static class MockOpenAiChatModel implements ChatModel {
         @Override
         public org.springframework.ai.chat.model.ChatResponse call(org.springframework.ai.chat.prompt.Prompt prompt) {

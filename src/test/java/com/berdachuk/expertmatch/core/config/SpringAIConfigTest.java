@@ -112,19 +112,16 @@ class SpringAIConfigTest {
 
     /**
      * Test that provider values are validated correctly.
-     * Valid providers are 'ollama' and 'openai' (case-insensitive).
+     * Only 'openai' (OpenAI-compatible) is supported (case-insensitive).
      */
     @Test
     void testProviderValues() {
-        // Valid provider values
-        String[] validProviders = {"ollama", "openai", "OLLAMA", "OPENAI", "Ollama", "OpenAI"};
+        String[] validProviders = {"openai", "OPENAI", "OpenAI"};
 
         for (String provider : validProviders) {
             assertNotNull(provider, "Provider should not be null");
             assertFalse(provider.isEmpty(), "Provider should not be empty");
-            // SpringAIConfig uses equalsIgnoreCase, so both should work
-            assertTrue("ollama".equalsIgnoreCase(provider) || "openai".equalsIgnoreCase(provider),
-                    "Provider should be 'ollama' or 'openai': " + provider);
+            assertTrue("openai".equalsIgnoreCase(provider), "Provider should be 'openai': " + provider);
         }
     }
 }

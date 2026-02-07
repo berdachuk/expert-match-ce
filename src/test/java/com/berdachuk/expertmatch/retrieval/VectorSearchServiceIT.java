@@ -51,7 +51,7 @@ class VectorSearchServiceIT extends BaseIntegrationTest {
         // Insert test work experience with embedding
         String workExperienceId = IdGenerator.generateId();
 
-        // Generate a test embedding (mock vector) - 1024 dimensions (Ollama)
+        // Generate a test embedding (mock vector) - 1536 dimensions (OpenAI-compatible)
         float[] testEmbedding = new float[1024];
         for (int i = 0; i < 1024; i++) {
             testEmbedding[i] = (float) (Math.random() * 2 - 1); // Random values between -1 and 1
@@ -100,7 +100,7 @@ class VectorSearchServiceIT extends BaseIntegrationTest {
         // Clean up any data from previous tests
         namedJdbcTemplate.getJdbcTemplate().execute("DELETE FROM expertmatch.work_experience");
 
-        // Create 1024-dimension embedding (Ollama) - will be normalized to 1536 by PgVectorSearchService
+        // Create 1536-dimension embedding - will be normalized to 1536 by PgVectorSearchService
         float[] queryEmbedding = new float[1024];
         var results = vectorSearchService.search(queryEmbedding, 5, 0.7);
 
@@ -120,7 +120,7 @@ class VectorSearchServiceIT extends BaseIntegrationTest {
         // Insert test data
         String workExperienceId = IdGenerator.generateId();
 
-        // Create 1024-dimension embedding (Ollama)
+        // Create 1536-dimension embedding
         float[] testEmbedding = new float[1024];
         java.util.Arrays.fill(testEmbedding, 0.5f);
 
@@ -140,7 +140,7 @@ class VectorSearchServiceIT extends BaseIntegrationTest {
         );
 
         // Search with very high threshold (should return empty)
-        // Create 1024-dimension query embedding - will be normalized by PgVectorSearchService
+        // Create 1536-dimension query embedding - will be normalized by PgVectorSearchService
         float[] differentEmbedding = new float[1024];
         java.util.Arrays.fill(differentEmbedding, -0.5f);
 
@@ -178,7 +178,7 @@ class VectorSearchServiceIT extends BaseIntegrationTest {
 
     @Test
     void testSearchWithInvalidMaxResults() {
-        // Use 1024-dimension embedding (Ollama) - will be normalized by PgVectorSearchService
+        // Use 1536-dimension embedding - will be normalized by PgVectorSearchService
         float[] embedding = new float[1024];
         assertThrows(IllegalArgumentException.class, () -> {
             vectorSearchService.search(embedding, 0, 0.7);
@@ -190,7 +190,7 @@ class VectorSearchServiceIT extends BaseIntegrationTest {
 
     @Test
     void testSearchWithInvalidThreshold() {
-        // Use 1024-dimension embedding (Ollama) - will be normalized by PgVectorSearchService
+        // Use 1536-dimension embedding - will be normalized by PgVectorSearchService
         float[] embedding = new float[1024];
         assertThrows(IllegalArgumentException.class, () -> {
             vectorSearchService.search(embedding, 5, -0.1);

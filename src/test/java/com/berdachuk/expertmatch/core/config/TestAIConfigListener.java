@@ -3,7 +3,6 @@ package com.berdachuk.expertmatch.core.config;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -46,21 +45,6 @@ public class TestAIConfigListener implements ApplicationListener<ContextRefreshe
             log.info("✓ SpringAIConfig not found (correct - should be excluded in test profile)");
         }
 
-        // Check for OllamaApi beans (should NOT exist in test profile)
-        try {
-            Map<String, OllamaApi> ollamaApis = context.getBeansOfType(OllamaApi.class);
-            if (!ollamaApis.isEmpty()) {
-                log.error("REAL LLM API DETECTED: {} OllamaApi bean(s) found in test profile! ", ollamaApis.size());
-                ollamaApis.forEach((name, api) -> {
-                    log.error("  ✗ OllamaApi bean: {} - Type: {}", name, api.getClass().getName());
-                });
-            } else {
-                log.info("✓ No OllamaApi beans found (correct)");
-            }
-        } catch (Exception e) {
-            log.info("✓ No OllamaApi beans found (correct)");
-        }
-
         // Check for OpenAiApi beans (should NOT exist in test profile)
         try {
             Map<String, OpenAiApi> openAiApis = context.getBeansOfType(OpenAiApi.class);
@@ -83,8 +67,6 @@ public class TestAIConfigListener implements ApplicationListener<ContextRefreshe
                 String simpleName = model.getClass().getSimpleName();
                 if (className.contains("MockitoMock") || className.contains("$MockitoMock")) {
                     log.info("  ✓ ChatModel: {} - MOCK (correct)", simpleName);
-                } else if (className.contains("Ollama")) {
-                    log.error("  ✗ ChatModel: {} - REAL OLLAMA (should be mock!)", simpleName);
                 } else if (className.contains("OpenAi")) {
                     log.error("  ✗ ChatModel: {} - REAL OPENAI (should be mock!)", simpleName);
                 } else {
@@ -102,8 +84,6 @@ public class TestAIConfigListener implements ApplicationListener<ContextRefreshe
                 String simpleName = model.getClass().getSimpleName();
                 if (className.contains("MockitoMock") || className.contains("$MockitoMock")) {
                     log.info("  ✓ EmbeddingModel: {} - MOCK (correct)", simpleName);
-                } else if (className.contains("Ollama")) {
-                    log.error("  ✗ EmbeddingModel: {} - REAL OLLAMA (should be mock!)", simpleName);
                 } else if (className.contains("OpenAi")) {
                     log.error("  ✗ EmbeddingModel: {} - REAL OPENAI (should be mock!)", simpleName);
                 } else {

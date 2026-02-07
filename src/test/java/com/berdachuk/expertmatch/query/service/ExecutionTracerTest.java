@@ -36,14 +36,14 @@ class ExecutionTracerTest {
 
         tracer.startStep("LLM Step", "LLMService", "generate");
         ExecutionTrace.TokenUsage tokenUsage = new ExecutionTrace.TokenUsage(45, 12, 57);
-        tracer.endStepWithLLM("Query: test", "Answer: success", "OllamaChatModel (test-model)", tokenUsage);
+        tracer.endStepWithLLM("Query: test", "Answer: success", "OpenAiChatModel (test-model)", tokenUsage);
 
         ExecutionTrace.ExecutionTraceData trace = tracer.buildTrace();
 
         assertEquals(1, trace.steps().size());
         ExecutionTrace.ExecutionStep step = trace.steps().get(0);
         assertEquals("LLM Step", step.name());
-        assertEquals("OllamaChatModel (test-model)", step.llmModel());
+        assertEquals("OpenAiChatModel (test-model)", step.llmModel());
         assertNotNull(step.tokenUsage());
         assertEquals(45, step.tokenUsage().inputTokens());
         assertEquals(12, step.tokenUsage().outputTokens());
@@ -288,7 +288,7 @@ class ExecutionTracerTest {
 
         tracer.startStep("Generate Answer", "AnswerGenerationService", "generateAnswer");
         ExecutionTrace.TokenUsage tokenUsage = new ExecutionTrace.TokenUsage(50, 20, 70);
-        tracer.endStepWithLLM("Query: test", "Answer: success", "OllamaChatModel", tokenUsage);
+        tracer.endStepWithLLM("Query: test", "Answer: success", "OpenAiChatModel", tokenUsage);
 
         ExecutionTrace.ExecutionTraceData trace = tracer.buildTrace();
 

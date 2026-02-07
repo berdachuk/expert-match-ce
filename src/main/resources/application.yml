@@ -16,10 +16,6 @@ spring:
       - org.springframework.ai.model.openai.autoconfigure.OpenAiModerationAutoConfiguration
       - org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration
       - org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration
-      # Exclude ALL Ollama auto-configurations
-      - org.springframework.ai.model.ollama.autoconfigure.OllamaChatAutoConfiguration
-      - org.springframework.ai.model.ollama.autoconfigure.OllamaEmbeddingAutoConfiguration
-      - org.springframework.ai.model.ollama.autoconfigure.OllamaApiAutoConfiguration
 
   # Database Configuration
   datasource:
@@ -68,44 +64,13 @@ spring:
 
   # Spring AI Configuration
   # NOTE: Auto-configuration is DISABLED for ALL profiles - all models are created via SpringAIConfig.java
+  # Only OpenAI-compatible providers are supported (OpenAI, Azure OpenAI, or other compatible services).
   # You can configure different providers for different tasks:
   # 1. LLM Inference (Chat) - for query processing and answer generation
   # 2. Embedding - for vector embeddings
   # 3. Reranking - for semantic reranking (optional)
-  #
-  # Provider Selection:
-  # - Set LLM_PROVIDER=ollama or LLM_PROVIDER=openai for chat/LLM
-  # - Set EMBEDDING_PROVIDER=ollama or EMBEDDING_PROVIDER=openai for embeddings
-  # - Set RERANKING_PROVIDER=ollama or RERANKING_PROVIDER=openai for reranking
-  #
-  # All models are created via SpringAIConfig.java custom configuration.
-  # Configure the providers you need - you can mix Ollama and OpenAI for different tasks.
   ai:
-    # Disable Spring AI auto-configuration - we use custom configuration only
-    ollama:
-      enabled: false
-      # Ollama Provider (local or remote)
-      # NOTE: These properties are kept for reference but won't be used by auto-configuration
-      # They are used by SpringAIConfig.java custom configuration instead
-      base-url: ${OLLAMA_BASE_URL:http://localhost:11435}
-      chat:
-        options:
-          # Default local LLM model: qwen3:4b-instruct-2507-q4_K_M
-          # Alternative: qwen3:30b-a3b-instruct-2507-q4_K_M (use OLLAMA_MODEL env var)
-          # Override with OLLAMA_MODEL environment variable if needed
-          model: ${OLLAMA_MODEL:qwen3:4b-instruct-2507-q4_K_M}
-          temperature: 0.7
-      embedding:
-        embedding:
-          options:
-            model: ${OLLAMA_EMBEDDING_MODEL:qwen3-embedding-8b}
-      reranking:
-        options:
-          model: ${OLLAMA_RERANKING_MODEL:qwen3:4b-instruct-2507-q4_K_M}
-
-    # OpenAI or OpenAI-compatible provider configuration (e.g., OpenAI, Azure OpenAI, Anthropic Claude, etc.)
-    # Note: Ollama Cloud (https://ollama.com/api) uses Ollama's native API format, not OpenAI-compatible format.
-    # For OpenAI-compatible providers, use providers like OpenAI, Azure OpenAI, or other compatible services.
+    # OpenAI or OpenAI-compatible provider configuration (e.g., OpenAI, Azure OpenAI, etc.)
     # NOTE: enabled: false is set below - these properties are kept for reference but won't be used by auto-configuration
     # They are used by SpringAIConfig.java custom configuration instead
     openai:
@@ -140,58 +105,26 @@ spring:
           # Can be overridden with EMBEDDING_OPENAI_DIMENSIONS for embedding-specific configuration
           dimensions: ${EMBEDDING_OPENAI_DIMENSIONS:1536}
 
-    # Custom configuration for separate base URLs and providers per component
-    # These properties are used by SpringAIConfig.java to create separate beans
-    # for chat, embedding, and reranking with different base URLs and providers
-    # If not configured, falls back to spring.ai.openai.* or spring.ai.ollama.* auto-configuration
+    # Custom configuration for separate base URLs per component (OpenAI-compatible only)
+    # Used by SpringAIConfig.java to create separate beans for chat, embedding, and reranking
     custom:
       chat:
-        # Provider selection: 'ollama' or 'openai' (default: 'openai')
-        # Determines which AI provider to use for chat/LLM service
         provider: ${CHAT_PROVIDER:${LLM_PROVIDER:openai}}
-        # Base URL for chat/LLM service
-        # For Ollama: http://localhost:11434 (native Ollama API)
-        # For OpenAI-compatible: https://api.openai.com, https://YOUR_RESOURCE.openai.azure.com, etc.
         base-url: ${CHAT_BASE_URL:${LLM_OPENAI_BASE_URL:}}
-        # API key for chat service (required for OpenAI-compatible providers, optional for Ollama)
         api-key: ${CHAT_API_KEY:${LLM_OPENAI_API_KEY:}}
-        # Chat model name
-        # For Ollama: qwen3:4b-instruct-2507-q4_K_M, qwen3:30b-a3b-instruct-2507-q4_K_M, etc.
-        # For OpenAI: gpt-4, gpt-3.5-turbo, gpt-4-turbo-preview, etc.
-        model: ${CHAT_MODEL:${LLM_OPENAI_CHAT_MODEL::gpt-4-turbo-preview}}
-        # Chat temperature
+        model: ${CHAT_MODEL:${LLM_OPENAI_CHAT_MODEL:gpt-4-turbo-preview}}
         temperature: ${CHAT_TEMPERATURE:0.7}
       embedding:
-        # Provider selection: 'ollama' or 'openai' (default: 'openai')
-        # Determines which AI provider to use for embedding service
         provider: ${EMBEDDING_PROVIDER:openai}
-        # Base URL for embedding service
-        # For Ollama: http://localhost:11434 (native Ollama API)
-        # For OpenAI-compatible: https://api.openai.com, https://YOUR_RESOURCE.openai.azure.com, etc.
         base-url: ${EMBEDDING_BASE_URL:}
-        # API key for embedding service (required for OpenAI-compatible providers, optional for Ollama)
         api-key: ${EMBEDDING_API_KEY:}
-        # Embedding model name
-        # For Ollama: qwen3-embedding:8b, qwen3-embedding:0.6b, etc.
-        # For OpenAI: text-embedding-3-large, text-embedding-ada-002, etc.
         model: ${EMBEDDING_MODEL:text-embedding-3-large}
-        # Embedding dimensions (for OpenAI models only, Ollama models have fixed dimensions)
         dimensions: ${EMBEDDING_DIMENSIONS:1536}
       reranking:
-        # Provider selection: 'ollama' or 'openai'
-        # Determines which AI provider to use for reranking service
         provider: ${RERANKING_PROVIDER:openai}
-        # Base URL for reranking service
-        # For Ollama: http://localhost:11434 (native Ollama API)
-        # For OpenAI-compatible: https://api.openai.com, https://YOUR_RESOURCE.openai.azure.com, etc.
-        base-url: ${RERANKING_BASE_URL:http://localhost:11435}
-        # API key for reranking service (required for OpenAI-compatible providers, optional for Ollama)
+        base-url: ${RERANKING_BASE_URL:}
         api-key: ${RERANKING_API_KEY:}
-        # Reranking model name
-        # For Ollama: qwen3:4b-instruct-2507-q4_K_M, dengcao/Qwen3-Reranker-0.6B:Q8_0, etc.
-        # For OpenAI: typically uses a chat model like gpt-4, gpt-3.5-turbo, etc.
-        model: ${RERANKING_MODEL:qwen3:4b-instruct-2507-q4_K_M}
-        # Reranking temperature (lower is better for reranking, default: 0.1)
+        model: ${RERANKING_MODEL:gpt-4}
         temperature: ${RERANKING_TEMPERATURE:0.1}
 
     vectorstore:
@@ -286,13 +219,8 @@ expertmatch:
       max-depth: 3
     reranking:
       enabled: true
-      # Provider selection: 'ollama' or 'openai' (for future OpenAI reranking support)
-      provider: ${RERANKING_PROVIDER:ollama}
-      # Model name (provider-specific)
-      # For Ollama: qwen3:4b-instruct-2507-q4_K_M (recommended)
-      #             Pull with: ollama pull qwen3:4b-instruct-2507-q4_K_M
-      # For OpenAI: typically uses a chat model for relevance scoring
-      model: ${RERANKING_MODEL:qwen3:4b-instruct-2507-q4_K_M}
+      provider: ${RERANKING_PROVIDER:openai}
+      model: ${RERANKING_MODEL:gpt-4}
       # OpenAI-specific reranking configuration (if using OpenAI for reranking)
       openai:
         api-key: ${RERANKING_OPENAI_API_KEY:${OPENAI_API_KEY:}}

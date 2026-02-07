@@ -41,13 +41,6 @@ spring:
       enabled: false
       api-key: test-key
       base-url: http://localhost:9999
-    ollama:
-      enabled: false
-      base-url: http://localhost:11434
-      # Disable reranking to prevent real LLM calls
-      reranking:
-        options:
-          model: ""
 
 # ExpertMatch API Configuration for tests
 # WebController uses API client to call REST endpoints
@@ -58,12 +51,8 @@ expertmatch:
     base-url: http://localhost:${server.port:8093}
 
   # Explicitly exclude Spring AI auto-configuration classes to prevent real LLM models from being created
-  # This ensures that even tests with their own @SpringBootTest use mocks
   autoconfigure:
     exclude:
-      - org.springframework.ai.model.ollama.autoconfigure.OllamaChatAutoConfiguration
-      - org.springframework.ai.model.ollama.autoconfigure.OllamaEmbeddingAutoConfiguration
-      - org.springframework.ai.model.ollama.autoconfigure.OllamaApiAutoConfiguration
       - org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration
       - org.springframework.ai.model.openai.autoconfigure.OpenAiEmbeddingAutoConfiguration
 

@@ -133,7 +133,7 @@ class ToolPerformanceTest {
      * 4. Verify 30%+ savings
      * <p>
      * This requires:
-     * - Actual LLM provider (Ollama or OpenAI)
+     * - Actual LLM provider (OpenAI-compatible)
      * - Token counting mechanism
      * - Multiple test queries
      */

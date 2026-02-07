@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
  * All LLM calls in integration tests should use these mocks to avoid real API calls.
  * <p>
  * Configuration:
- * - BaseIntegrationTest disables Spring AI auto-configuration (spring.ai.ollama.enabled=false, spring.ai.openai.enabled=false)
+ * - BaseIntegrationTest disables Spring AI auto-configuration (spring.ai.openai.enabled=false)
  * - This ensures only the mocked beans from TestAIConfig are used
  * - All @Primary annotations ensure mocks are selected over any auto-configured beans
  */
@@ -109,8 +109,7 @@ public class TestAIConfig {
      * This replaces any auto-configured EmbeddingModel beans.
      * Note: SpringAIConfig.primaryEmbeddingModel is excluded in test profile.
      * <p>
-     * Supports both 1024 (Ollama) and 1536 (OpenAI/DIAL) dimensions.
-     * Returns 1024 dimensions by default (Ollama), which will be padded to 1536 when stored.
+     * Returns 1536 dimensions (OpenAI-compatible default), which matches text-embedding-3-large.
      * <p>
      * IMPORTANT: This mock ensures that TestDataGenerator.generateEmbeddings() (if called)
      * will use the mock instead of making real LLM API calls. The @Primary annotation
@@ -126,10 +125,8 @@ public class TestAIConfig {
         log.info("Creating MOCK EmbeddingModel for tests - NO real LLM calls will be made");
         EmbeddingModel mockModel = mock(EmbeddingModel.class);
 
-        // Mock EmbeddingResponse with a default embedding vector
-        // Use 1024 dimensions (Ollama BAAI/bge-m3 model)
-        // The TestDataGenerator will pad this to 1536 when storing in the database
-        float[] defaultEmbedding = new float[1024];
+        // Mock EmbeddingResponse with a default embedding vector (1536 dimensions, OpenAI-compatible)
+        float[] defaultEmbedding = new float[1536];
         org.springframework.ai.embedding.Embedding embedding =
                 new org.springframework.ai.embedding.Embedding(defaultEmbedding, 0);
         EmbeddingResponse mockResponse = new EmbeddingResponse(List.of(embedding));
